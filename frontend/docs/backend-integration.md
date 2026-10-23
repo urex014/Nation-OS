@@ -1,183 +1,137 @@
-# Backend contract and integration guide
+# Backend Integration Guide and API Specification
 
-The Next.js server currently supports analyst requests only. Country/state data comes from maintained fixtures; saved plans live in browser storage. No account, database, durable institution record or approval service exists.
+This document defines the proposed REST API contracts required by the NationOS frontend. All endpoints use standard HTTP methods, JSON payloads, consistent error envelopes, and ISO-8601 timestamps.
 
-All paths below are relative to `frontend/`. The root README includes startup commands and complete planning inputs.
+## Global Conventions
 
-## Existing HTTP API
+- Base URL: `NEXT_PUBLIC_API_BASE_URL` (e.g., `http://localhost:8000/api/v1`).
+- Currencies: ISO-4217 code `NGN` (symbol `₦`) or demonstration code `AND` (`A₦`).
+- Monetary precision: Decimal string or integer minor units to eliminate floating-point drift.
+- Authentication: Bearer token in `Authorization: Bearer <token>` for institutional access.
+- Role-based scopes: `fiscal:read`, `budget:write`, `decision:review`, `admin:all`.
+- Error envelope: `{ "error": { "code": "STRING", "message": "STRING", "details": {} } }`.
 
-### GET /api/ai/status
+## Required Endpoints Matrix
 
-```json
-{
-  "configured": false,
-  "model": null,
-  "evidenceSearch": true,
-  "automatedAnalysis": true,
-  "provider": "OpenAI",
-  "liveVerified": false
-}
-```
+| Method | Endpoint                          | Purpose                               | Consuming Component                  |
+| :----- | :-------------------------------- | :------------------------------------ | :----------------------------------- |
+| GET    | `/api/v1/fiscal/overview`         | National fiscal summary               | `FiscalOverview`                     |
+| GET    | `/api/v1/fiscal/revenue`          | Gross revenue receipts & breakdown    | `FiscalOverview`, `RevenueWorkspace` |
+| GET    | `/api/v1/fiscal/revenue/trends`   | Historical receipts over time         | `RevenueWorkspace`                   |
+| GET    | `/api/v1/allocations/revenue`     | Vertical & horizontal distribution    | `RevenueWorkspace`                   |
+| GET    | `/api/v1/allocations/formulas`    | Mandated & scenario sharing formulas  | `RevenueWorkspace`                   |
+| GET    | `/api/v1/jurisdictions`           | Active subnational territories        | `CountryMap`, `FiscalOverview`       |
+| GET    | `/api/v1/jurisdictions/:id`       | Territory-specific accounts           | `FiscalOverview`                     |
+| GET    | `/api/v1/sectors`                 | Baseline sector performance & needs   | `BudgetPlanner`, `FiscalOverview`    |
+| POST   | `/api/v1/budgets/recommend`       | Structured AI policy investigation    | `BudgetPlanner`                      |
+| POST   | `/api/v1/budgets/calculate`       | Deterministic capital plan projection | `BudgetPlanner`                      |
+| POST   | `/api/v1/scenarios/simulate`      | Multi-scenario stress projection      | `ScenarioLab`                        |
+| POST   | `/api/v1/scenarios/compare`       | Side-by-side alternative analysis     | `ScenarioLab`                        |
+| GET    | `/api/v1/decisions`               | Preserved decision proposal catalog   | `DecisionMemory`                     |
+| POST   | `/api/v1/decisions`               | Store immutable proposal revision     | `BudgetPlanner`, `DecisionMemory`    |
+| GET    | `/api/v1/decisions/:id`           | Retrieve decision audit record        | `DecisionMemory`                     |
+| PATCH  | `/api/v1/decisions/:id`           | Update lifecycle review status        | `DecisionMemory`                     |
+| GET    | `/api/v1/decisions/:id/revisions` | Revision lineage and diff history     | `DecisionMemory`                     |
 
-Configured means a key exists, not that billing/model access works. No user identity is returned.
+## Endpoint Specifications
 
-### POST /api/ai/analyze
+### 1. Fiscal Summary: `GET /api/v1/fiscal/overview`
 
-```json
-{
-  "question": "Draft a 10-year education plan with 120 million per year",
-  "scope": "all",
-  "mode": "local"
-}
-```
+- Auth: `fiscal:read`
+- Query Params: `fiscalYear` (int, default 2026), `jurisdictionId` (string, default "all").
+- Response: `{ "fiscalYear": 2026, "jurisdiction": { "id": "all", "name": "National" }, "metrics": { "totalRevenue": "270000.0", "totalSpending": "315000.0", "deficit": "45000.0", "debt": "810000.0" } }`.
+- Errors: `400 Invalid year`, `404 Jurisdiction not found`.
 
-- Content-Type must start with `application/json`.
-- Question is a non-empty string of at most 4,000 characters.
-- Scope is `all` or a canonical jurisdiction ID, e.g. `AD-11` or `AD-CT`.
-- Mode is `local`, `evidence`, `ai` or `review`. Defaults: scope `all`, mode `ai`; clients should send both explicitly.
-- Body limit is 12,000 bytes, checked while reading the body as well as against Content-Length.
-- An Origin header, when supplied, must match the request origin.
-- One active request and 20 accepted attempts per rolling minute are allowed per process.
+### 2. Revenue Sources: `GET /api/v1/fiscal/revenue`
 
-### Report envelope
+- Auth: `fiscal:read`
+- Query Params: `fiscalYear` (int).
+- Response: `{ "fiscalYear": 2026, "sources": [{ "id": "vat", "name": "VAT", "amount": "72000.0", "statutoryPool": true }] }`.
 
-| Field                       | Type / meaning                                                                    |
-| --------------------------- | --------------------------------------------------------------------------------- |
-| question, scope, mode       | Echoed/normalized request context                                                 |
-| created                     | ISO server timestamp                                                              |
-| summary                     | Short narrative string                                                            |
-| findings                    | Array of `{ text, sourceIds: string[] }`                                          |
-| gaps, assumptions           | Arrays of strings                                                                 |
-| sources                     | Array of source records described below                                           |
-| proposal                    | Null or `{ title, reason, scope, years, growth, delivery, maintenance, budgets }` |
-| modelResult                 | Null or deterministic service projection with fiscal attachment                   |
-| model                       | Provider model name or null                                                       |
-| engine, provider, retrieval | Mode-specific provenance; clients must tolerate optional fields                   |
-| review                      | Present for review mode only                                                      |
+### 3. Historical Trends: `GET /api/v1/fiscal/revenue/trends`
 
-Source records have `id`, `title`, `summary`, `values`, `scope`, `sector`, `period` and `synthetic`. IDs are stable catalog references, not database authorization tokens. Preserve source content revisions with future saved analyses.
+- Auth: `fiscal:read`
+- Query Params: `startYear` (int), `endYear` (int).
+- Response: `{ "trends": [{ "year": 2024, "revenue": "235000.0" }, { "year": 2025, "revenue": "252000.0" }] }`.
 
-### Review mode
+### 4. Revenue Distribution: `GET /api/v1/allocations/revenue`
 
-Send a non-empty question, `mode: "review"` and `proposal` containing the six-budget planning configuration from the README. Exactly six supported budget keys are required. The numerical scope comes from `proposal.scope`; request scope must still be valid.
+- Auth: `fiscal:read`
+- Query Params: `fiscalYear` (int), `formulaId` (string, e.g. "statutory-v1").
+- Response: `{ "distributablePool": "229500.0", "distributionTiers": { "federal": "120900.6", "states": "61322.4", "local": "47277.0" }, "stateAllocations": [{ "id": "AD-01", "allocationAmount": "1650.0" }] }`.
 
-The report sets proposal/modelResult to null so a critique cannot accidentally become an executable draft. `review` contains:
+### 5. Distribution Formulas: `GET /api/v1/allocations/formulas`
 
-| Field            | Shape                                                       |
-| ---------------- | ----------------------------------------------------------- |
-| input            | Validated planning configuration                            |
-| flags            | String array of rule-based risks                            |
-| cases            | `{ label, config, annualCost, end }[]`                      |
-| monitoring       | `{ sector, indicator, unit, cadence, evidence, trigger }[]` |
-| version, dataset | Review engine and dataset identifiers                       |
+- Auth: `fiscal:read`
+- Response: `{ "formulas": [{ "id": "statutory-v1", "isStatutory": true, "legalBasis": "Act Cap F26 LFN 2004", "weights": { "equality": 0.4, "population": 0.3 } }] }`.
 
-Each case's `end` contains national endpoint indicators with `no`, `with`, `low` and `high` values. Cases rerun current inputs, delivery minus 20 percentage points, growth plus 1 percentage point and zero maintenance. Bounds still apply. Each changes one assumption, not a probability distribution.
+### 6. Jurisdictions: `GET /api/v1/jurisdictions`
 
-### Errors
+- Auth: `fiscal:read`
+- Response: `{ "jurisdictions": [{ "id": "AD-01", "name": "Kainji", "type": "State", "population": 620000 }] }`.
 
-Errors return `{ "error": "message" }`. Codes include 400 invalid input, 403 origin, 413 body size, 415 content type, 422 provider refusal, 429 process throttle, 503 missing live-AI key and 502 provider/structured-output failure. Unexpected failures return a generic 500 message. Next returns 405 for unsupported methods.
+### 7. Jurisdiction Detail: `GET /api/v1/jurisdictions/:id`
 
-Responses use no-store and nosniff headers. Same-origin checks are not authentication. Repeated failed requests can still consume the prototype rate limit.
+- Auth: `fiscal:read`
+- Response: `{ "id": "AD-01", "revenue": "4200.0", "spending": "5100.0", "deficit": "900.0" }`.
 
-## Numerical inputs and outputs
+### 8. Sectors: `GET /api/v1/sectors`
 
-`computeProposal` in `lib/knowledge.mjs` combines PlanningEngine.project with EconomyEngine.fiscalPlan. It is the server entry point for authoritative results.
+- Auth: `fiscal:read`
+- Response: `{ "sectors": [{ "id": "health", "name": "Healthcare", "baselineIndex": 72.4, "target": 90.0 }] }`.
 
-Configuration: years 5 or 10; scope canonical ID/all; growth 0–5; delivery 0–100; maintenance 0–50; six annual budgets each 0–2,000. Budget units are millions of real 2026 Aderin naira per year.
+### 9. AI Recommendation: `POST /api/v1/budgets/recommend`
 
-The result includes `version`, `dataset`, `config`, `annualCost`, `totalCost`, `scopePopulation`, `years`, `limitations`, `assumptions` and `fiscal`. Each annual row includes year, population, annual/cumulative cost, national indicators and per-state no/with/low/high paths. The baseline row has no new investment cost.
+- Auth: `budget:write`
+- Request: `{ "question": "string", "budget": 1000, "horizon": 5, "scope": "all", "strategy": "needs" }`.
+- Response: `{ "budgets": { "health": 220, "education": 220, "transport": 140, "food": 200, "energy": 110, "water": 110 }, "investigationStages": [{ "stage": 1, "status": "completed" }], "tradeoffs": ["string"], "risks": ["string"] }`.
 
-Store input, immutable output and all engine/dataset versions. Never accept a client-calculated outcome as authoritative. Forecasts and measured observations are different entity types.
+### 10. Budget Calculation: `POST /api/v1/budgets/calculate`
 
-## What each frontend feature needs from a future backend
+- Auth: `budget:write`
+- Request: `{ "years": 5, "scope": "all", "growth": 2.0, "delivery": 80, "maintenance": 20, "budgets": { "health": 180 } }`.
+- Response: `{ "annualCost": 980, "cumulativeCost": 4900, "fiscal": { "years": [{ "deficit": "4200.0" }] } }`.
 
-| Feature          | Required service/data                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| Country/map      | Versioned jurisdiction hierarchy, geography, capitals, population and reporting period    |
-| State profiles   | Same-version public-service baselines, state accounts and definitions/units               |
-| Citizens         | Cursor-paginated authorized records, state filters, ID lookup and streaming export        |
-| Businesses       | Ownership/control, operating location, sector, employment and turnover                    |
-| Banks/money      | Bank balance sheets, branches and explicitly defined national monetary aggregates         |
-| Comparisons      | Canonical indicator provider, target definitions, scoring method/version and peer context |
-| Plans            | Owned drafts, optimistic revisions and authoritative model-run snapshots                  |
-| Decision memory  | Durable records, review events, permissions and administration handover access            |
-| Evidence/imports | Source revisions, dataset ingestion validation and publication workflow                   |
-| Monitoring       | Responsible owner, milestones, dated measured observations and evidence provenance        |
+### 11. Scenario Simulation: `POST /api/v1/scenarios/simulate`
 
-Keep separate state own-source accounts and consolidated national fiscal projections. Do not infer state money supply from national monetary stocks or bank branch counts.
+- Auth: `fiscal:read`
+- Request: `{ "budget": 1000, "horizon": 5, "scope": "all" }`.
+- Response: `{ "baseline": { "id": "balanced", "annualCost": 1000 }, "alternatives": [{ "id": "needs", "annualCost": 1000 }] }`.
 
-## Proposed REST resources — not implemented
+### 12. Scenario Comparison: `POST /api/v1/scenarios/compare`
 
-| Method / route                                  | Contract direction                                                               |
-| ----------------------------------------------- | -------------------------------------------------------------------------------- |
-| GET /api/session                                | Authenticated user, institution memberships and capabilities                     |
-| GET /api/jurisdictions?datasetVersion=...       | Stable ID/name/type/zone/population/geography plus version                       |
-| GET /api/indicators?scope=...&period=...        | Versioned metric/value/unit/source records                                       |
-| GET /api/citizens?scope=...&cursor=...&limit=20 | `{ items, nextCursor, total, datasetVersion }`                                   |
-| GET /api/citizens/:id                           | Authorized synthetic/real record with appropriate access policy                  |
-| GET /api/businesses?scope=...&ownership=...     | Paginated ownership/location data                                                |
-| GET /api/banks and /api/monetary-accounts       | Versioned national stocks, units and definitions                                 |
-| GET /api/sources?scope=...&query=...            | Paginated source revisions                                                       |
-| POST /api/proposals                             | Create institution-owned draft from title/reason/config                          |
-| PATCH /api/proposals/:id                        | Update using expectedRevision; conflict returns 409                              |
-| POST /api/proposals/:id/model-runs              | Calculate/persist an immutable run against a published dataset                   |
-| GET /api/proposals/:id                          | Draft, revision and permitted saved runs                                         |
-| POST /api/decisions                             | Save a selected proposal revision with human reasoning                           |
-| GET /api/decisions?cursor=...                   | Permitted institution-owned archive                                              |
-| POST /api/decisions/:id/reviews                 | Append an authorized review; do not overwrite history                            |
-| POST /api/milestones/:id/observations           | Actual value, period, source and evidence method                                 |
-| POST /api/imports                               | Validate an experimental upload; publish through a separate authorized operation |
+- Auth: `fiscal:read`
+- Request: `{ "scenarioIds": ["balanced", "growth"], "shock": "revenueDrop" }`.
+- Response: `{ "comparison": [{ "scenarioId": "balanced", "adjustedAnnual": 850 }] }`.
 
-These are design requirements, not callable endpoints. Define a common error envelope and pagination contract before wiring them into the React hooks. Retain no-store for private data.
+### 13. Decision List: `GET /api/v1/decisions`
 
-## Suggested relational schema — not implemented
+- Auth: `decision:read`
+- Query Params: `status` (optional), `limit` (int, default 20), `offset` (int, default 0).
+- Response: `{ "decisions": [{ "id": "DEC-001", "title": "Health Plan", "status": "Draft", "budgetAmount": 1000 }] }`.
 
-| Entity              | Key fields / relationship                                                |
-| ------------------- | ------------------------------------------------------------------------ |
-| organizations       | id, name, jurisdiction_id                                                |
-| users / memberships | external identity, organization_id, role                                 |
-| jurisdictions       | stable id, name, type, parent_id, geometry revision                      |
-| dataset_versions    | id, source, period, checksum, publication state                          |
-| indicators          | dataset_version_id, jurisdiction_id, metric, value, unit                 |
-| source_revisions    | source_id, immutable revision, content, provenance                       |
-| proposals           | id, organization_id, owner_id, title, current_revision                   |
-| proposal_versions   | proposal_id, revision, reason, config, created_by                        |
-| model_runs          | proposal_revision, dataset/engine versions, inputs and immutable outputs |
-| decisions           | proposal_revision, selected_run_id, reasoning, status                    |
-| review_events       | decision_id, reviewer_id, event, timestamp                               |
-| milestones          | decision_id, owner_id, due_date, intended_metric                         |
-| observations        | milestone_id, measured_value, period, source_revision, method            |
-| audit_events        | actor_id, entity, revision, operation, server_timestamp                  |
+### 14. Save Decision: `POST /api/v1/decisions`
 
-Use explicit decimal money units. Preserve source snapshots or immutable revision references. Do not store only a URL that may later change.
+- Auth: `budget:write`
+- Request: `{ "title": "string", "budgetAmount": 1000, "horizonYears": 5, "allocations": {}, "status": "Draft" }`.
+- Response: `{ "id": "DEC-002", "created": "2026-10-23T21:00:00Z", "status": "Draft" }`.
 
-## Integration points in the current code
+### 15. Decision Detail: `GET /api/v1/decisions/:id`
 
-- Replace fixture reads in `lib/client/country.mjs` with one versioned indicator/data provider.
-- Replace client generation/paging in CitizenRegister and BusinessRegister with query hooks.
-- Replace `useSavedRecords` at Planner and DecisionMemory with asynchronous repositories/API hooks.
-- Keep draft inputs in WorkspaceProvider; committed saves must return a server ID and revision.
-- Keep numerical functions pure. Add server-only `lib/repositories/` and application services.
-- Add loading/error/retry states. Show saved success only after the transaction commits.
+- Auth: `decision:read`
+- Response: `{ "id": "DEC-001", "title": "Health Plan", "allocations": {}, "assumptions": [], "risks": [] }`.
 
-For a proposal save: resolve actor → authorize scope/organization → validate request → load published data → recompute model → transactionally store revision/run/source context → append audit event → return ID/revision. Do not hold a database transaction open during an external provider call.
+### 16. Update Decision: `PATCH /api/v1/decisions/:id`
 
-## Importing browser history
+- Auth: `decision:review`
+- Request: `{ "status": "Reviewed", "notes": "Approved by analyst panel" }`.
+- Response: `{ "id": "DEC-001", "status": "Reviewed", "updated": "2026-10-23T21:30:00Z" }`.
 
-Current long-term records contain id (new records), title, reason, origin, date, reviewed, result and optional AI/comparison provenance. Older records may lack IDs or use display-formatted dates. `nationos-decisions` contains earlier short-horizon snapshots with varying shapes.
+### 17. Decision Revisions: `GET /api/v1/decisions/:id/revisions`
 
-Offer explicit, idempotent migration with a batch ID. Validate every record, return per-record failures, preserve historical model snapshots and add authoritative server timestamps. Recompute new runs separately. Do not clear browser copies until the server confirms a durable copy.
+- Auth: `decision:read`
+- Response: `{ "revisions": [{ "revisionNumber": 1, "timestamp": "ISO", "changedBy": "Analyst-4", "diff": {} }] }`.
 
-Legacy JSON is untrusted. Rendering it safely does not make it a valid institutional record or approval.
+## Mock vs Live Execution
 
-## Security and deployment expectations
-
-Add sessions, institution/jurisdiction permissions, CSRF protection appropriate to the chosen session model, distributed rate limiting and audit trails before multi-user deployment. Authorize reads as well as writes. Client-hidden controls do not enforce permissions.
-
-Keep provider/database secrets server-only. Configure secure environment injection, migrations, backups, restore tests, monitoring and request tracing. Use a recoverable job queue for long calculations/imports. Do not expose provider error bodies or secrets in logs.
-
-Real person data needs a separate privacy/access design. The current generator and full client-side synthetic dataset are not a ready-made sensitive-person registry.
-
-## Acceptance tests for a real backend
-
-Verify isolation between institutions, forbidden workflow transitions, optimistic revision conflicts, duplicate import handling, transaction rollback, reproducible model runs, historical snapshot retrieval and save failures in the UI. Begin with one durable proposal save/retrieve workflow, then add reviews, observations and ingestion.
+When `NEXT_PUBLIC_USE_MOCK_API=true`, all calls route through `lib/api/fiscal-adapter.mjs`. Live requests failing return structured error notifications without silent mock fallback.

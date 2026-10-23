@@ -1,2 +1,5 @@
-// Route modules stay small; the feature owns its React state and presentation.
-export { CountryOverview as default } from "../components/country/overview";
+import { FiscalOverview } from "../components/overview/fiscal-overview";
+
+export default function OverviewPage() {
+  return <FiscalOverview />;
+}
