@@ -1,9 +1,0 @@
-node_modules/
-.next/
-.npm-cache/
-generated/
-package-lock.json
-data/*.ndjson
-# Seed shards are regenerated with JSON.stringify(..., null, 2), not edited by hand.
-data/country/
-data/citizens/

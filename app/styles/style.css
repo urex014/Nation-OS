@@ -1,5 +1,0 @@
-/* Ordered stylesheets: preserve cascade order when adding a section. */
-@import "./style/part-1.css";
-@import "./style/part-2.css";
-@import "./style/part-3.css";
-@import "./style/part-4.css";

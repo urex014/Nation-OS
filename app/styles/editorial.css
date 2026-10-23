@@ -1,6 +1,0 @@
-/* Ordered stylesheets: preserve cascade order when adding a section. */
-@import "./editorial/part-1.css";
-@import "./editorial/part-2.css";
-@import "./editorial/part-3.css";
-@import "./editorial/part-4.css";
-@import "./editorial/part-5.css";
