@@ -1,0 +1,45 @@
+﻿@import "tailwindcss";
+@theme {
+  --color-paper: #f4f3ee;
+  --color-ink: #18352e;
+  --color-accent: #476548;
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+@layer base {
+  body {
+    @apply bg-paper text-ink antialiased;
+    font-family: Arial, sans-serif;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent;
+  }
+  button:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+  input,
+  select,
+  textarea {
+    @apply w-full rounded-sm border border-stone-300 bg-white px-3 py-2 text-sm;
+  }
+  input[type="checkbox"] {
+    width: auto;
+  }
+  textarea {
+    min-height: 110px;
+  }
+  th {
+    @apply bg-stone-50 text-xs font-semibold uppercase tracking-wide text-stone-600;
+  }
+  th,
+  td {
+    @apply border-b border-stone-200 px-4 py-3 text-left align-top;
+  }
+  h3 {
+    @apply text-lg font-medium;
+  }
+}

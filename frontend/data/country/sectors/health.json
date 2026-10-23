@@ -1,0 +1,72 @@
+{
+  "name": "Healthcare",
+  "icon": "✚",
+  "metric": "Primary care access",
+  "unit": "%",
+  "baseline": [
+    45,
+    50,
+    47,
+    51,
+    46,
+    49,
+    41,
+    46,
+    43,
+    47,
+    42,
+    45,
+    70,
+    75,
+    72,
+    76,
+    71,
+    74,
+    67,
+    72,
+    69,
+    73,
+    68,
+    71,
+    49,
+    54,
+    51,
+    55,
+    50,
+    53,
+    74,
+    79,
+    76,
+    80,
+    75,
+    78,
+    67
+  ],
+  "target": 90,
+  "higher": true,
+  "eligible": 1,
+  "source": "Synthetic facility census · 180 clinics",
+  "gap": "Access represents geographic coverage, not treatment quality or medicine availability.",
+  "people": "Residents in clinic catchments",
+  "impact": "Reliable electricity and transport can support functioning clinics and timely referrals.",
+  "actions": [
+    [
+      "Primary clinic upgrades",
+      0.09
+    ],
+    [
+      "Community health workers",
+      0.08
+    ],
+    [
+      "Medicine supply reliability",
+      0.06
+    ]
+  ],
+  "links": "Energy → clinic uptime · Water → infection prevention · Transport → referrals",
+  "milestones": [
+    "Verify clinic readiness and catchment coverage",
+    "Staff facilities and establish medicine delivery logs",
+    "Review access, stockouts and patient waiting times"
+  ]
+}
