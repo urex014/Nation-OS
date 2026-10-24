@@ -1,8 +1,4 @@
-node_modules/
-.next/
-.npm-cache/
+.next
+node_modules
+data
 package-lock.json
-data/*.ndjson
-# Keep canonical shards in their readable two-space JSON layout.
-data/country/
-data/citizens/

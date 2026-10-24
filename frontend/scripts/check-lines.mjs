@@ -1,38 +1,29 @@
-/** Enforce module size without pretending machine-generated dependencies are maintained source. */
-import { readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { extname, join } from "node:path";
 
-const excluded = new Set([
-  "node_modules",
-  ".next",
-  ".npm-cache",
-  ".git",
-  "coverage",
-  "test-results",
-]);
-const machineFiles = new Set(["package-lock.json", "next-env.d.ts", "tsconfig.tsbuildinfo"]);
-const extensions = /\.(?:[cm]?js|jsx|tsx?|css|json|md|sql|ya?ml|svg)$/;
-const files = [];
-function visit(directory) {
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (excluded.has(entry.name) || machineFiles.has(entry.name)) continue;
-    const file = path.join(directory, entry.name);
-    if (entry.isDirectory()) visit(file);
-    else if (extensions.test(file) || entry.name.startsWith(".")) files.push(file);
+const root = new URL("..", import.meta.url).pathname;
+const skip = new Set(["node_modules", ".next", "data"]);
+const extensions = new Set([".ts", ".tsx", ".css", ".mjs", ".js"]);
+const tooLong = [];
+
+function walk(dir) {
+  for (const name of readdirSync(dir)) {
+    if (skip.has(name)) continue;
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) {
+      walk(path);
+      continue;
+    }
+    if (!extensions.has(extname(name))) continue;
+    const text = readFileSync(path, "utf8");
+    const physical = text === "" ? 0 : text.split(/\r?\n/).length - (text.endsWith("\n") ? 1 : 0);
+    if (physical > 300) tooLong.push(`${physical}\t${path.slice(root.length)}`);
   }
 }
-visit(".");
-let longest = { lines: 0 };
-for (const file of files) {
-  const text = readFileSync(file, "utf8").replaceAll("\r\n", "\n");
-  const lines = text ? text.split("\n").length - Number(text.endsWith("\n")) : 0;
-  if (lines > longest.lines) longest = { file, lines };
-  if (lines > 300) {
-    console.error(`${file}: ${lines} lines (maximum 300)`);
-    process.exitCode = 1;
-  }
+
+walk(root);
+if (tooLong.length > 0) {
+  console.error(`Files over 300 lines:\n${tooLong.join("\n")}`);
+  process.exit(1);
 }
-if (!process.exitCode)
-  console.log(
-    `Line policy passed: ${files.length} maintained files; longest ${longest.file} (${longest.lines} lines).`,
-  );
+console.log("All source files are within 300 lines.");

@@ -1,0 +1,50 @@
+::view-transition-group(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes slide-to-left {
+  to {
+    transform: translateX(-8%);
+  }
+}
+@keyframes slide-from-right {
+  from {
+    transform: translateX(8%);
+  }
+}
+@keyframes slide-to-right {
+  to {
+    transform: translateX(8%);
+  }
+}
+@keyframes slide-from-left {
+  from {
+    transform: translateX(-8%);
+  }
+}
+
+html:active-view-transition-type(forward)::view-transition-old(root) {
+  animation-name: slide-to-left;
+}
+html:active-view-transition-type(forward)::view-transition-new(root) {
+  animation-name: slide-from-right;
+}
+html:active-view-transition-type(backward)::view-transition-old(root) {
+  animation-name: slide-to-right;
+}
+html:active-view-transition-type(backward)::view-transition-new(root) {
+  animation-name: slide-from-left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root) {
+    animation: none !important;
+  }
+  .drawer-scroller {
+    scroll-behavior: auto;
+  }
+  .cell:hover {
+    transform: none;
+  }
+}
