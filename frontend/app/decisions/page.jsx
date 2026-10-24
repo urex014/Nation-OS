@@ -1,11 +1,7 @@
-import { DecisionMemory } from "../../components/decisions/decision-memory";
-
-export const metadata = {
-  title: "Decision Records - NationOS",
-  description:
-    "Preserve the evidence, assumptions, trade-offs and revision history behind budget proposals.",
-};
-
-export default function DecisionsPage() {
-  return <DecisionMemory />;
+import { listDecisions } from "../../lib/nigeria/decisions.mjs";
+import { DecisionRecords } from "../../components/nigeria/decision-records";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export default function Page() {
+  return <DecisionRecords initial={listDecisions()} />;
 }

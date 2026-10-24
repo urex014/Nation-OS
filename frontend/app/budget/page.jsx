@@ -1,10 +1,7 @@
-import { BudgetPlanner } from "../../components/budget/budget-planner";
-
-export const metadata = {
-  title: "Budget Planner - NationOS",
-  description: "AI-assisted sector planning and deterministic expenditure allocation.",
-};
-
-export default function BudgetPage() {
-  return <BudgetPlanner />;
+import { getJurisdictions } from "../../lib/nigeria/repository.mjs";
+import { IntelligenceChat } from "../../components/nigeria/intelligence-chat";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export default function Page() {
+  return <IntelligenceChat jurisdictions={getJurisdictions()} />;
 }

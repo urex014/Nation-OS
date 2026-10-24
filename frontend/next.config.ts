@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: { cpus: 1 },
   outputFileTracingRoot: process.cwd(),
+  outputFileTracingIncludes: {
+    "/*": ["./lib/nigeria/schema.sql", "./data/nigeria/normalized/**/*"],
+  },
 };
 
 export default nextConfig;

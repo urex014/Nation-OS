@@ -1,8 +1,8 @@
 node_modules/
 .next/
 .npm-cache/
+.recovery/
+data/nigeria/raw/
+data/nigeria/normalized/
 package-lock.json
-data/*.ndjson
-# Keep canonical shards in their readable two-space JSON layout.
-data/country/
-data/citizens/
+next-env.d.ts

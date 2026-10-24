@@ -6,17 +6,18 @@
     "dev": "next dev --webpack --hostname 127.0.0.1 --port 4173",
     "build": "next build --webpack",
     "start": "next start --hostname 127.0.0.1 --port 4173",
-    "lint": "eslint app components hooks lib/client scripts tests/ui.test.jsx",
+    "lint": "eslint app components lib/nigeria scripts tests",
     "check": "node scripts/check.mjs",
     "check:lines": "node scripts/check-lines.mjs",
     "check:http": "node tests/http.mjs",
-    "test:ui": "tsx --test tests/ui.test.jsx",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:init": "node scripts/init-db.mjs",
+    "data:fetch": "node scripts/nigeria/fetch.mjs",
+    "data:normalize": "python scripts/nigeria/normalize.py",
+    "test:ui": "tsx --test tests/ui.test.jsx"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.12.7",
-    "@supabase/supabase-js": "^2.118.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"
@@ -34,5 +35,9 @@
     "tailwindcss": "4.3.3",
     "tsx": "^4",
     "typescript": "^5"
-  }
+  },
+  "engines": {
+    "node": "\u003e=24 \u003c25"
+  },
+  "type": "module"
 }

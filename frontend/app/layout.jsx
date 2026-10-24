@@ -1,20 +1,18 @@
 import "./globals.css";
-import { WorkspaceProvider } from "../components/workspace/provider";
+import { DraftProvider } from "../components/nigeria/draft-provider";
 import { WorkspaceShell } from "../components/workspace/shell";
-
 export const metadata = {
-  title: "NationOS · Aderin planning workspace",
-  description: "Explore a synthetic country and review evidence-led public investment plans.",
+  title: "NationOS · Nigeria planning workspace",
+  description: "Nigerian public data, explainable budget scenarios and decision records.",
 };
-
-// The persistent provider keeps an unsaved proposal alive while Next changes pages.
+// This provider carries an unsaved plan between pages; SQLite stores saved records.
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <WorkspaceProvider>
+        <DraftProvider>
           <WorkspaceShell>{children}</WorkspaceShell>
-        </WorkspaceProvider>
+        </DraftProvider>
       </body>
     </html>
   );

@@ -1,137 +1,211 @@
-# Backend Integration Guide and API Specification
+# Backend contract and SQLite handover
 
-This document defines the proposed REST API contracts required by the NationOS frontend. All endpoints use standard HTTP methods, JSON payloads, consistent error envelopes, and ISO-8601 timestamps.
+This application already has a backend: Next.js route handlers in `app/api/`. The following contract describes the current implementation, not a future service that must be supplied separately.
 
-## Global Conventions
+## Runtime and conventions
 
-- Base URL: `NEXT_PUBLIC_API_BASE_URL` (e.g., `http://localhost:8000/api/v1`).
-- Currencies: ISO-4217 code `NGN` (symbol `₦`) or demonstration code `AND` (`A₦`).
-- Monetary precision: Decimal string or integer minor units to eliminate floating-point drift.
-- Authentication: Bearer token in `Authorization: Bearer <token>` for institutional access.
-- Role-based scopes: `fiscal:read`, `budget:write`, `decision:review`, `admin:all`.
-- Error envelope: `{ "error": { "code": "STRING", "message": "STRING", "details": {} } }`.
+- Node.js 24; native `node:sqlite`; Next App Router route handlers use `runtime = "nodejs"`.
+- Responses are JSON. Successful responses are HTTP 200, including creation.
+- Errors are `{"error":"human-readable message"}`.
+- Client requests use the same origin. Explicit foreign Origin headers are rejected for writes.
+- The origin check recognizes Next's request URL, the browser-facing Host header and browser-protected Sec-Fetch-Site: same-origin metadata (which survives preview proxies). Same-site/cross-site metadata does not bypass the check; forwarded headers cannot authorize writes. For a trusted proxy whose client omits Fetch Metadata, set NATIONOS_ALLOWED_ORIGINS to its exact public origin (comma-separated for multiple origins); restart after changing configuration.
+- Writes require application/json and a body of at most 16,000 streamed bytes.
+- There is no authentication or authorization. This is a loopback-bound single-operator workspace.
+- Unknown data is null; zero is a measured/calculated zero. Do not silently replace one with the other.
+- Units are part of the contract: API money is naira; revenue storage is integer kobo; national GDP is current USD.
+- Dates are ISO UTC strings; reporting years are integers.
+- Reads use no-store. Generic unexpected server errors do not expose internal database paths.
 
-## Required Endpoints Matrix
+## Read endpoints
 
-| Method | Endpoint                          | Purpose                               | Consuming Component                  |
-| :----- | :-------------------------------- | :------------------------------------ | :----------------------------------- |
-| GET    | `/api/v1/fiscal/overview`         | National fiscal summary               | `FiscalOverview`                     |
-| GET    | `/api/v1/fiscal/revenue`          | Gross revenue receipts & breakdown    | `FiscalOverview`, `RevenueWorkspace` |
-| GET    | `/api/v1/fiscal/revenue/trends`   | Historical receipts over time         | `RevenueWorkspace`                   |
-| GET    | `/api/v1/allocations/revenue`     | Vertical & horizontal distribution    | `RevenueWorkspace`                   |
-| GET    | `/api/v1/allocations/formulas`    | Mandated & scenario sharing formulas  | `RevenueWorkspace`                   |
-| GET    | `/api/v1/jurisdictions`           | Active subnational territories        | `CountryMap`, `FiscalOverview`       |
-| GET    | `/api/v1/jurisdictions/:id`       | Territory-specific accounts           | `FiscalOverview`                     |
-| GET    | `/api/v1/sectors`                 | Baseline sector performance & needs   | `BudgetPlanner`, `FiscalOverview`    |
-| POST   | `/api/v1/budgets/recommend`       | Structured AI policy investigation    | `BudgetPlanner`                      |
-| POST   | `/api/v1/budgets/calculate`       | Deterministic capital plan projection | `BudgetPlanner`                      |
-| POST   | `/api/v1/scenarios/simulate`      | Multi-scenario stress projection      | `ScenarioLab`                        |
-| POST   | `/api/v1/scenarios/compare`       | Side-by-side alternative analysis     | `ScenarioLab`                        |
-| GET    | `/api/v1/decisions`               | Preserved decision proposal catalog   | `DecisionMemory`                     |
-| POST   | `/api/v1/decisions`               | Store immutable proposal revision     | `BudgetPlanner`, `DecisionMemory`    |
-| GET    | `/api/v1/decisions/:id`           | Retrieve decision audit record        | `DecisionMemory`                     |
-| PATCH  | `/api/v1/decisions/:id`           | Update lifecycle review status        | `DecisionMemory`                     |
-| GET    | `/api/v1/decisions/:id/revisions` | Revision lineage and diff history     | `DecisionMemory`                     |
+The conversational endpoint is documented separately in [Project Intelligence chat](chat.md): POST `/api/chat` accepts a message, validated follow-up context and optional planning configuration. It returns sourced paragraphs, optional tables and optional plan calculations without persisting a decision.
 
-## Endpoint Specifications
+| Method/path            | Input                                                           | Response                                                                           |
+| ---------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| GET /api/overview      | None                                                            | Country, indicators, federal budget, combined revenue, history, map paths, sources |
+| GET /api/revenue       | year optional, scope optional ISO/all, compare optional ISO/all | revenue, scope, compare, history, comparison                                       |
+| GET /api/sources       | None                                                            | sources and coverage counts                                                        |
+| GET /api/decisions     | limit 1–100 (default 20), offset ≥0                             | records, total, limit, offset, hasMore                                             |
+| GET /api/decisions/:id | Existing UUID                                                   | Complete decision, original result/source snapshots and ordered audit events       |
 
-### 1. Fiscal Summary: `GET /api/v1/fiscal/overview`
+A revenue response contains:
 
-- Auth: `fiscal:read`
-- Query Params: `fiscalYear` (int, default 2026), `jurisdictionId` (string, default "all").
-- Response: `{ "fiscalYear": 2026, "jurisdiction": { "id": "all", "name": "National" }, "metrics": { "totalRevenue": "270000.0", "totalSpending": "315000.0", "deficit": "45000.0", "debt": "810000.0" } }`.
-- Errors: `400 Invalid year`, `404 Jurisdiction not found`.
+```json
+{
+  "revenue": {
+    "year": 2025,
+    "years": [2025, 2024, 2023, 2022, 2021, 2020, 2019],
+    "coverage": 37,
+    "sourceId": "nbs-igr-2019-2025",
+    "states": []
+  },
+  "scope": "NG-LA",
+  "compare": "NG-RI",
+  "history": [],
+  "comparison": []
+}
+```
 
-### 2. Revenue Sources: `GET /api/v1/fiscal/revenue`
+The abbreviated revenue object also includes combined totalNaira, taxNaira, otherNaira and a scope warning. Each state row has id, name, type, rank, totalNaira, taxNaira, otherNaira, otherLabel, sourceName, sourceId, components, growthPercent, nationalSharePercent and reconciliationKobo. Each component has label and naira (nullable). Histories contain year/totalNaira pairs.
 
-- Auth: `fiscal:read`
-- Query Params: `fiscalYear` (int).
-- Response: `{ "fiscalYear": 2026, "sources": [{ "id": "vat", "name": "VAT", "amount": "72000.0", "statutoryPool": true }] }`.
+Rank uses total nominal IGR, with SQL competition ranking for ties. Annual growth is null without a positive preceding observation. It is not real growth or causal evidence.
 
-### 3. Historical Trends: `GET /api/v1/fiscal/revenue/trends`
+Indicator objects have code, label, unit, note, value, year, sourceId and series. Series contain available non-null year/value pairs. Federal budget includes year, scope, approvedNaira, classification, note and sourceId. Map entries contain ISO id, name, SVG path and sourceId.
 
-- Auth: `fiscal:read`
-- Query Params: `startYear` (int), `endYear` (int).
-- Response: `{ "trends": [{ "year": 2024, "revenue": "235000.0" }, { "year": 2025, "revenue": "252000.0" }] }`.
+Coverage returns jurisdictions, stateYearRows, indicatorRows and missingIndicatorValues.
 
-### 4. Revenue Distribution: `GET /api/v1/allocations/revenue`
+## Planning input
 
-- Auth: `fiscal:read`
-- Query Params: `fiscalYear` (int), `formulaId` (string, e.g. "statutory-v1").
-- Response: `{ "distributablePool": "229500.0", "distributionTiers": { "federal": "120900.6", "states": "61322.4", "local": "47277.0" }, "stateAllocations": [{ "id": "AD-01", "allocationAmount": "1650.0" }] }`.
+POST /api/plans and POST /api/scenarios accept `{"config": ...}`:
 
-### 5. Distribution Formulas: `GET /api/v1/allocations/formulas`
+```json
+{
+  "config": {
+    "scope": "NG-LA",
+    "years": 5,
+    "startYear": 2027,
+    "annualBudgetNaira": 6000000000,
+    "inflation": 15,
+    "budgetGrowth": 0,
+    "revenueGrowth": 0,
+    "delivery": 80,
+    "maintenance": 20,
+    "allocations": {
+      "education": 1000000000,
+      "health": 1000000000,
+      "transport": 1000000000,
+      "agriculture": 1000000000,
+      "energy": 1000000000,
+      "water": 1000000000
+    }
+  }
+}
+```
 
-- Auth: `fiscal:read`
-- Response: `{ "formulas": [{ "id": "statutory-v1", "isStatutory": true, "legalBasis": "Act Cap F26 LFN 2004", "weights": { "equality": 0.4, "population": 0.3 } }] }`.
+| Field             | Validation/meaning                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| scope             | all or a known Nigerian state/FCT ISO identifier                                     |
+| years             | Exactly 5 or 10                                                                      |
+| startYear         | Integer 2026–2040                                                                    |
+| annualBudgetNaira | Positive safe integer, at most ₦100tn                                                |
+| allocations       | Exactly the six sector keys, non-negative whole naira, sum exactly annualBudgetNaira |
+| inflation         | Finite percent 0–100                                                                 |
+| budgetGrowth      | Finite percent −20–25                                                                |
+| revenueGrowth     | Finite percent −20–25                                                                |
+| delivery          | Finite percent 0–100                                                                 |
+| maintenance       | Finite percent 0–50                                                                  |
 
-### 6. Jurisdictions: `GET /api/v1/jurisdictions`
+The model strips unknown top-level configuration fields. All rates are assumptions. The observed IGR baseline comes from SQLite, never from a client-supplied context.
 
-- Auth: `fiscal:read`
-- Response: `{ "jurisdictions": [{ "id": "AD-01", "name": "Kainji", "type": "State", "population": 620000 }] }`.
+POST /api/plans returns `{runId,result,sources}` and persists a run. Result contains:
 
-### 7. Jurisdiction Detail: `GET /api/v1/jurisdictions/:id`
+- version, validated config and context (scope, name, revenueYear, referenceRevenueNaira, sourceId, warning).
+- annual rows: year, nominalNaira, constantPriceNaira, maintenanceNaira, deliveryAdjustedCapitalNaira, constantPriceCapitalNaira, projectedIgrNaira, investmentToIgrPercent.
+- totals: nominalNaira, constantPriceNaira, deliveryAdjustedCapitalNaira.
+- flags, formulas, limitations and roadmap, each an array of strings.
 
-- Auth: `fiscal:read`
-- Response: `{ "id": "AD-01", "revenue": "4200.0", "spending": "5100.0", "deficit": "900.0" }`.
+POST /api/scenarios returns `{scenarios:[{id,label,change,result}]}`. It calculates the four documented cases without storing them as decision records.
 
-### 8. Sectors: `GET /api/v1/sectors`
+## Allocation preferences
 
-- Auth: `fiscal:read`
-- Response: `{ "sectors": [{ "id": "health", "name": "Healthcare", "baselineIndex": 72.4, "target": 90.0 }] }`.
+POST /api/allocations:
 
-### 9. AI Recommendation: `POST /api/v1/budgets/recommend`
+```json
+{ "annualBudgetNaira": 6000000000, "strategy": "balanced" }
+```
 
-- Auth: `budget:write`
-- Request: `{ "question": "string", "budget": 1000, "horizon": 5, "scope": "all", "strategy": "needs" }`.
-- Response: `{ "budgets": { "health": 220, "education": 220, "transport": 140, "food": 200, "energy": 110, "water": 110 }, "investigationStages": [{ "stage": 1, "status": "completed" }], "tradeoffs": ["string"], "risks": ["string"] }`.
+Strategies: balanced, social, infrastructure. Output: allocations, strategy, label, fractional weights and explanation. Total rounding uses largest remainders so the sum remains exact. See constants.mjs for declared weights. The response is a preference aid, not a learned policy recommendation.
 
-### 10. Budget Calculation: `POST /api/v1/budgets/calculate`
+## Save a decision
 
-- Auth: `budget:write`
-- Request: `{ "years": 5, "scope": "all", "growth": 2.0, "delivery": 80, "maintenance": 20, "budgets": { "health": 180 } }`.
-- Response: `{ "annualCost": 980, "cumulativeCost": 4900, "fiscal": { "years": [{ "deficit": "4200.0" }] } }`.
+POST /api/decisions:
 
-### 11. Scenario Simulation: `POST /api/v1/scenarios/simulate`
+```text
+{
+  title: nonempty string, at most 160 characters,
+  reason: nonempty string, at most 4000 characters,
+  config: the complete planning configuration
+}
+```
 
-- Auth: `fiscal:read`
-- Request: `{ "budget": 1000, "horizon": 5, "scope": "all" }`.
-- Response: `{ "baseline": { "id": "balanced", "annualCost": 1000 }, "alternatives": [{ "id": "needs", "annualCost": 1000 }] }`.
+The server validates and recomputes the configuration. Any supplied run result is ignored. A single transaction inserts a plan run, Draft decision and creation event. It returns the full decision:
 
-### 12. Scenario Comparison: `POST /api/v1/scenarios/compare`
+```text
+{
+  id, title, reason, status, revision, createdAt, updatedAt,
+  result: original model result,
+  sources: original source metadata array,
+  audit: [{action, details, createdAt}]
+}
+```
 
-- Auth: `fiscal:read`
-- Request: `{ "scenarioIds": ["balanced", "growth"], "shock": "revenueDrop" }`.
-- Response: `{ "comparison": [{ "scenarioId": "balanced", "adjustedAnnual": 850 }] }`.
+Run/source snapshots are immutable through this API. Review does not recalculate historical data.
 
-### 13. Decision List: `GET /api/v1/decisions`
+## Review a decision
 
-- Auth: `decision:read`
-- Query Params: `status` (optional), `limit` (int, default 20), `offset` (int, default 0).
-- Response: `{ "decisions": [{ "id": "DEC-001", "title": "Health Plan", "status": "Draft", "budgetAmount": 1000 }] }`.
+PATCH /api/decisions/:id:
 
-### 14. Save Decision: `POST /api/v1/decisions`
+```json
+{ "status": "Under review", "expectedRevision": 1 }
+```
 
-- Auth: `budget:write`
-- Request: `{ "title": "string", "budgetAmount": 1000, "horizonYears": 5, "allocations": {}, "status": "Draft" }`.
-- Response: `{ "id": "DEC-002", "created": "2026-10-23T21:00:00Z", "status": "Draft" }`.
+Allowed statuses: Draft, Under review, Reviewed, Rejected. The API permits any allowed status transition; it is a record of a local review, not a statutory workflow. A transaction updates status, increments revision and appends an audit event.
 
-### 15. Decision Detail: `GET /api/v1/decisions/:id`
+A stale revision returns HTTP 409. Reload the record and let the operator inspect it before retrying. There are no delete or bulk overwrite endpoints.
 
-- Auth: `decision:read`
-- Response: `{ "id": "DEC-001", "title": "Health Plan", "allocations": {}, "assumptions": [], "risks": [] }`.
+Other errors: 400 validation, 403 origin, 404 unknown record, 413 body too large, 415 content type, 500 unexpected internal failure.
 
-### 16. Update Decision: `PATCH /api/v1/decisions/:id`
+## SQLite schema
 
-- Auth: `decision:review`
-- Request: `{ "status": "Reviewed", "notes": "Approved by analyst panel" }`.
-- Response: `{ "id": "DEC-001", "status": "Reviewed", "updated": "2026-10-23T21:30:00Z" }`.
+The complete executable DDL is `lib/nigeria/schema.sql`.
 
-### 17. Decision Revisions: `GET /api/v1/decisions/:id/revisions`
+| Table           | Key             | Content/relationships                                             |
+| --------------- | --------------- | ----------------------------------------------------------------- |
+| sources         | id              | JSON publisher metadata, checksum, period, terms                  |
+| jurisdictions   | id              | Unique name, state/territory type, GeoJSON; source FK             |
+| indicators      | code + year     | Value nullable, name, source FK                                   |
+| state_revenue   | state_id + year | Integer kobo totals, components JSON, source name/FK              |
+| federal_budgets | year            | Integer approved naira, original metadata JSON, source FK         |
+| plan_runs       | UUID id         | Validated configuration, computed result and source snapshot JSON |
+| decisions       | UUID id         | Title, reason, run FK, status, revision, UTC timestamps           |
+| audit_events    | integer id      | Decision FK, action, details JSON, UTC timestamp                  |
 
-- Auth: `decision:read`
-- Response: `{ "revisions": [{ "revisionNumber": 1, "timestamp": "ISO", "changedBy": "Analyst-4", "diff": {} }] }`.
+Foreign keys and JSON validity checks are enabled. Revenue year/total and audit decision/id indexes support page queries. All user inputs are parameterized SQL values; they are not concatenated into SQL statements.
 
-## Mock vs Live Execution
+The import is one transaction. Observations upsert on stable keys; decisions, runs and audit events are never wiped during refresh. Source metadata updates for current observations do not mutate previously saved JSON snapshots.
 
-When `NEXT_PUBLIC_USE_MOCK_API=true`, all calls route through `lib/api/fiscal-adapter.mjs`. Live requests failing return structured error notifications without silent mock fallback.
+## Import data interface
+
+`NATIONOS_SOURCE_DIR` supplies five normalized files:
+
+| File                | Format          | Required fields                                                                                                |
+| ------------------- | --------------- | -------------------------------------------------------------------------------------------------------------- |
+| sources.json        | Array           | id and publisher metadata                                                                                      |
+| states.ndjson       | One object/line | id, name, type, geometry, sourceId                                                                             |
+| revenue.ndjson      | One object/line | stateId, year, totalKobo, taxKobo, otherKobo, otherLabel, components, reconciliationKobo, sourceName, sourceId |
+| indicators.ndjson   | One object/line | code, name, year, value, sourceId                                                                              |
+| federal-budget.json | Object          | year, approvedNaira, sourceId, scope/classification/note                                                       |
+
+The current importer expects exactly 37 states, 259 revenue rows and four sources. Changing coverage requires an intentional importer/test update. Amounts must fit JavaScript safe integers; don't use floating-point decimal parsing for source money.
+
+Running db:init again refreshes observations without deleting decisions. Removing a normalized row does not delete an already-imported observation: implement an explicit, reviewed dataset-version replacement if changing coverage.
+
+## Extending/replacing the backend
+
+Keep frontend request/response names and units stable, or update components and tests together. The browser adapter is `lib/nigeria/client.mjs`; server pages also call repository functions directly, so replacing fetch URLs alone will not move every read to a remote service.
+
+Recommended boundaries:
+
+1. Keep pure arithmetic and validation in planning.mjs.
+2. Replace repository/database implementations while preserving DTOs.
+3. Move decision transactions and optimistic revision checking atomically.
+4. Preserve source and model snapshots when migrating records.
+5. Add explicit migrations and restore testing before changing deployed schemas.
+
+## Controls needed before shared deployment
+
+Local origin checks are not authentication. Before exposing the app, implement identity, authorization by institution/role, authenticated reviewers, CSRF/session controls, transport security, rate limits, backup/restore procedures and monitored migrations.
+
+A writable local SQLite file is not suitable for ephemeral serverless instances, shared-network filesystems or multi-replica writes. Do not deploy this unchanged to a filesystem that disappears after each request. Use a durable single host/volume or migrate the backend database.
+
+The audit table records application events, but local file access can alter it. It is not tamper-proof. No real citizen data should be added without a separate privacy/access design.

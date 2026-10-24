@@ -1,31 +1,19 @@
-# Contributing to NationOS
+# Contributing
 
-Work directly from `frontend/`. All commands and relative paths below assume this directory.
+Use branch ITAI for changes in this workspace. Do not push unless requested.
 
-## Core Rules
+1. Work inside frontend/ and use the installed Next/React/Tailwind versions.
+2. Read AGENTS.md and the local installed Next documentation before changing framework conventions.
+3. Keep maintained source/docs at most 300 lines per file, with readable formatting.
+4. Explain data units and non-obvious logic in comments.
+5. Keep database access out of client components.
+6. Validate API inputs before calling models or SQLite.
+7. Preserve missing observations, reporting periods, provenance and existing decision snapshots.
+8. Run check, lint, format:check and build.
+9. Run check:http with the app running when changing routes.
 
-1. Module Size: Every maintained file must have at most 300 physical lines, enforced by `npm run check:lines`.
-2. Architecture Focus: The frontend maintains exactly five primary navigation pages: Overview (`/`), Revenue (`/revenue`), Budget Planner (`/budget`), Scenario Lab (`/scenarios`), and Decision Records (`/decisions`).
-3. Mathematical Determinism: Never approximate numerical totals with generative LLM text. Financial sums must compute deterministically via domain calculation engines.
-4. Editorial Standards: Do not use em dashes in user-facing copy or documentation. Use hyphens, colons, or parentheses.
+Do not add fictional observations to fill source gaps. Additional public datasets need a publisher URL, terms, reporting period, reproducible parser and validation. New predictions need an explainable model and calibration evidence.
 
-## Verification Suite
+Source snapshots and model versions are part of persisted records. Do not change what an already-saved result means by recalculating it on read. Use a new run and decision when assumptions change.
 
-Before submitting any code changes, execute the verification suite:
-
-```bash
-npm run format:check   # Checks Prettier formatting
-npm run check:lines    # Verifies all files stay within 300 physical lines
-npm run lint           # Verifies ESLint compliance
-npm run check          # Runs full domain invariant test suite
-npm run test:ui        # Runs JSDOM component test suite
-npm run build          # Compiles production Next.js build
-npm run check:http     # Verifies live HTTP route status (requires running server)
-```
-
-## Adding or Modifying Features
-
-1. Compose UI features using modular components in `components/<feature>/`.
-2. Centralize external communication in `lib/api/client.mjs` with mock fallbacks in `lib/api/fiscal-adapter.mjs`.
-3. Keep pure numerical functions in `lib/domain/`.
-4. Ensure all newly added routes are documented in `README.md` and registered in `tests/http.mjs`.
+Local .recovery/ files exist only to recover the pre-rebuild source. They must never be imported, served or committed.

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "nbs-igr-2019-2025",
+    "title": "NBS: Internally Generated Revenue, 2019–2025",
+    "publisher": "National Bureau of Statistics, Nigeria",
+    "url": "https://microdata.nigerianstat.gov.ng/index.php/catalog/170/related-materials",
+    "downloadUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/170/download/1436",
+    "period": "2019–2025",
+    "file": "nbs-igr-2025.zip",
+    "rights": "NBS source material; factual values reproduced with attribution. See publisher terms.",
+    "note": "Audited/reconciled state submissions. IGR excludes federal transfers. Missing cells are not zero.",
+    "retrievedAt": "2026-10-24T00:06:53.986006+00:00",
+    "sha256": "e3710744bb153a194dec2ea55dcae59bc3742d9139187f371b44b37599777610"
+  },
+  {
+    "id": "worldbank-wdi-ng",
+    "title": "World Development Indicators: Nigeria",
+    "publisher": "World Bank",
+    "url": "https://data.worldbank.org/country/nigeria",
+    "downloadUrl": "https://api.worldbank.org/v2/country/NGA/indicator",
+    "period": "2015–2025",
+    "file": "worldbank.json",
+    "rights": "World Bank open data; see dataset terms and original indicator providers.",
+    "note": "API last updated 2026-10-08. Each indicator retains its own year; some values are modelled estimates.",
+    "retrievedAt": "2026-10-24T00:06:53.986006+00:00",
+    "sha256": "8fbff0ad14727f830276ce03d74726fa6a715474a11e5ae36172ddc2f53d0034"
+  },
+  {
+    "id": "geoboundaries-ng-2022",
+    "title": "geoBoundaries gbOpen: Nigeria ADM1",
+    "publisher": "geoBoundaries / GRID3",
+    "url": "https://www.geoboundaries.org/api/current/gbOpen/NGA/ADM1/",
+    "period": "Boundaries represented: 2022",
+    "file": "states.geojson",
+    "rights": "CC BY 4.0; attribute geoBoundaries and GRID3.",
+    "note": "37 state/FCT boundaries. Geometry has been simplified for display; not a legal boundary survey.",
+    "retrievedAt": "2026-10-24T00:06:53.986006+00:00",
+    "sha256": "edd28050c7f1ae40471424605f74e4d2df83502e4f301089761ae18f8ae2fbbf"
+  },
+  {
+    "id": "fgn-budget-2025",
+    "title": "Official remarks at the signing of the 2025 federal budget",
+    "publisher": "State House, Federal Republic of Nigeria",
+    "url": "https://statehouse.gov.ng/remarks-by-president-tinubu-at-the-signing-of-the-2025-budget/",
+    "period": "2025 approved budget",
+    "file": "federal-budget-source.html",
+    "rights": "Official public statement; headline factual amount transcribed with attribution.",
+    "note": "₦54.99 trillion approved federal budget. Not state IGR or actual expenditure.",
+    "retrievedAt": "2026-10-24T00:06:53.986006+00:00",
+    "sha256": "769442838e9e4517b021c6f009c84680c48e13e16ddaa52b2ea9db059745f382"
+  }
+]
