@@ -4,7 +4,7 @@ import { Heading, Card, Button, Notice, Download, Field } from "./ui";
 import { PlanResult } from "./plan-result";
 import { STATUSES } from "../../lib/nigeria/constants.mjs";
 import { request } from "../../lib/nigeria/client.mjs";
-export function DecisionRecords({ initial }) {
+export function DecisionRecords({ initial, canReview = false }) {
   const [list, setList] = useState(initial),
     [record, setRecord] = useState(null),
     [status, setStatus] = useState("Draft"),
@@ -41,8 +41,9 @@ export function DecisionRecords({ initial }) {
       <Card title={`${list.total} saved decision records`}>
         {!list.total ? (
           <p className="text-sm text-stone-500">
-            No records yet. Calculate a plan in Project Intelligence, then save it with your
-            reasoning.
+            {canReview
+              ? "No records yet. Calculate a plan in Project Intelligence, then save it with your reasoning."
+              : "No decision has been saved yet. When an official saves one, it appears here with the reason and the source."}
           </p>
         ) : (
           <>
@@ -91,36 +92,42 @@ export function DecisionRecords({ initial }) {
               Record {record.id} · revision {record.revision} · saved {record.createdAt}
             </p>
             <div className="flex flex-wrap items-end gap-4">
-              <Field label="Review status">
-                <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                  {STATUSES.map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </Field>
-              <Button
-                disabled={busy || status === record.status}
-                onClick={() =>
-                  act(async () => {
-                    const r = await request(
-                      `decisions/${record.id}`,
-                      { status, expectedRevision: record.revision },
-                      "PATCH",
-                    );
-                    setRecord(r);
-                    await page(list.offset);
-                  })
-                }
-              >
-                Record review
-              </Button>
+              {canReview && (
+                <>
+                  <Field label="Review status">
+                    <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                      {STATUSES.map((s) => (
+                        <option key={s}>{s}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Button
+                    disabled={busy || status === record.status}
+                    onClick={() =>
+                      act(async () => {
+                        const r = await request(
+                          `decisions/${record.id}`,
+                          { status, expectedRevision: record.revision },
+                          "PATCH",
+                        );
+                        setRecord(r);
+                        await page(list.offset);
+                      })
+                    }
+                  >
+                    Record review
+                  </Button>
+                </>
+              )}
               <Button secondary disabled={busy} onClick={() => inspect(record.id)}>
                 Reload record
               </Button>
               <Download value={record} />
             </div>
             <p className="mt-4 text-xs text-stone-500">
-              Local operator review only. “Reviewed” does not signify formal government approval.
+              {canReview
+                ? "Local operator review only. “Reviewed” does not signify formal government approval."
+                : "You can read this record. Only a government account can change its status."}
             </p>
           </Card>
           <PlanResult result={record.result} />

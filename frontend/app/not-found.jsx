@@ -5,7 +5,7 @@ export default function NotFound() {
       <h1 className="font-serif text-4xl">Page not found</h1>
       <p className="my-5 text-sm">This workspace section does not exist.</p>
       <Link href="/" className="underline">
-        Return to the country overview
+        Return to NationOS
       </Link>
     </section>
   );

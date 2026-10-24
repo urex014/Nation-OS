@@ -17,7 +17,13 @@ Suggested questions provide reliable starting points. Unsupported questions retu
 
 ## How responses work
 
-This implementation is **local and rule-based**, not a connected language model. It needs neither a key nor Ollama. Topic aliases and state names select repository queries; JavaScript formats the returned observations and computes explicit comparisons. No user-generated SQL is run.
+With no AI credentials, the answer is **local and rule-based**. Topic aliases and state names select repository queries. JavaScript formats the observations. No user-generated SQL is run.
+
+When `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN` is set, the same `{ "message" }` route calls Grok through the Vercel AI Gateway. The default model is `spacexai/grok-4.20-non-reasoning` (fast, tool-calling). `AI_MODEL` overrides that gateway id. The live catalog has no `xai/grok-4-fast`. On Vercel the platform sets `VERCEL_OIDC_TOKEN`, so production does not need a pasted key. Locally, use the gateway key or `vercel env pull`. `XAI_API_KEY` with `@ai-sdk/xai` is used only when the gateway is not configured. The direct model id defaults to `grok-4.20-non-reasoning`.
+
+The model must call a tool. Tools read national indicators, one state's revenue, a two-state comparison, and the federal headline. A government session may also run the tax or plan projection. A citizen session, or no session, does not receive that tool. The role comes from the session cookie, not the body. After the reply, any number that is not in the tool results is removed. The badge reads `AI · figures checked`, `AI · unsupported figure removed`, or `Rule-based`. If the model call fails, the rule-based answer is returned and the log line does not include the question or the key.
+
+`{ "query" }` still returns `{ "answer" }` from the ledger and never calls the model. `stream: true` on a `{ "message" }` request returns the already-checked text as `text/plain`, with `X-NationOS-Mode`. Message chat is limited to 30 requests per 15 minutes in this process.
 
 Files:
 
@@ -25,11 +31,12 @@ Files:
 | ---------------------------------------- | ------------------------------------------------------------------------- |
 | components/nigeria/intelligence-chat.jsx | Transcript, composer, suggested questions, sources and expandable planner |
 | lib/nigeria/chat-topics.mjs              | Supported topic aliases and example prompts                               |
-| lib/nigeria/chat.mjs                     | Validation, retrieval, context resolution and response assembly           |
-| app/api/chat/route.js                    | Shared HTTP boundary and local response handler                           |
-| tests/chat.mjs                           | Retrieval accuracy, context, missing data and API checks                  |
+| lib/nigeria/chat.mjs                     | Rule-based retrieval, context, and response assembly                      |
+| lib/ai/                                  | Gateway model, tools, number check, and fallback                          |
+| app/api/chat/route.js                    | `{ "message" }` and `{ "query" }` boundary                                |
+| tests/chat.mjs, tests/ai.mjs             | Retrieval, mocked tool calls, and the number check                        |
 
-The chat cannot reason arbitrarily about every phrasing. Adding an LLM later requires a separate server-side provider adapter and grounding/validation of any claimed numbers. The current UI deliberately identifies its actual mode.
+The rule-based chat cannot cover every phrasing. The AI path covers more wording, but it still may only repeat numbers the tools returned. The screen badge names which path answered.
 
 ## API contract
 
@@ -50,14 +57,16 @@ Responses:
 
 ```text
 {
-  mode: "local-data",
+  mode: "local-data" | "ai" | "ai-checked",
   paragraphs: string[],
-  context: {scope, year, topic},
+  context: {scope, year, topic} | null,
   sources: sourceMetadata[],
   table?: {columns: string[], rows: string[][]},
   result?: validatedPlanResult
 }
 ```
+
+`local-data` is the rule-based engine. `ai` means every number in the reply was in a tool result. `ai-checked` means at least one unsupported number was removed.
 
 Errors use `{error: string}`, HTTP 400 for invalid questions/context/configuration, plus shared HTTP origin/size/content-type errors. Messages must contain 1–2,000 characters.
 

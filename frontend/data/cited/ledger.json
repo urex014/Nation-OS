@@ -1,0 +1,245 @@
+{
+  "fiscalYear": 2026,
+  "gdpGrowthRate": 0.0407,
+  "citations": {
+    "faacJanSep2026": {
+      "publisher": "Agora Policy",
+      "title": "Gross FAAC Allocation to States (January to September 2026)",
+      "date": "2026-10-21",
+      "url": "https://x.com/AgoraPolicy/status/2112965242862927974",
+      "note": "Compiled from FAAC. Headline ₦8.43tn to the 36 states, up 25% from ₦6.76tn in January–September 2025. Statutory ₦4.92tn and VAT ₦3.51tn are the headline split of that ₦8.43tn. Listed state amounts are rounded to 2 decimals; the ledger stores their sum, not a forced 8.43. FCT is not in the table."
+    },
+    "budgetThirdReading": {
+      "publisher": "BusinessDay",
+      "title": "National Assembly passes N68.3tn 2026 budget for third reading",
+      "date": "2026-03-31",
+      "url": "https://businessday.ng/news/article/national-assembly-passes-n68-3tn-2026-budget-for-third-reading/",
+      "note": "Headline ₦68.3tn. Components: statutory transfers ₦4.79tn, recurrent non-debt ₦15.4tn, capital ₦32.2tn, debt service ₦15.8tn. Those four add to ₦68.19tn. They are stored as published and are not forced to 68.3. Oil benchmark in this article is $75."
+    },
+    "budgetSigning": {
+      "publisher": "BusinessDay",
+      "title": "Tinubu Signs ₦68.32tn 2026 Budget",
+      "date": "2026-04-17",
+      "url": "https://businessday.ng/politics/article/tinubu-signs-%e2%82%a668-32tn-2026-budget/",
+      "note": "Signed total ₦68.32tn. No component split in the article. Not used as the stored expenditure total."
+    },
+    "mtef": {
+      "publisher": "BusinessDay",
+      "title": "2026 budget: FG targets 2.06m bpd, $64 crude oil, N1,512/$1 exchange rate",
+      "date": "2025-12-03",
+      "url": "https://businessday.ng/news/article/2026-budget-fg-targets-2-06m-bpd-64-crude-oil-n1512-1-exchange-rate/",
+      "note": "FEC/MTEF revenue target ₦34.33tn and exchange-rate assumption ₦1,512/$. These are planning assumptions, not collections and not a market rate."
+    },
+    "inflation": {
+      "publisher": "National Bureau of Statistics",
+      "title": "February 2026 CPI / headline inflation 15.06%",
+      "date": "2026-03-16",
+      "url": "https://x.com/NBS_Nigeria/status/2033535372580258032",
+      "also": "https://punchng.com/?p=2091219",
+      "note": "Headline inflation 15.06% in February 2026, from 15.10% in January. CPI 130.0 from 127.4. Month-on-month 2.01%."
+    },
+    "gdp": {
+      "publisher": "National Bureau of Statistics",
+      "title": "Q4 2025 GDP grew 4.07% year-on-year in real terms",
+      "date": "2026-02-27",
+      "url": "https://x.com/NBS_Nigeria/status/2027400896384999717",
+      "also": "https://www.vanguardngr.com/2026/02/nigerias-gdp-grows-4-07-in-q4-2025-as-services-oil-lift-economy-nbs/",
+      "note": "Real GDP 4.07% year-on-year in Q4 2025 (Q4 2024 was 3.76%). Full-year 2025 3.87%. The stored growth rate is 4.07%, not a forecast."
+    },
+    "debt": {
+      "publisher": "Debt Management Office, via Vanguard",
+      "title": "Nigeria’s public debt up 10% to N159trn in 2025—DMO",
+      "date": "2026-04-16",
+      "url": "https://www.vanguardngr.com/2026/04/nigerias-public-debt-up-10-to-n159trn-in-2025-dmo/",
+      "note": "Total public debt ₦159.27tn at end of Q4 2025 (31 Dec 2025). Q3 2025 was ₦153.29tn. Other reports of the same stock round it to ₦159.28tn. The ledger stores 159.27 as this article printed it."
+    },
+    "verticalFormula": {
+      "publisher": "National Bureau of Statistics FAAC disbursement notes",
+      "title": "Federation Account Allocation Committee vertical formula",
+      "date": "2018-07",
+      "url": "https://www.nigerianstat.gov.ng/pdfuploads/Federation_Account_Allocation_Committee_(FAAC)_JULY_2018_Disbursement.pdf",
+      "also": "https://nigerianstat.gov.ng/download/1227",
+      "note": "Federal 52.68%, states 26.72%, local governments 20.60%. Applying those weights to the 36-state gross produces a derived pool. That derived pool is not a published FAAC total."
+    }
+  },
+  "snapshot": {
+    "approvedTrillion": 68.3,
+    "statutoryTrillion": 4.79,
+    "recurrentTrillion": 15.4,
+    "debtServiceTrillion": 15.8,
+    "capitalTrillion": 32.2,
+    "revenueTargetTrillion": 34.33,
+    "approvedCitation": "budgetThirdReading",
+    "revenueTargetCitation": "mtef"
+  },
+  "indicators": [
+    {
+      "title": "Inflation",
+      "value": "15.06%",
+      "period": "Feb 2026",
+      "source": "NBS, 16 Mar 2026",
+      "citation": "inflation"
+    },
+    {
+      "title": "GDP growth",
+      "value": "4.07%",
+      "period": "Q4 2025",
+      "source": "NBS, 27 Feb 2026",
+      "citation": "gdp"
+    },
+    {
+      "title": "Exchange rate",
+      "value": "₦1,512/$",
+      "period": "MTEF assumption",
+      "source": "FEC/MTEF, 3 Dec 2025",
+      "citation": "mtef"
+    },
+    {
+      "title": "Public debt",
+      "value": "₦159.27tn",
+      "period": "31 Dec 2025",
+      "source": "DMO via Vanguard, 16 Apr 2026",
+      "citation": "debt"
+    }
+  ],
+  "receiptsToStates": [
+    {
+      "id": "statutory",
+      "name": "Statutory allocation to states",
+      "trillion": 4.92,
+      "citation": "faacJanSep2026"
+    },
+    {
+      "id": "vat",
+      "name": "VAT allocation to states",
+      "trillion": 3.51,
+      "citation": "faacJanSep2026"
+    }
+  ],
+  "faac": {
+    "period": "January–September 2026",
+    "headlineTrillion": 8.43,
+    "unit": "billion naira",
+    "citation": "faacJanSep2026",
+    "states": [
+      { "id": "NG-LA", "name": "Lagos", "billion": 708.38 },
+      { "id": "NG-DE", "name": "Delta", "billion": 649.53 },
+      { "id": "NG-RI", "name": "Rivers", "billion": 576.46 },
+      { "id": "NG-AK", "name": "Akwa Ibom", "billion": 515.32 },
+      { "id": "NG-BY", "name": "Bayelsa", "billion": 501.36 },
+      { "id": "NG-KN", "name": "Kano", "billion": 259.78 },
+      { "id": "NG-OY", "name": "Oyo", "billion": 248.49 },
+      { "id": "NG-IM", "name": "Imo", "billion": 205.35 },
+      { "id": "NG-KD", "name": "Kaduna", "billion": 203.6 },
+      { "id": "NG-ON", "name": "Ondo", "billion": 199.21 },
+      { "id": "NG-KT", "name": "Katsina", "billion": 198.87 },
+      { "id": "NG-ED", "name": "Edo", "billion": 198.0 },
+      { "id": "NG-BO", "name": "Borno", "billion": 192.8 },
+      { "id": "NG-BA", "name": "Bauchi", "billion": 185.07 },
+      { "id": "NG-JI", "name": "Jigawa", "billion": 183.94 },
+      { "id": "NG-NI", "name": "Niger", "billion": 182.57 },
+      { "id": "NG-AN", "name": "Anambra", "billion": 182.57 },
+      { "id": "NG-BE", "name": "Benue", "billion": 177.68 },
+      { "id": "NG-AB", "name": "Abia", "billion": 176.04 },
+      { "id": "NG-SO", "name": "Sokoto", "billion": 174.38 },
+      { "id": "NG-KO", "name": "Kogi", "billion": 171.62 },
+      { "id": "NG-PL", "name": "Plateau", "billion": 166.39 },
+      { "id": "NG-AD", "name": "Adamawa", "billion": 165.75 },
+      { "id": "NG-KE", "name": "Kebbi", "billion": 165.62 },
+      { "id": "NG-ZA", "name": "Zamfara", "billion": 162.52 },
+      { "id": "NG-EN", "name": "Enugu", "billion": 159.98 },
+      { "id": "NG-OG", "name": "Ogun", "billion": 159.16 },
+      { "id": "NG-YO", "name": "Yobe", "billion": 157.49 },
+      { "id": "NG-CR", "name": "Cross River", "billion": 156.49 },
+      { "id": "NG-GO", "name": "Gombe", "billion": 154.75 },
+      { "id": "NG-TA", "name": "Taraba", "billion": 152.86 },
+      { "id": "NG-OS", "name": "Osun", "billion": 151.77 },
+      { "id": "NG-KW", "name": "Kwara", "billion": 151.08 },
+      { "id": "NG-EK", "name": "Ekiti", "billion": 147.59 },
+      { "id": "NG-NA", "name": "Nasarawa", "billion": 146.36 },
+      { "id": "NG-EB", "name": "Ebonyi", "billion": 145.41 }
+    ]
+  },
+  "projects": [
+    {
+      "id": "NGA-UNF-2025",
+      "jurisdictionId": null,
+      "name": "Outstanding unfunded 2025 capital",
+      "agency": "2026 Appropriation (third reading)",
+      "billion": 5710,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    },
+    {
+      "id": "NGA-PRI-2026",
+      "jurisdictionId": null,
+      "name": "Extra priority capital omitted from the rollover",
+      "agency": "2026 Appropriation (third reading)",
+      "billion": 2000,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    },
+    {
+      "id": "NGA-MOFI-RAIL",
+      "jurisdictionId": null,
+      "name": "MOFI equity, Presidential Legacy light rail (Lagos, Kano, Kaduna, Ogun) and studies",
+      "agency": "Ministry of Finance Incorporated",
+      "billion": 478.6,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    },
+    {
+      "id": "NGA-HLT-ADD",
+      "jurisdictionId": null,
+      "name": "Additional priority health interventions (about US$344.83m)",
+      "agency": "Health (third reading)",
+      "billion": 482.76,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    },
+    {
+      "id": "NGA-JSC-CEIL",
+      "jurisdictionId": null,
+      "name": "Reinstatement of the Judiciary budget ceiling",
+      "agency": "Judiciary",
+      "billion": 268.54,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    },
+    {
+      "id": "NGA-COA-2026",
+      "jurisdictionId": null,
+      "name": "Court of Appeal",
+      "agency": "Judiciary",
+      "billion": 98.5,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    },
+    {
+      "id": "NGA-SC-2026",
+      "jurisdictionId": null,
+      "name": "Supreme Court",
+      "agency": "Judiciary",
+      "billion": 36.7,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    },
+    {
+      "id": "NGA-FEAS-BELT",
+      "jurisdictionId": null,
+      "name": "Feasibility, Calabar–Maiduguri corridor and Maiduguri–Sokoto superhighway",
+      "agency": "Tinubu National Beltway Initiative",
+      "billion": 8.96,
+      "expected": "2026 appropriation",
+      "status": "Appropriated",
+      "citation": "budgetThirdReading"
+    }
+  ]
+}

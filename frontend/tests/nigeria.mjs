@@ -11,6 +11,7 @@ const repo = await import("../lib/nigeria/repository.mjs");
 const plans = await import("../lib/nigeria/planning.mjs");
 const decisions = await import("../lib/nigeria/decisions.mjs");
 const { compareScenarios } = await import("../lib/nigeria/scenarios.mjs");
+const { illustrateSplit, illustrateTax } = await import("../lib/nigeria/illustrate.mjs");
 const { importNigeriaData } = await import("../lib/nigeria/import-data.mjs");
 const config = {
   scope: "NG-LA",
@@ -96,6 +97,28 @@ test("decision snapshots are server-computed, persistent and revision-protected"
   getDatabase().close();
   globalThis[Symbol.for("nationos.sqlite")].clear();
   assert.equal(decisions.getDecision(d.id).revision, 2);
+});
+test("tax and sector illustrations start from published Lagos kobo", () => {
+  const row = getDatabase()
+    .prepare(
+      "select tax_kobo, other_kobo, total_kobo from state_revenue where state_id = 'NG-LA' and year = 2025",
+    )
+    .get();
+  const same = illustrateTax(row.tax_kobo, row.other_kobo, 0);
+  assert.equal(same.taxKobo, row.tax_kobo);
+  assert.equal(same.otherKobo, row.other_kobo);
+  assert.equal(same.totalKobo, row.total_kobo);
+  const up = illustrateTax(row.tax_kobo, row.other_kobo, 10);
+  assert.equal(up.otherKobo, row.other_kobo);
+  assert.ok(up.taxKobo > row.tax_kobo);
+  assert.equal(up.totalKobo, up.taxKobo + up.otherKobo);
+  const envelope = Math.round(row.total_kobo / 100);
+  const split = illustrateSplit(envelope, "balanced");
+  assert.equal(
+    Object.values(split.allocations).reduce((sum, value) => sum + value, 0),
+    envelope,
+  );
+  assert.match(split.projection, /Projection/);
 });
 test("HTTP boundary validates size, origin, JSON and model input", async () => {
   const { POST } = await import("../app/api/plans/route.js");

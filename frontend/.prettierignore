@@ -4,5 +4,6 @@ node_modules/
 .recovery/
 data/nigeria/raw/
 data/nigeria/normalized/
+data/cited/map-paths.json
 package-lock.json
 next-env.d.ts

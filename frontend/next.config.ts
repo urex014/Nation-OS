@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   outputFileTracingIncludes: {
     "/*": ["./lib/nigeria/schema.sql", "./data/nigeria/normalized/**/*"],
+    "/**": ["./lib/nigeria/schema.sql", "./data/nigeria/normalized/**/*"],
+    "/api/**": ["./lib/nigeria/schema.sql", "./data/nigeria/normalized/**/*"],
   },
 };
 

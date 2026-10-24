@@ -5,6 +5,7 @@ import { Heading, Card, Button, Notice, Source, Download } from "./ui";
 import { PlanResult } from "./plan-result";
 import { Planner } from "./planner";
 import { request } from "../../lib/nigeria/client.mjs";
+import { engineLabel } from "../../lib/ai/labels.mjs";
 import { prompts } from "../../lib/nigeria/chat-topics.mjs";
 
 const welcome = {
@@ -66,7 +67,7 @@ export function IntelligenceChat({ jurisdictions }) {
             <div>
               <h2 className="font-semibold">Data conversation</h2>
               <p className="mt-1 text-xs text-stone-500">
-                Local data assistant · SQLite-backed · no language model
+                Rule-based until an AI key is set. AI figures are checked against the database.
               </p>
             </div>
             <Button
@@ -100,6 +101,7 @@ export function IntelligenceChat({ jurisdictions }) {
               >
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
                   {message.role === "user" ? "You" : "NationOS · evidence assistant"}
+                  {message.mode ? ` · ${engineLabel(message.mode)}` : ""}
                 </p>
                 {message.paragraphs.map((paragraph, i) => (
                   <p key={i} className="whitespace-pre-wrap text-sm leading-7 text-stone-700">

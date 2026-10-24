@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { writableDatabasePath } from "../runtime/sqlite-file.mjs";
 import { importNigeriaData } from "./import-data.mjs";
 
 export const sourceDirectory = () =>
@@ -10,7 +11,7 @@ export const databasePath = () =>
 const instances = (globalThis[Symbol.for("nationos.sqlite")] ||= new Map());
 
 export function getDatabase() {
-  const filename = databasePath();
+  const filename = writableDatabasePath(databasePath());
   if (instances.has(filename)) return instances.get(filename);
   mkdirSync(path.dirname(filename), { recursive: true });
   const db = new DatabaseSync(filename);

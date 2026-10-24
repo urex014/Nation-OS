@@ -7,6 +7,9 @@ import React, { act } from "react";
 import { JSDOM } from "jsdom";
 // tsx uses the classic JSX transform for .jsx; Next supplies its own production transform.
 globalThis.React = React;
+delete process.env.AI_GATEWAY_API_KEY;
+delete process.env.VERCEL_OIDC_TOKEN;
+delete process.env.XAI_API_KEY;
 const temporary = mkdtempSync(path.join(tmpdir(), "nationos-ui-"));
 process.env.NATIONOS_DB_PATH = path.join(temporary, "test.sqlite");
 const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>", {
