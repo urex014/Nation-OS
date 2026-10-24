@@ -4,7 +4,7 @@ import { Heading, Card, Stat, Source, Notice } from "./ui";
 import { Trend } from "./trend";
 import { naira, indicatorValue, number } from "../../lib/nigeria/format.mjs";
 const colours = ["#dcece3", "#abcab8", "#77a58c", "#3b7959", "#145337"];
-export function Overview({ data }) {
+export function Overview({ data, decisionsData }) {
   const [selected, setSelected] = useState("NG-LA");
   const state = data.revenue.states.find((s) => s.id === selected);
   const population = data.indicators.find((i) => i.code === "SP.POP.TOTL");
@@ -130,6 +130,77 @@ export function Overview({ data }) {
           </Card>
         ))}
       </div>
+      {decisionsData && (
+        <div className="mt-12 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-stone-200 pb-3">
+            <div>
+              <span className="text-2xs font-bold uppercase tracking-wider text-emerald-800">
+                Government Transparency
+              </span>
+              <h2 className="text-xl font-semibold text-stone-900">
+                Lagos State Capital Project Intelligence & Decisions
+              </h2>
+            </div>
+            <a
+              href="/decisions"
+              className="inline-flex items-center text-xs font-semibold text-emerald-800 hover:text-emerald-950 underline"
+            >
+              Open Full Project Explorer & Decisions System →
+            </a>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat
+              label="Indexed Projects"
+              value={decisionsData.overview.totalProjects?.toLocaleString() || "0"}
+              note="Lagos PMR & Tracka records"
+            />
+            <Stat
+              label="Ongoing Works"
+              value={decisionsData.overview.ongoingProjects?.toLocaleString() || "0"}
+              note="Active capital commitments"
+            />
+            <Stat
+              label="Completed Projects"
+              value={decisionsData.overview.completedProjects?.toLocaleString() || "0"}
+              note="100% physically verified"
+            />
+            <Stat
+              label="Verified Capital Sums"
+              value={decisionsData.overview.verifiedAllocationsCompact || "₦0"}
+              note="Traceable contract allocations"
+            />
+          </div>
+
+          {decisionsData.recentAnalyses?.length > 0 && (
+            <Card title="Recent Government Budget Decisions & Evidence Citations">
+              <p className="text-xs text-stone-500 mb-4">
+                Public decision records evaluating Lagos State infrastructure funding priorities with verified source citations.
+              </p>
+              <div className="divide-y divide-stone-100">
+                {decisionsData.recentAnalyses.map((d) => (
+                  <div key={d.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="min-w-0">
+                      <strong className="block text-sm font-semibold text-stone-900 truncate">
+                        {d.title}
+                      </strong>
+                      <span className="text-2xs text-stone-500">
+                        {new Date(d.createdAt).toLocaleDateString()} · Proposed: {d.proposedBudgetFormatted} · {d.projectsCount} projects prioritized
+                      </span>
+                    </div>
+                    <a
+                      href="/decisions"
+                      className="text-xs font-medium text-emerald-700 hover:underline shrink-0"
+                    >
+                      Inspect Evidence Citations →
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
     </>
   );
 }

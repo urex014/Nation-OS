@@ -23,7 +23,9 @@ export function prepareLedger(): void {
   const filename = ledgerPath();
   fs.mkdirSync(path.dirname(filename), { recursive: true });
   const db = new DatabaseSync(filename);
-  db.exec("PRAGMA journal_mode = DELETE");
+  try {
+    db.exec("PRAGMA journal_mode = DELETE");
+  } catch {}
   db.exec("PRAGMA foreign_keys = ON");
   applySchema(db);
   seed(db);

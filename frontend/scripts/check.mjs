@@ -10,6 +10,7 @@ for (const args of [
     "tests/accounts.mjs",
     "tests/runtime-pg.mjs",
     "tests/main-contract.test.ts",
+    "tests/intelligence.test.ts",
   ],
   [
     "node_modules/tsx/dist/cli.mjs",

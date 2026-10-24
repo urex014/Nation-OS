@@ -50,7 +50,7 @@ Both commands bind to your local computer. Stop a running dev server before star
 | `/revenue`              | Compare any two jurisdictions and reporting years; all 37 state/FCT rows                                |
 | `/budget`               | Tax slider from the old government desk, then chat, plans, and the decision builder. Government only. |
 | `/scenarios`            | Compare four conditional cases using the current unsaved planner configuration                          |
-| `/decisions`            | Retrieve saved reasoning, model/source snapshots, status reviews and audit events                       |
+| `/decisions`            | Real government project intelligence, budget allocation engine, discrepancy inspection, AI advisor and audit history |
 | `/sources`              | Publishers, source periods, attribution, checksums and coverage gaps                                    |
 
 The sidebar and restrained green/white dashboard follow the existing fiscal workspace layout. Draft inputs survive navigation within the open application but reset on reload. Saved runs and decisions persist in SQLite.
@@ -78,19 +78,33 @@ Results show annual nominal budgets, purchasing power, maintenance and a deliver
 
 Formulas, scenario changes, flags and a review roadmap are visible alongside each result. See [Model definitions](docs/data-and-models.md#planning-arithmetic).
 
+## Government Project Intelligence & Decisions (`/decisions`)
+
+The Decision Intelligence system ingests real public project records, reconciles conflicting observations, infers explainable delivery risks, and drives evidence-grounded budget allocations for Lagos State:
+
+- **Verified Ingestion Connectors**: Live ingestion adapters for Lagos State PMR (`lybrah-api.lagosmepb.org`), BudgIT Tracka (`apirebuild.yourtracka.org` and S3 PDF documents via `pdftotext`), Nigeria BPP NOCOPO (OCDS releases), and Kaduna Open Contracting (strictly partitioned).
+- **Deterministic Matcher & Discrepancy Tracking**: Matches records across official IDs and normalized titles. Never merges conflicting observations silently; highlights source discrepancies.
+- **Explainable Risk Assessment**: Inferred delivery risks (schedule slips, stalled reporting, funding gaps, abandoned status) strictly require explicit citation evidence.
+- **Constrained Budget Allocation Engine**: Deterministic optimization distributing any user-defined envelope (e.g. ₦100B) across ongoing completion, essential services, regional equity, and new projects without exceeding budget caps.
+- **Grounded AI Advisor**: Natural language decision intelligence backed strictly by database evidence and cited source records.
+
+See [Government Project Intelligence System](docs/decisions-intelligence.md) for full architectural specifications, data contracts, and operational guides.
+
 ## Code map
 
 ```text
-app/                         App Router pages and nine API route groups
+app/api/decisions/           Decision intelligence endpoints (projects, allocate, sync, sources)
+components/intelligence/     Project explorer, budget workspace, evidence modal, AI advisor
 components/nigeria/          Page components, forms, tables, map and presentation
 components/workspace/        Persistent sidebar and page frame
+lib/intelligence/            Ingestion connectors, matcher, risk engine, budget engine, repository
 lib/nigeria/                 SQLite, repositories, validation and pure calculations
 data/nigeria/raw/            Original publisher artifacts
 data/nigeria/normalized/     Reproducible NDJSON and source manifest
 scripts/nigeria/             Data download and offline normalization
 scripts/init-db.mjs          Non-destructive observation import
 tests/                       Isolated database/model/API tests and HTTP smoke check
-docs/                        Detailed architecture and backend contract
+docs/                        Detailed architecture, intelligence contracts, and guides
 ```
 
 Source files contain comments explaining boundaries and non-obvious decisions. Maintained code/docs are limited to 300 lines per file. Generated lockfiles and publisher/generated data artifacts are exempt.

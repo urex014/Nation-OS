@@ -108,6 +108,104 @@ CREATE TABLE IF NOT EXISTS decisions (
   revisions TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS line_items_lookup ON line_items (fiscal_year, lga, sector);
+
+-- Government Project Intelligence Tables
+CREATE TABLE IF NOT EXISTS government_projects (
+  id TEXT PRIMARY KEY,
+  canonical_id TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  state TEXT NOT NULL DEFAULT 'Lagos',
+  lga TEXT,
+  agency TEXT NOT NULL,
+  sector TEXT NOT NULL,
+  status TEXT NOT NULL,
+  progress_percent INTEGER NOT NULL DEFAULT 0,
+  contract_sum_kobo INTEGER NOT NULL DEFAULT 0,
+  expended_kobo INTEGER NOT NULL DEFAULT 0,
+  start_date TEXT,
+  expected_completion_date TEXT,
+  actual_completion_date TEXT,
+  risk_level TEXT NOT NULL DEFAULT 'Low',
+  risk_indicators_json TEXT NOT NULL DEFAULT '[]',
+  source_count INTEGER NOT NULL DEFAULT 1,
+  last_verified_at TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS project_sources (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  publisher TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  original_project_id TEXT NOT NULL,
+  document_title TEXT,
+  page_number INTEGER,
+  publication_date TEXT,
+  retrieval_timestamp TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  confidence REAL NOT NULL DEFAULT 1.0,
+  raw_payload_json TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS project_financial_records (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  record_type TEXT NOT NULL,
+  amount_kobo INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'NGN',
+  fiscal_year INTEGER NOT NULL,
+  source_id TEXT,
+  description TEXT,
+  verified INTEGER NOT NULL DEFAULT 0,
+  verified_by TEXT,
+  date_recorded TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS project_status_history (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  reported_status TEXT NOT NULL,
+  progress_percent INTEGER,
+  observation_date TEXT NOT NULL,
+  publisher TEXT NOT NULL,
+  source_id TEXT,
+  remarks TEXT,
+  conflicting INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ingestion_jobs (
+  id TEXT PRIMARY KEY,
+  source_name TEXT NOT NULL,
+  status TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  records_retrieved INTEGER NOT NULL DEFAULT 0,
+  records_created INTEGER NOT NULL DEFAULT 0,
+  records_updated INTEGER NOT NULL DEFAULT 0,
+  records_rejected INTEGER NOT NULL DEFAULT 0,
+  error_details TEXT,
+  source_availability TEXT NOT NULL DEFAULT 'online',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS decision_analyses (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  proposed_budget_kobo INTEGER NOT NULL,
+  priority_weights_json TEXT NOT NULL,
+  selected_lga TEXT,
+  selected_sector TEXT,
+  allocation_results_json TEXT NOT NULL,
+  rationale TEXT NOT NULL,
+  evidence_citations_json TEXT NOT NULL,
+  created_by TEXT,
+  created_at TEXT NOT NULL
+);
 `;
 
 export function applySchema(db: DatabaseSync): void {
