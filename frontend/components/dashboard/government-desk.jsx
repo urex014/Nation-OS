@@ -2,7 +2,7 @@ import Link from "next/link";
 import { number } from "../../lib/nigeria/format.mjs";
 import { ROLE_PROFILES } from "../../lib/auth/types";
 import { Card, Heading, Notice } from "../nigeria/ui";
-import { Advisor } from "./advisor";
+import { AdvisorLaunch } from "./advisor-panel";
 import { DecisionList, PublishedMoney } from "./published";
 import { Simulator } from "./simulator";
 
@@ -46,15 +46,7 @@ export function GovernmentDesk({ user, snapshot }) {
         <Notice>The what-if waits until the published Lagos revenue is loaded.</Notice>
       )}
       <div className="mt-6">
-        <Advisor
-          heading="AI advisor"
-          intro="Ask what a budget or tax change would mean. The advisor uses the published figures. If AI isn't set up, you still get an answer from the data."
-          prompts={[
-            "What if Lagos tax collections were 10% lower than the published figure?",
-            "What is the federal budget headline, and is it Lagos spending?",
-            "Compare Lagos and Rivers revenue.",
-          ]}
-        />
+        <AdvisorLaunch />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card title="Continue in the workspace">

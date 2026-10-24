@@ -1,9 +1,11 @@
+import { connection } from "next/server";
 import "./globals.css";
 import { DraftProvider } from "../components/nigeria/draft-provider";
 import { AppFrame } from "../components/workspace/frame";
 import { currentUser } from "../lib/auth/current";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const description =
   "Budget planning, revenue insight, and decision records for Lagos State agencies.";
@@ -38,6 +40,7 @@ export const viewport = {
 
 // DraftProvider carries an unsaved plan between workspace pages. Public pages skip the shell.
 export default async function RootLayout({ children }) {
+  await connection();
   let user = null;
   try {
     user = await currentUser();

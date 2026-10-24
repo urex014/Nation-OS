@@ -3,7 +3,7 @@ import { userFromToken } from "./lib/auth/token";
 import { SESSION_COOKIE } from "./lib/auth/token";
 import {
   GOVERNMENT_PATHS,
-  homeFor,
+  landingFor,
   isGovernmentWrite,
   roleForDashboard,
   type PublicUser,
@@ -49,11 +49,11 @@ export function proxy(request: NextRequest) {
   }
 
   if (pathname === "/sign-in" && user) {
-    return NextResponse.redirect(new URL(homeFor(user.role), request.url));
+    return NextResponse.redirect(new URL(landingFor(user.role), request.url));
   }
   if (pathname === "/dashboard") {
     return user
-      ? NextResponse.redirect(new URL(homeFor(user.role), request.url))
+      ? NextResponse.redirect(new URL(landingFor(user.role), request.url))
       : signedOut(request);
   }
 

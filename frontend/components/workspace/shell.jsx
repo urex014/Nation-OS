@@ -2,29 +2,40 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { GOVERNMENT_PATHS, ROLE_PROFILES } from "../../lib/auth/types";
+import { ROLE_PROFILES } from "../../lib/auth/types";
+import { workspaceItems } from "../../lib/auth/workspace-nav";
+import { AdvisorPanel } from "../dashboard/advisor-panel";
+import { AdvisorProvider, useAdvisor } from "../dashboard/advisor-state";
 import { MobileMenu, signOutAndLeave } from "../public/mobile-menu";
 import { Logo } from "../public/logo";
 
-const navigation = [
-  ["/overview", "The country", "National figures and the map"],
-  ["/revenue", "Money in", "What each state collected"],
-  ["/budget", "Plan a budget", "Ask questions and try a plan"],
-  ["/scenarios", "What-if tests", "See what changes the plan"],
-  ["/decisions", "Saved decisions", "The reason and the review history"],
-  ["/sources", "Sources", "Who published each number"],
-];
-
 export function WorkspaceShell({ children, user }) {
+  return (
+    <AdvisorProvider enabled={user?.role === "government"}>
+      <WorkspaceFrame user={user}>{children}</WorkspaceFrame>
+    </AdvisorProvider>
+  );
+}
+
+function WorkspaceFrame({ children, user }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const visible = navigation.filter(
-    ([path]) => user?.role === "government" || !GOVERNMENT_PATHS.includes(path),
-  );
-  const items = user
-    ? [[ROLE_PROFILES[user.role].path, "Your desk", ROLE_PROFILES[user.role].title], ...visible]
-    : visible;
+  const advisor = useAdvisor();
+  const items = workspaceItems(user);
+
+  function follow(event, href) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    setOpen(false);
+    if (pathname === href) router.refresh();
+    else {
+      router.push(href);
+      router.refresh();
+    }
+  }
   const active = items.find(([path]) => path === pathname);
 
   const menuLinks = items.map(([href, label, description]) => ({
@@ -32,10 +43,12 @@ export function WorkspaceShell({ children, user }) {
     label,
     description,
     current: pathname === href,
+    prefetch: false,
+    onSelect: (event) => follow(event, href),
   }));
 
   return (
-    <div className="min-h-screen bg-[#F8FAF9] lg:grid lg:grid-cols-[260px_1fr]">
+    <div className="min-h-screen bg-[#F8FAF9] lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
       <MobileMenu
         links={menuLinks}
         user={user}
@@ -64,7 +77,8 @@ export function WorkspaceShell({ children, user }) {
             <Link
               key={path}
               href={path}
-              onClick={() => setOpen(false)}
+              prefetch={false}
+              onClick={(event) => follow(event, path)}
               aria-current={pathname === path ? "page" : undefined}
               className={`block rounded-lg px-4 py-3 focus-visible:outline-white ${pathname === path ? "bg-white/10 text-white" : "text-emerald-50 hover:bg-white/5"}`}
             >
@@ -92,29 +106,47 @@ export function WorkspaceShell({ children, user }) {
           )}
         </div>
       </aside>
-      <div className="min-w-0">
-        <header className="flex items-center justify-between gap-4 border-b border-stone-200 bg-white px-6 py-5 text-xs text-stone-600">
-          <span className="min-w-0 truncate">Workspace / {active?.[1] || "Page"}</span>
-          {user ? (
-            <button
-              type="button"
-              onClick={() => signOutAndLeave(router)}
-              className="hidden shrink-0 rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-[#18352e] md:inline"
-            >
-              Sign out
-            </button>
-          ) : (
-            <Link href="/sign-in" className="hidden font-medium text-emerald-800 md:inline">
-              Sign in
-            </Link>
-          )}
-        </header>
-        <main className="mx-auto min-w-0 max-w-[1500px] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] md:p-8 xl:p-10">
-          {children}
-        </main>
-        <footer className="px-5 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] text-xs text-stone-600 md:px-8">
-          The years on these figures stay as published. Plans depend on the guesses you type in.
-        </footer>
+      <div
+        className={`min-w-0 ${advisor.open ? "lg:grid lg:grid-cols-[minmax(0,1fr)_380px]" : ""}`}
+      >
+        <div className="min-w-0">
+          <header className="flex items-center justify-between gap-4 border-b border-stone-200 bg-white px-6 py-5 text-xs text-stone-600">
+            <span className="min-w-0 truncate">Workspace / {active?.[1] || "Page"}</span>
+            <span className="flex shrink-0 items-center gap-2">
+              {advisor.enabled ? (
+                <button
+                  type="button"
+                  aria-expanded={advisor.open}
+                  aria-controls="advisor-panel"
+                  onClick={advisor.toggle}
+                  className="hidden min-h-11 items-center rounded-md border border-stone-300 bg-white px-3 text-xs font-medium text-[#18352e] lg:inline-flex"
+                >
+                  {advisor.open ? "Hide advisor" : "Advisor"}
+                </button>
+              ) : null}
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => signOutAndLeave(router)}
+                  className="hidden shrink-0 rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-[#18352e] md:inline"
+                >
+                  Sign out
+                </button>
+              ) : (
+                <Link href="/sign-in" className="hidden font-medium text-emerald-800 md:inline">
+                  Sign in
+                </Link>
+              )}
+            </span>
+          </header>
+          <main className="mx-auto min-w-0 max-w-[1500px] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] md:p-8 xl:p-10">
+            {children}
+          </main>
+          <footer className="px-5 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] text-xs text-stone-600 md:px-8">
+            The years on these figures stay as published. Plans depend on the guesses you type in.
+          </footer>
+        </div>
+        <AdvisorPanel />
       </div>
     </div>
   );

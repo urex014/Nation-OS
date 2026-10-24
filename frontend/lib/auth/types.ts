@@ -101,6 +101,11 @@ export function homeFor(role: Role): string {
   return ROLE_PROFILES[role].path;
 }
 
+/** Where a person lands after sign-in. Citizens open the country overview. */
+export function landingFor(role: Role): string {
+  return role === "citizen" ? "/overview" : homeFor(role);
+}
+
 /** True when this request would change a plan, a decision, or a simulation. */
 export function isGovernmentWrite(pathname: string, method: string): boolean {
   if (method === "GET" || method === "HEAD") return false;
@@ -110,7 +115,7 @@ export function isGovernmentWrite(pathname: string, method: string): boolean {
 
 /** Sends a person to their desk, or back to a page that role may open. */
 export function destinationFor(role: Role, next?: string | null): string {
-  const home = homeFor(role);
+  const home = landingFor(role);
   if (
     !next ||
     !next.startsWith("/") ||
@@ -121,7 +126,13 @@ export function destinationFor(role: Role, next?: string | null): string {
     return home;
   }
   const path = next.split("?")[0] ?? "";
-  if (path === home || (SHARED_PATHS as readonly string[]).includes(path)) return path;
+  if (
+    path === home ||
+    path === homeFor(role) ||
+    (SHARED_PATHS as readonly string[]).includes(path)
+  ) {
+    return path;
+  }
   if (role === "government" && (GOVERNMENT_PATHS as readonly string[]).includes(path)) return path;
   return home;
 }

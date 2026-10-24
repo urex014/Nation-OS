@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { userFromToken } from "../../../../lib/auth/service";
-import { homeFor } from "../../../../lib/auth/types";
+import { landingFor } from "../../../../lib/auth/types";
 import { SESSION_COOKIE } from "../../../../lib/auth/token";
 
 export const runtime = "nodejs";
@@ -14,7 +14,7 @@ export function GET(request: Request) {
     .find((part) => part.startsWith(`${SESSION_COOKIE}=`))
     ?.slice(SESSION_COOKIE.length + 1);
   const user = userFromToken(token ? decodeURIComponent(token) : null);
-  return NextResponse.json(user ? { user, dashboardPath: homeFor(user.role) } : { user: null }, {
+  return NextResponse.json(user ? { user, dashboardPath: landingFor(user.role) } : { user: null }, {
     headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
   });
 }

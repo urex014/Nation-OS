@@ -40,7 +40,7 @@ function cookiePair(response) {
 test("each demonstration role receives only its own desk", async () => {
   const cases = [
     ["government@nationos.demo", "Government-Demo-2026!", "/dashboard/government"],
-    ["citizen@nationos.demo", "Citizen-Demo-2026!", "/dashboard/citizen"],
+    ["citizen@nationos.demo", "Citizen-Demo-2026!", "/overview"],
   ];
   for (const [email, password, dashboardPath] of cases) {
     const response = await signIn(
@@ -247,6 +247,29 @@ test("validation rejects a short sign-up password", async () => {
   const body = await response.json();
   assert.equal(body.fieldErrors.password, "Use at least 12 characters.");
   assert.equal(body.fieldErrors.email, "Enter a valid email address.");
+});
+
+test("a citizen lands on the overview, listed first in the menu", async () => {
+  const { landingFor } = await import("../lib/auth/types.ts");
+  const { workspaceItems } = await import("../lib/auth/workspace-nav.ts");
+  assert.equal(landingFor("citizen"), "/overview");
+  assert.equal(landingFor("government"), "/dashboard/government");
+  assert.deepEqual(
+    workspaceItems({ role: "citizen" }).map(([path]) => path),
+    ["/overview", "/dashboard/citizen", "/revenue", "/decisions", "/sources"],
+  );
+  assert.deepEqual(
+    workspaceItems({ role: "government" }).map(([path]) => path),
+    [
+      "/dashboard/government",
+      "/overview",
+      "/revenue",
+      "/budget",
+      "/scenarios",
+      "/decisions",
+      "/sources",
+    ],
+  );
 });
 
 test.after(() => {

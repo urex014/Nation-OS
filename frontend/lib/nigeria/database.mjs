@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { openReadOnlySqlite } from "../runtime/read-only-sqlite.mjs";
 import { importNigeriaData } from "./import-data.mjs";
 
 export const sourceDirectory = () =>
@@ -17,8 +18,7 @@ export function getDatabase() {
   const filename = databasePath();
   if (instances.has(filename)) return instances.get(filename);
   if (!existsSync(filename)) throw Object.assign(Error(MISSING), { status: 503 });
-  const db = new DatabaseSync(filename, { readOnly: true });
-  db.exec("pragma query_only=ON; pragma foreign_keys=ON;");
+  const db = openReadOnlySqlite(filename);
   instances.set(filename, db);
   return db;
 }

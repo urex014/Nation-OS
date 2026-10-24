@@ -106,28 +106,28 @@ No database credentials belong in browser code. Local development can sign sessi
 
 Copy `.env.example` to `.env.local` only if overriding defaults:
 
-| Variable                  | Default                              | Meaning                                                |
-| ------------------------- | ------------------------------------ | ------------------------------------------------------ |
-| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`       | Read-only published figures. Built by `npm run db:init` |
-| `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`            | Normalized input directory                             |
-| `DATABASE_URL`            | required for writes                  | Pooled Postgres for accounts, plans, decisions, audit  |
-| `DATABASE_URL_UNPOOLED`   | unset                                | Direct Postgres used to create those tables            |
-| `POSTGRES_URL`            | unset                                | Used when `DATABASE_URL` is empty                      |
-| `AI_TIMEOUT_MS`           | `12000`                              | Model call limit before the data answer is used        |
-| `NATIONOS_SESSION_SECRET` | development fallback                 | HMAC secret; required in production, 32+ characters    |
-| `NATIONOS_BCRYPT_COST`    | `12`                                 | Password hash cost                                     |
-| `NATION_DB_PATH`          | `data/nationos.sqlite`               | SQLite file for the `main` fiscal routes               |
-| `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning`   | Gateway model. The catalog has no `xai/grok-4-fast`    |
-| `AI_GATEWAY_API_KEY`      | unset                                | Local AI Gateway key. Optional                         |
-| `VERCEL_OIDC_TOKEN`       | not a project variable               | Request header when OIDC is on. Do not create it       |
-| `XAI_API_KEY`             | unset                                | Direct xAI key, only if the gateway is not set         |
-| `XAI_MODEL`               | `grok-4.20-non-reasoning`            | Model id for that direct key                           |
+| Variable                  | Default                            | Meaning                                                                       |
+| ------------------------- | ---------------------------------- | ----------------------------------------------------------------------------- |
+| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`     | Read-only published figures. Built by `next build` and `npm run db:init`      |
+| `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`          | Normalized input directory                                                    |
+| `DATABASE_URL`            | required for writes                | Pooled Postgres for accounts, plans, decisions, audit                         |
+| `DATABASE_URL_UNPOOLED`   | unset                              | Direct Postgres used to create those tables                                   |
+| `POSTGRES_URL`            | unset                              | Used when `DATABASE_URL` is empty                                             |
+| `AI_TIMEOUT_MS`           | `12000`                            | Model call limit before the data answer is used                               |
+| `NATIONOS_SESSION_SECRET` | development fallback               | HMAC secret; required in production, 32+ characters                           |
+| `NATIONOS_BCRYPT_COST`    | `12`                               | Password hash cost                                                            |
+| `NATION_DB_PATH`          | `data/nationos.sqlite`             | Read-only fiscal file for the `main` routes. Built with the published figures |
+| `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning` | Gateway model. The catalog has no `xai/grok-4-fast`                           |
+| `AI_GATEWAY_API_KEY`      | unset                              | Local AI Gateway key. Optional                                                |
+| `VERCEL_OIDC_TOKEN`       | not a project variable             | Request header when OIDC is on. Do not create it                              |
+| `XAI_API_KEY`             | unset                              | Direct xAI key, only if the gateway is not set                                |
+| `XAI_MODEL`               | `grok-4.20-non-reasoning`          | Model id for that direct key                                                  |
 
 Next reads `.env.local`; standalone Node scripts use process environment variables. For a script override in PowerShell, set `$env:NATIONOS_DB_PATH='your-path.sqlite'` first.
 
 SQLite files, WAL files, environment files and local recovery archives are ignored by Git. Shut down all app processes before copying the database for backup; copying only the main file while WAL writes are active can lose recent transactions. Keep your backup outside this working folder.
 
-Locally, the published money databases live under `data/`. `npm run db:init` and the production build create them. The running app opens them read-only and does not copy them to `/tmp`. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are bcrypt cost 10. A new account is hashed at cost 12.
+Locally, the published money databases live under `data/`. `next build` writes both SQLite files before file tracing and includes them in every server function that reads them. `npm run db:init` writes the same files. The running app opens them read-only (`immutable=1`) from that bundled path. If that open fails, it copies the bytes once to `/tmp/nationos-ro` and opens the copy read-only. That copy is not a place anything is saved. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are bcrypt cost 10. A new account is hashed at cost 12.
 
 Accounts, saved plans, decisions, and the audit trail are the rows people write. They go to Postgres when `DATABASE_URL` or `POSTGRES_URL` is set, and the tables in `db/schema.sql` are created on the first request. `DATABASE_URL_UNPOOLED` is used for that create when Neon provides it. With no database URL, those requests return 503 and nothing is saved on the computer. The two demo sign-ins still work. Citizens read the same decision rows the official wrote, with no static cache. Set `DATABASE_URL` for local development too.
 
