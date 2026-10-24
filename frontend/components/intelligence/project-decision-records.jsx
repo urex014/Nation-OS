@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Card, Button, Heading } from "../nigeria/ui";
+import { LgaSourcesSection } from "./source-badges";
 
 export function ProjectDecisionRecords({ initialAnalyses = { records: [], total: 0 } }) {
   const [selected, setSelected] = useState(initialAnalyses.records[0] || null);
@@ -109,6 +110,27 @@ export function ProjectDecisionRecords({ initialAnalyses = { records: [], total:
                       <div className="text-stone-500 text-2xs mt-0.5">
                         {val.percent}% · {val.amountFormatted || val.amountKobo}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selected.allocationResults?.lgaBreakdown && (
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-600 mb-2">
+                  LGA Allocations & Indicator Citations
+                </h4>
+                <div className="space-y-2">
+                  {Object.entries(selected.allocationResults.lgaBreakdown).slice(0, 4).map(([lgaName, val]) => (
+                    <div key={lgaName} className="rounded-lg border border-stone-200/80 bg-stone-50/50 p-3 text-xs">
+                      <div className="flex justify-between font-semibold text-stone-900">
+                        <span>{lgaName} LGA</span>
+                        <span className="text-emerald-800">{val.percent}% · {val.amountFormatted || val.amountKobo}</span>
+                      </div>
+                      {val.sources?.length > 0 && (
+                        <LgaSourcesSection lgaName={lgaName} sources={val.sources.slice(0, 3)} />
+                      )}
                     </div>
                   ))}
                 </div>

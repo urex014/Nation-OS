@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Card, Button, Field, Notice } from "../nigeria/ui";
+import { ProjectSourcesList, LgaSourcesSection } from "./source-badges";
 
 export function BudgetWorkspace() {
   const [budget, setBudget] = useState("100000000000"); // ₦100bn
@@ -128,62 +129,27 @@ export function BudgetWorkspace() {
             Policy Weights (% Relative Priority)
           </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span>Complete Existing Projects</span>
-                <span className="font-semibold">{completeExisting}%</span>
+            {[
+              { label: "Complete Existing Projects", val: completeExisting, set: setCompleteExisting },
+              { label: "Essential Services (Health/Edu)", val: essentialServices, set: setEssentialServices },
+              { label: "Geographic Equity (Outer LGAs)", val: geographicEquity, set: setGeographicEquity },
+              { label: "Economic Growth & Works", val: economicGrowth, set: setEconomicGrowth },
+            ].map((w) => (
+              <div key={w.label}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>{w.label}</span>
+                  <span className="font-semibold">{w.val}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={w.val}
+                  onChange={(e) => w.set(e.target.value)}
+                  className="w-full"
+                />
               </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={completeExisting}
-                onChange={(e) => setCompleteExisting(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span>Essential Services (Health/Edu)</span>
-                <span className="font-semibold">{essentialServices}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={essentialServices}
-                onChange={(e) => setEssentialServices(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span>Geographic Equity (Outer LGAs)</span>
-                <span className="font-semibold">{geographicEquity}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={geographicEquity}
-                onChange={(e) => setGeographicEquity(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span>Economic Growth & Works</span>
-                <span className="font-semibold">{economicGrowth}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={economicGrowth}
-                onChange={(e) => setEconomicGrowth(e.target.value)}
-                className="w-full"
-              />
-            </div>
+            ))}
           </div>
         </div>
 
@@ -231,15 +197,16 @@ export function BudgetWorkspace() {
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {result.results.recommendedProjects.slice(0, 10).map((p, idx) => (
-                    <tr key={idx} className="hover:bg-stone-50">
-                      <td className="p-3 max-w-xs">
-                        <strong className="block text-stone-900 truncate">{p.name}</strong>
-                        <span className="text-stone-500">{p.lga} LGA</span>
+                    <tr key={idx} className="hover:bg-stone-50 align-top">
+                      <td className="p-3 max-w-sm">
+                        <strong className="block text-stone-900 break-words">{p.name}</strong>
+                        <span className="text-stone-500 text-2xs">{p.lga} LGA</span>
+                        <ProjectSourcesList sources={p.sources} />
                       </td>
                       <td className="p-3">{p.sector}</td>
                       <td className="p-3">{p.progressPercent}%</td>
-                      <td className="p-3 font-semibold text-emerald-800">{p.allocatedFormatted}</td>
-                      <td className="p-3 text-stone-600">{p.remainingCostFormatted}</td>
+                      <td className="p-3 font-semibold text-emerald-800 whitespace-nowrap">{p.allocatedFormatted}</td>
+                      <td className="p-3 text-stone-600 whitespace-nowrap">{p.remainingCostFormatted}</td>
                       <td className="p-3 text-stone-500 max-w-sm">{p.rationale}</td>
                     </tr>
                   ))}
@@ -267,16 +234,19 @@ export function BudgetWorkspace() {
             </Card>
 
             <Card title="Allocation by Local Government Area (LGA)">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {Object.entries(result.results.lgaBreakdown).slice(0, 8).map(([lgaName, data]) => (
-                  <div key={lgaName}>
+                  <div key={lgaName} className="rounded-lg border border-stone-200/80 bg-stone-50/50 p-2.5">
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="font-medium text-stone-800">{lgaName}</span>
-                      <span className="text-stone-600">{data.amountFormatted} ({data.percent}%)</span>
+                      <span className="font-semibold text-stone-900">{lgaName} LGA</span>
+                      <span className="text-stone-700 font-medium">{data.amountFormatted} ({data.percent}%)</span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-stone-100">
+                    <div className="h-1.5 w-full rounded-full bg-stone-200">
                       <div className="h-1.5 rounded-full bg-stone-700" style={{ width: `${Math.min(data.percent, 100)}%` }} />
                     </div>
+                    {data.sources?.length > 0 && (
+                      <LgaSourcesSection lgaName={lgaName} sources={data.sources} />
+                    )}
                   </div>
                 ))}
               </div>

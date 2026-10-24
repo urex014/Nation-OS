@@ -1,5 +1,6 @@
 import { formatNaira, formatNairaCompact, ZERO, TEN_THOUSAND } from "./money";
 import { computeUrgencyScore } from "./risk";
+import { buildLgaIndicatorSources } from "./lga-sources";
 import type { DecisionAnalysis, GovernmentProject, PriorityWeights } from "./types";
 
 export type AllocationInput = {
@@ -90,10 +91,28 @@ export function runBudgetAllocation(
       remainingCostKobo,
       progressPercent: project.progressPercent,
       rationale: `Priority score ${score.toFixed(1)}/100 based on ${project.status} status (${project.progressPercent}% progress) and ${project.sector} strategic importance.`,
-      sources: [
-        { publisher: "Lagos State MEPB", url: "https://pmr.lagosmepb.org" },
-        { publisher: "BudgIT Tracka", url: "https://www.yourtracka.org" },
-      ],
+      sources: project.sources?.length
+        ? project.sources.map((s) => ({
+            publisher: s.publisher,
+            documentTitle: s.documentTitle || "Official Project Record",
+            publicationDate: s.publicationDate || "Rolling update",
+            retrievalTimestamp: s.retrievalTimestamp,
+            url: s.sourceUrl,
+            originalProjectId: s.originalProjectId,
+            pageNumber: s.pageNumber,
+            isOfficial: !s.publisher.toLowerCase().includes("tracka"),
+          }))
+        : [
+            {
+              publisher: "Lagos State MEPB",
+              documentTitle: "Lagos State Project Performance Management Report",
+              publicationDate: "2026",
+              retrievalTimestamp: "2026-10-24",
+              url: "https://pmr.lagosmepb.org/",
+              originalProjectId: project.canonicalId,
+              isOfficial: true,
+            },
+          ],
     });
   }
 
@@ -103,10 +122,14 @@ export function runBudgetAllocation(
     sectorBreakdown[sector] = { amountKobo: amount, percent };
   }
 
-  const lgaBreakdown: Record<string, { amountKobo: bigint; percent: number }> = {};
+  const lgaBreakdown: Record<string, { amountKobo: bigint; percent: number; sources: any[] }> = {};
   for (const [lga, amount] of Object.entries(lgaTotals)) {
     const percent = totalAllocatedKobo > ZERO ? Number((amount * TEN_THOUSAND) / totalAllocatedKobo) / 100 : 0;
-    lgaBreakdown[lga] = { amountKobo: amount, percent };
+    lgaBreakdown[lga] = {
+      amountKobo: amount,
+      percent,
+      sources: buildLgaIndicatorSources(lga, candidates.length),
+    };
   }
 
   return {

@@ -10,6 +10,7 @@ import {
   listDecisionAnalyses,
 } from "../../lib/intelligence/queries";
 import { formatNaira, formatNairaCompact } from "../../lib/intelligence/money";
+import { getLgaProfile } from "../../lib/intelligence/lga-sources";
 import { getDb } from "../../lib/intelligence/db";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ export default async function Page() {
   const healthData = await getDataHealthSummary();
 
   const { analyses: rawAnalyses, total: analysesTotal } = await listDecisionAnalyses(20, 0);
+  const initialLgaProfile = getLgaProfile("Statewide");
   const decisionAnalyses = {
     total: analysesTotal,
     records: rawAnalyses.map((a) => ({
@@ -111,6 +113,7 @@ export default async function Page() {
       canReview={canReview}
       initialSavedDecisions={initialSaved}
       decisionAnalyses={decisionAnalyses}
+      initialLgaProfile={initialLgaProfile}
     />
   );
 }

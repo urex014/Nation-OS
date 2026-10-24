@@ -81,7 +81,12 @@ export const POST = api(async (request: Request) => {
       lgaBreakdown: Object.fromEntries(
         Object.entries(results.lgaBreakdown).map(([k, v]) => [
           k,
-          { amountKobo: v.amountKobo.toString(), amountFormatted: formatNaira(v.amountKobo), percent: v.percent },
+          {
+            amountKobo: v.amountKobo.toString(),
+            amountFormatted: formatNaira(v.amountKobo),
+            percent: v.percent,
+            sources: (v as any).sources || [],
+          },
         ]),
       ),
       recommendedProjects: results.recommendedProjects.map((p) => ({

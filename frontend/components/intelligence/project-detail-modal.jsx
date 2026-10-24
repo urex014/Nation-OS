@@ -130,24 +130,50 @@ export function ProjectDetailModal({ projectData, onClose }) {
 
         {/* Supporting Sources with Links */}
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-stone-900">Supporting Provenance & Citations</h3>
+          <h3 className="text-sm font-semibold text-stone-900">Original Data Sources & Document Citations</h3>
+          <p className="text-xs text-stone-500 mt-0.5">
+            Verified external government and civic sources corroborating this capital project record.
+          </p>
           <div className="mt-2 space-y-2">
-            {sources.map((s) => (
-              <div key={s.id} className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-3 text-xs">
-                <div>
-                  <strong className="text-stone-900">{s.publisher}</strong>
-                  <p className="text-stone-500">{s.documentTitle || s.sourceType} · Confidence: {Math.round(s.confidence * 100)}%</p>
+            {sources.map((s) => {
+              const isOfficial = !s.publisher?.toLowerCase().includes("tracka");
+              const ref = s.pageNumber ? `Page ${s.pageNumber}` : s.originalProjectId ? `Record #${s.originalProjectId}` : null;
+              return (
+                <div key={s.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-stone-200 bg-stone-50/70 p-3 text-xs">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className={`rounded px-1.5 py-0.2 text-[10px] font-semibold ${isOfficial ? "bg-emerald-100 text-emerald-900 border border-emerald-300" : "bg-blue-100 text-blue-900 border border-blue-300"}`}>
+                        {isOfficial ? "Official Government Record" : "Third-Party Civic Monitoring"}
+                      </span>
+                      <strong className="text-stone-900">{s.publisher}</strong>
+                      {ref && <span className="font-mono text-stone-500 text-[10px]">[{ref}]</span>}
+                    </div>
+                    <p className="text-stone-600 mt-1">
+                      <span className="italic">{s.documentTitle || "Published Record"}</span>
+                      <span className="text-stone-400 mx-1">·</span>
+                      <span>Pub: {s.publicationDate || "Rolling update"}</span>
+                      <span className="text-stone-400 mx-1">·</span>
+                      <span>Retrieved: {s.retrievalTimestamp ? new Date(s.retrievalTimestamp).toLocaleDateString() : "Verified"}</span>
+                      <span className="text-stone-400 mx-1">·</span>
+                      <span>Confidence: {Math.round(s.confidence * 100)}%</span>
+                    </p>
+                  </div>
+                  {s.sourceUrl ? (
+                    <a
+                      href={s.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-md border border-stone-300 bg-white px-3 py-1.5 font-medium text-emerald-800 hover:bg-stone-50 text-xs shrink-0 self-start sm:self-auto"
+                    >
+                      <span>Open Document</span>
+                      <span>↗</span>
+                    </a>
+                  ) : (
+                    <span className="text-stone-400 italic text-xs">Source unavailable</span>
+                  )}
                 </div>
-                <a
-                  href={s.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-md border border-stone-300 bg-white px-3 py-1.5 font-medium text-emerald-800 hover:bg-stone-50"
-                >
-                  Inspect Source ↗
-                </a>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

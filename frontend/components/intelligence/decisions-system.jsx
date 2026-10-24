@@ -18,6 +18,7 @@ export function DecisionsSystem({
   canReview = false,
   initialSavedDecisions,
   decisionAnalyses = { records: [], total: 0 },
+  initialLgaProfile = null,
 }) {
   const [activeTab, setActiveTab] = useState("explorer");
 
@@ -164,6 +165,7 @@ export function DecisionsSystem({
         <ProjectExplorer
           initialProjects={initialProjects}
           initialTotal={initialProjectsTotal}
+          initialLgaProfile={initialLgaProfile}
         />
       )}
 

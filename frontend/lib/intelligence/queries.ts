@@ -12,6 +12,24 @@ import type {
 } from "./types";
 import type { ProjectFilter } from "./store";
 
+export function mapRowToSource(s: any): ProjectSource {
+  return {
+    id: s.id,
+    projectId: s.project_id,
+    publisher: s.publisher,
+    sourceUrl: s.source_url,
+    originalProjectId: s.original_project_id,
+    documentTitle: s.document_title || "Official Government Record",
+    pageNumber: s.page_number ?? undefined,
+    publicationDate: s.publication_date ?? undefined,
+    retrievalTimestamp: s.retrieval_timestamp,
+    sourceType: s.source_type,
+    confidence: Number(s.confidence || 1.0),
+    rawPayloadJson: s.raw_payload_json,
+    createdAt: s.created_at,
+  };
+}
+
 function mapRowToProject(r: any): GovernmentProject {
   return {
     id: r.id,
@@ -95,7 +113,24 @@ export async function listProjects(filter: ProjectFilter = {}): Promise<{ projec
     `)
     .all(...params, limit, offset);
 
-  return { projects: rows.map(mapRowToProject), total };
+  const projects = rows.map(mapRowToProject);
+  if (projects.length > 0) {
+    const ids = projects.map((p) => p.id);
+    const placeholders = ids.map(() => "?").join(",");
+    const sourceRows: any[] = db
+      .prepare(`SELECT * FROM project_sources WHERE project_id IN (${placeholders}) ORDER BY retrieval_timestamp DESC`)
+      .all(...ids);
+    const sourcesMap: Record<string, ProjectSource[]> = {};
+    for (const r of sourceRows) {
+      const src = mapRowToSource(r);
+      (sourcesMap[src.projectId] ??= []).push(src);
+    }
+    for (const p of projects) {
+      p.sources = sourcesMap[p.id] || [];
+    }
+  }
+
+  return { projects, total };
 }
 
 export async function getProjectById(id: string): Promise<{
@@ -115,21 +150,7 @@ export async function getProjectById(id: string): Promise<{
 
   return {
     project,
-    sources: sources.map((s) => ({
-      id: s.id,
-      projectId: s.project_id,
-      publisher: s.publisher,
-      sourceUrl: s.source_url,
-      originalProjectId: s.original_project_id,
-      documentTitle: s.document_title,
-      pageNumber: s.page_number,
-      publicationDate: s.publication_date,
-      retrievalTimestamp: s.retrieval_timestamp,
-      sourceType: s.source_type,
-      confidence: Number(s.confidence || 1.0),
-      rawPayloadJson: s.raw_payload_json,
-      createdAt: s.created_at,
-    })),
+    sources: sources.map(mapRowToSource),
     financials: financials.map((f) => ({
       id: f.id,
       projectId: f.project_id,
@@ -162,21 +183,7 @@ export async function getProjectById(id: string): Promise<{
 export async function getProjectSources(projectId: string): Promise<ProjectSource[]> {
   const db = getReadDb();
   const rows: any[] = db.prepare("SELECT * FROM project_sources WHERE project_id = ?").all(projectId);
-  return rows.map((s) => ({
-    id: s.id,
-    projectId: s.project_id,
-    publisher: s.publisher,
-    sourceUrl: s.source_url,
-    originalProjectId: s.original_project_id,
-    documentTitle: s.document_title,
-    pageNumber: s.page_number,
-    publicationDate: s.publication_date,
-    retrievalTimestamp: s.retrieval_timestamp,
-    sourceType: s.source_type,
-    confidence: Number(s.confidence || 1.0),
-    rawPayloadJson: s.raw_payload_json,
-    createdAt: s.created_at,
-  }));
+  return rows.map(mapRowToSource);
 }
 
 export async function getDecisionsOverview() {

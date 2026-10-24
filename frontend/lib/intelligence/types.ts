@@ -37,6 +37,7 @@ export type GovernmentProject = {
   riskIndicators: RiskIndicator[];
   sourceCount: number;
   primarySource?: string;
+  sources?: ProjectSource[];
   lastVerifiedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -131,7 +132,7 @@ export type DecisionAnalysis = {
     existingProjectsCount: number;
     newProjectsCount: number;
     sectorBreakdown: Record<string, { amountKobo: bigint; percent: number }>;
-    lgaBreakdown: Record<string, { amountKobo: bigint; percent: number }>;
+    lgaBreakdown: Record<string, { amountKobo: bigint; percent: number; sources?: any[] }>;
     recommendedProjects: {
       projectId: string;
       name: string;
@@ -141,7 +142,16 @@ export type DecisionAnalysis = {
       remainingCostKobo: bigint;
       progressPercent: number;
       rationale: string;
-      sources: { publisher: string; url: string }[];
+      sources: {
+        publisher: string;
+        url: string;
+        documentTitle?: string;
+        publicationDate?: string;
+        retrievalTimestamp?: string;
+        originalProjectId?: string;
+        pageNumber?: number;
+        isOfficial?: boolean;
+      }[];
     }[];
   };
   rationale: string;

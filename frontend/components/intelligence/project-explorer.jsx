@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { Card, Button, Field } from "../nigeria/ui";
 import { ProjectDetailModal } from "./project-detail-modal";
+import { ProjectSourcesList } from "./source-badges";
+import { LgaSourcesCard } from "./lga-sources-card";
 
-export function ProjectExplorer({ initialProjects = [], initialTotal = 0 }) {
+export function ProjectExplorer({ initialProjects = [], initialTotal = 0, initialLgaProfile = null }) {
   const [projects, setProjects] = useState(initialProjects);
   const [total, setTotal] = useState(initialTotal);
   const [search, setSearch] = useState("");
@@ -148,6 +150,9 @@ export function ProjectExplorer({ initialProjects = [], initialTotal = 0 }) {
         </form>
       </Card>
 
+      {/* LGA Evidence & Citations */}
+      <LgaSourcesCard lga={lga} initialProfile={initialLgaProfile} />
+
       {/* Projects Table */}
       <Card title={`Verified Projects Registry (${total.toLocaleString()} records indexed)`}>
         {projects.length === 0 ? (
@@ -159,7 +164,7 @@ export function ProjectExplorer({ initialProjects = [], initialTotal = 0 }) {
             <table className="min-w-full text-left text-xs">
               <thead className="border-b border-stone-200 bg-stone-50 text-stone-600 font-medium">
                 <tr>
-                  <th className="p-3">Project & LGA</th>
+                  <th className="p-3">Project & Sources</th>
                   <th className="p-3">Agency & Sector</th>
                   <th className="p-3">Data Origin</th>
                   <th className="p-3">Status</th>
@@ -171,34 +176,19 @@ export function ProjectExplorer({ initialProjects = [], initialTotal = 0 }) {
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {projects.map((p) => (
-                  <tr key={p.id} className="hover:bg-stone-50/80 transition-colors">
-                    <td className="p-3 max-w-xs">
-                      <strong className="block text-stone-900 truncate">{p.name}</strong>
-                      <span className="text-stone-500">{p.lga || "Statewide"} LGA · {p.canonicalId}</span>
+                  <tr key={p.id} className="hover:bg-stone-50/80 transition-colors align-top">
+                    <td className="p-3 max-w-sm">
+                      <strong className="block text-stone-900 break-words">{p.name}</strong>
+                      <span className="text-stone-500 text-2xs">{p.lga || "Statewide"} LGA · {p.canonicalId}</span>
+                      <ProjectSourcesList sources={p.sources} />
                     </td>
                     <td className="p-3 max-w-xs">
                       <span className="block text-stone-800 truncate">{p.agency}</span>
                       <span className="text-stone-500">{p.sector}</span>
                     </td>
                     <td className="p-3 whitespace-nowrap">
-                      <span
-                        className={`inline-block rounded px-2 py-0.5 text-2xs font-semibold ${
-                          p.canonicalId?.startsWith("LAGOS-PMR")
-                            ? "bg-emerald-100 text-emerald-800"
-                            : p.canonicalId?.startsWith("TRACKA")
-                            ? "bg-blue-100 text-blue-800"
-                            : p.canonicalId?.startsWith("BPP")
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-stone-200 text-stone-800"
-                        }`}
-                      >
-                        {p.canonicalId?.startsWith("LAGOS-PMR")
-                          ? "Lagos PMR"
-                          : p.canonicalId?.startsWith("TRACKA")
-                          ? "BudgIT Tracka"
-                          : p.canonicalId?.startsWith("BPP")
-                          ? "Nigeria BPP"
-                          : "Kaduna OCDS"}
+                      <span className={`inline-block rounded px-2 py-0.5 text-2xs font-semibold ${p.canonicalId?.startsWith("LAGOS-PMR") ? "bg-emerald-100 text-emerald-800" : p.canonicalId?.startsWith("TRACKA") ? "bg-blue-100 text-blue-800" : p.canonicalId?.startsWith("BPP") ? "bg-purple-100 text-purple-800" : "bg-stone-200 text-stone-800"}`}>
+                        {p.canonicalId?.startsWith("LAGOS-PMR") ? "Lagos PMR" : p.canonicalId?.startsWith("TRACKA") ? "BudgIT Tracka" : p.canonicalId?.startsWith("BPP") ? "Nigeria BPP" : "Kaduna OCDS"}
                       </span>
                     </td>
                     <td className="p-3">
@@ -219,25 +209,15 @@ export function ProjectExplorer({ initialProjects = [], initialTotal = 0 }) {
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 font-semibold text-stone-900">
+                    <td className="p-3 font-semibold text-stone-900 whitespace-nowrap">
                       {p.contractSumFormatted !== "₦0.00" ? p.contractSumFormatted : "Unrecorded"}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          p.riskLevel === "Critical"
-                            ? "bg-red-100 text-red-800"
-                            : p.riskLevel === "High"
-                            ? "bg-amber-100 text-amber-800"
-                            : p.riskLevel === "Medium"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-emerald-100 text-emerald-800"
-                        }`}
-                      >
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.riskLevel === "Critical" ? "bg-red-100 text-red-800" : p.riskLevel === "High" ? "bg-amber-100 text-amber-800" : p.riskLevel === "Medium" ? "bg-yellow-100 text-yellow-800" : "bg-emerald-100 text-emerald-800"}`}>
                         {p.riskLevel}
                       </span>
                     </td>
-                    <td className="p-3 text-right">
+                    <td className="p-3 text-right whitespace-nowrap">
                       <Button
                         secondary
                         disabled={modalLoading}

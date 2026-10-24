@@ -5,6 +5,7 @@ import { evaluateProjectRisk, computeUrgencyScore } from "../lib/intelligence/ri
 import { matchProjects, checkDiscrepancies } from "../lib/intelligence/matcher";
 import { runBudgetAllocation } from "../lib/intelligence/engine";
 import { analyzeDecisionQuery } from "../lib/intelligence/ai-grounding";
+import { getLgaProfile } from "../lib/intelligence/lga-sources";
 import { listProjects, getDecisionsOverview, getProjectById, getDataHealthSummary } from "../lib/intelligence/queries";
 import type { GovernmentProject } from "../lib/intelligence/types";
 
@@ -198,4 +199,36 @@ test("grounded decision query returns answers with citations and facts", async (
   assert.ok(res.citations.length > 0);
   assert.ok(res.verifiedFacts.length > 0);
   assert.ok(res.recommendations.length > 0);
+});
+
+test("project records retain attached sources with clickable URLs and document titles", async () => {
+  const { projects } = await listProjects({ limit: 5 });
+  assert.ok(projects.length > 0);
+  for (const p of projects) {
+    assert.ok(Array.isArray(p.sources), `Project ${p.id} must have sources array`);
+    assert.ok(p.sources.length >= 1, `Project ${p.id} must have at least one source`);
+    const s = p.sources[0];
+    assert.ok(s.publisher.length > 0);
+    assert.ok(s.sourceUrl.startsWith("http"));
+    assert.ok(s.documentTitle && s.documentTitle.length > 0);
+  }
+});
+
+test("LGA data associates each indicator with its specific external source", () => {
+  const ikeja = getLgaProfile("Ikeja");
+  assert.equal(ikeja.name, "Ikeja");
+  assert.ok(ikeja.population > 0);
+  assert.ok(ikeja.sources.length >= 4);
+
+  // Verify population source
+  const popSource = ikeja.indicators.population.source;
+  assert.equal(popSource.indicator, "Population & Demographic Baseline");
+  assert.ok(popSource.sourceOrg.includes("National Bureau of Statistics"));
+  assert.ok(popSource.url.startsWith("http"));
+
+  // Verify allocation source
+  const allocSource = ikeja.indicators.allocations.source;
+  assert.equal(allocSource.indicator, "Project Inventory & Capital Allocations");
+  assert.ok(allocSource.sourceOrg.includes("Lagos State"));
+  assert.ok(allocSource.url.startsWith("http"));
 });
