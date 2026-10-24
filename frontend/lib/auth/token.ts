@@ -1,15 +1,19 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { isRole, type Role } from "./types";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { isRole, type PublicUser, type Role } from "./types";
 
 const DEV_SECRET = "dev-only-nationos-session-secret-do-not-use-in-production";
 
 export const SESSION_COOKIE = "nationos_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 12;
 
+/** Everything the next request needs. Nothing here is looked up in a database. */
 export type SessionClaims = {
-  sid: string;
-  uid: string;
+  userId: string;
+  email: string;
   role: Role;
+  name: string;
+  agency: string;
+  iat: number;
   exp: number;
 };
 
@@ -32,14 +36,17 @@ export function cookieOptions(maxAge: number) {
   };
 }
 
-export function newSessionId(): string {
-  return randomBytes(16).toString("base64url");
-}
-
 export function signSession(claims: SessionClaims): string {
   const body = Buffer.from(JSON.stringify(claims)).toString("base64url");
   const signature = createHmac("sha256", sessionSecret()).update(body).digest("base64url");
   return `${body}.${signature}`;
+}
+
+function text(value: unknown, max: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > max) return null;
+  return trimmed;
 }
 
 export function readSessionClaims(token: string | undefined | null): SessionClaims | null {
@@ -59,11 +66,38 @@ export function readSessionClaims(token: string | undefined | null): SessionClai
   }
   try {
     const parsed = JSON.parse(Buffer.from(body, "base64url").toString()) as Partial<SessionClaims>;
-    if (!parsed.sid || !parsed.uid || !parsed.role || typeof parsed.exp !== "number") return null;
-    if (!isRole(parsed.role)) return null;
-    if (parsed.exp < Math.floor(Date.now() / 1000)) return null;
-    return { sid: parsed.sid, uid: parsed.uid, role: parsed.role, exp: parsed.exp };
+    const userId = text(parsed.userId, 80);
+    const email = text(parsed.email, 254);
+    const name = text(parsed.name, 80);
+    const agency = text(parsed.agency, 120);
+    if (!userId || !email || !email.includes("@") || !name || !agency) return null;
+    if (typeof parsed.role !== "string" || !isRole(parsed.role)) return null;
+    if (typeof parsed.iat !== "number" || typeof parsed.exp !== "number") return null;
+    const now = Math.floor(Date.now() / 1000);
+    if (parsed.exp <= now || parsed.exp - parsed.iat > SESSION_TTL_SECONDS + 60) return null;
+    return {
+      userId,
+      email,
+      role: parsed.role,
+      name,
+      agency,
+      iat: parsed.iat,
+      exp: parsed.exp,
+    };
   } catch {
     return null;
   }
+}
+
+/** The cookie is the whole session. A missing or edited signature means signed out. */
+export function userFromToken(token: string | undefined | null): PublicUser | null {
+  const claims = readSessionClaims(token);
+  if (!claims) return null;
+  return {
+    id: claims.userId,
+    email: claims.email,
+    name: claims.name,
+    agency: claims.agency,
+    role: claims.role,
+  };
 }

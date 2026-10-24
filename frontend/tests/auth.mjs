@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -47,13 +48,54 @@ test("each demonstration role receives only its own desk", async () => {
     assert.equal(body.user.email, email);
     assert.match(response.headers.get("set-cookie") ?? "", /HttpOnly/i);
     assert.doesNotMatch(JSON.stringify(body), /password/i);
+    const token = decodeURIComponent(cookiePair(response).split("=").slice(1).join("="));
+    const claims = JSON.parse(Buffer.from(token.split(".")[0], "base64url").toString());
+    assert.equal(claims.userId, body.user.id);
+    assert.equal(claims.role, body.user.role);
+    assert.equal(claims.name, body.user.name);
+    assert.equal(claims.agency, body.user.agency);
+    assert.equal(claims.exp - claims.iat, 60 * 60 * 12);
+    assert.equal(claims.sid, undefined);
     const current = await session(
       new Request("http://127.0.0.1:4173/api/auth/session", {
         headers: { cookie: cookiePair(response) },
       }),
     );
     assert.equal((await current.json()).user.role, body.user.role);
+    assert.equal(existsSync(process.env.NATIONOS_AUTH_DB_PATH), false);
   }
+});
+
+test("a fresh process accepts the cookie without an account file", async () => {
+  const response = await signIn(
+    post("http://127.0.0.1:4173/api/auth/sign-in", {
+      email: "government@nationos.demo",
+      password: "Government-Demo-2026!",
+    }),
+  );
+  const token = decodeURIComponent(cookiePair(response).split("=").slice(1).join("="));
+  const run = spawnSync(
+    process.execPath,
+    [
+      "node_modules/tsx/dist/cli.mjs",
+      "-e",
+      `import { userFromToken } from "./lib/auth/token.ts";
+       const user = userFromToken(process.env.TOKEN);
+       if (!user || user.role !== "government") process.exit(1);
+       if (user.name !== "Government official") process.exit(2);
+       if (user.agency !== "Lagos State budget and finance (demonstration)") process.exit(3);`,
+    ],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        TOKEN: token,
+        NATIONOS_AUTH_STORE: "memory",
+        NATIONOS_AUTH_DB_PATH: "/tmp/nationos-missing-auth/nope.sqlite",
+      },
+    },
+  );
+  assert.equal(run.status, 0, run.stderr || run.stdout);
 });
 
 test("unknown people and wrong passwords share one error", async () => {
@@ -72,6 +114,34 @@ test("unknown people and wrong passwords share one error", async () => {
   assert.equal(missing.status, 401);
   assert.equal(wrong.status, 401);
   assert.equal((await missing.json()).error, (await wrong.json()).error);
+});
+
+test("on Vercel a new citizen is carried by the cookie, not by a database file", async () => {
+  const previous = process.env.VERCEL;
+  process.env.VERCEL = "1";
+  try {
+    const created = await signUp(
+      post("http://127.0.0.1:4173/api/auth/sign-up", {
+        name: "New Citizen",
+        agency: "Lagos",
+        email: "vercel.citizen@nationos.demo",
+        password: "Citizen-Demo-2026!",
+      }),
+    );
+    const { accountStore } = await import("../lib/auth/accounts.ts");
+    const { memoryAccounts } = await import("../lib/auth/memory-accounts.ts");
+    assert.equal(accountStore(), memoryAccounts);
+    assert.equal(created.status, 201);
+    const current = await session(
+      new Request("http://127.0.0.1:4173/api/auth/session", {
+        headers: { cookie: cookiePair(created) },
+      }),
+    );
+    assert.equal((await current.json()).user.role, "citizen");
+  } finally {
+    if (previous === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = previous;
+  }
 });
 
 test("sign-up cannot choose a privileged role", async () => {

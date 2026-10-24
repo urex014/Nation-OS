@@ -106,25 +106,26 @@ No database credentials belong in browser code. Local development can sign sessi
 
 Copy `.env.example` to `.env.local` only if overriding defaults:
 
-| Variable                  | Default                            | Meaning                                             |
-| ------------------------- | ---------------------------------- | --------------------------------------------------- |
-| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`     | Writable SQLite database file                       |
-| `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`          | Normalized input directory                          |
-| `NATIONOS_AUTH_DB_PATH`   | `data/auth.sqlite`                 | Account and session database                        |
-| `NATIONOS_SESSION_SECRET` | development fallback               | HMAC secret; required in production, 32+ characters |
-| `NATIONOS_BCRYPT_COST`    | `12`                               | Password hash cost                                  |
-| `NATION_DB_PATH`          | `data/nationos.sqlite`             | SQLite file for the `main` fiscal routes            |
-| `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning` | Gateway model. The catalog has no `xai/grok-4-fast` |
-| `AI_GATEWAY_API_KEY`      | unset                              | Local AI Gateway key. Optional                      |
-| `VERCEL_OIDC_TOKEN`       | set by Vercel                      | Gateway auth on Vercel. `vercel env pull` locally   |
-| `XAI_API_KEY`             | unset                              | Direct xAI key, only if the gateway is not set      |
-| `XAI_MODEL`               | `grok-4.20-non-reasoning`          | Model id for that direct key                        |
+| Variable                  | Default                              | Meaning                                                |
+| ------------------------- | ------------------------------------ | ------------------------------------------------------ |
+| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`       | Writable SQLite database file                          |
+| `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`            | Normalized input directory                             |
+| `NATIONOS_AUTH_STORE`     | `sqlite` locally, `memory` on Vercel | Where new citizen accounts are saved. Not the session. |
+| `NATIONOS_AUTH_DB_PATH`   | `data/auth.sqlite`                   | SQLite file used when the account store is `sqlite`    |
+| `NATIONOS_SESSION_SECRET` | development fallback                 | HMAC secret; required in production, 32+ characters    |
+| `NATIONOS_BCRYPT_COST`    | `12`                                 | Password hash cost                                     |
+| `NATION_DB_PATH`          | `data/nationos.sqlite`               | SQLite file for the `main` fiscal routes               |
+| `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning`   | Gateway model. The catalog has no `xai/grok-4-fast`    |
+| `AI_GATEWAY_API_KEY`      | unset                                | Local AI Gateway key. Optional                         |
+| `VERCEL_OIDC_TOKEN`       | set by Vercel                        | Gateway auth on Vercel. `vercel env pull` locally      |
+| `XAI_API_KEY`             | unset                                | Direct xAI key, only if the gateway is not set         |
+| `XAI_MODEL`               | `grok-4.20-non-reasoning`            | Model id for that direct key                           |
 
 Next reads `.env.local`; standalone Node scripts use process environment variables. For a script override in PowerShell, set `$env:NATIONOS_DB_PATH='your-path.sqlite'` first.
 
 SQLite files, WAL files, environment files and local recovery archives are ignored by Git. Shut down all app processes before copying the database for backup; copying only the main file while WAL writes are active can lose recent transactions. Keep your backup outside this working folder.
 
-Locally, SQLite files live under `data/`. On Vercel the disk is read-only, so each database is opened under `/tmp`. The published Nigeria files are included in the function bundle and imported on first use. Demo users are seeded into that `/tmp` copy, so the two demo sign-ins work without a write to the deployment. Sign-up and saved decisions are written only in that copy. They do not last across instances. Sign-in uses hashed passwords, an httpOnly session, and per-role desks. Set a real session secret, serve the app over HTTPS, and replace the demonstration accounts before exposing it to untrusted users.
+Locally, the money databases live under `data/`. On Vercel the disk is read-only, so those databases open under `/tmp` and the published Nigeria files are imported on first use. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are checked from hashes shipped in the program. A new citizen account is kept in memory on Vercel, so it does not last across copies unless you plug a real database into `lib/auth/accounts.ts`. Saved decisions still last only for that copy. Set a real session secret, serve the app over HTTPS, and replace the demonstration accounts before exposing it to untrusted users.
 
 ## Deploy to Vercel
 

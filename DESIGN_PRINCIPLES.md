@@ -20,11 +20,11 @@ Use this page when adding a screen or an API. The visual system is the one alrea
 - The UI and the HTTP API are one Next.js app. New backend behaviour goes in `app/api`, not a second server.
 - Validate input with zod. Return `{ "error": "..." }` and, for forms, `fieldErrors`. Unexpected failures stay generic.
 - Passwords are hashed with bcrypt before they are stored. Compare them on the server. Never return a hash.
-- The session is an HMAC-signed token in an `httpOnly`, `SameSite=Lax` cookie. The signature is not enough: the session row must still exist, and its role must match the token. Signing out deletes the row.
+- The session is an HMAC-signed token in an `httpOnly`, `SameSite=Lax` cookie. It carries the user id, email, role, name, agency, issued-at time, and a 12-hour expiry. Checking the signature is the whole check. Do not look up a session row. Signing out clears the cookie. A copied cookie stays valid until it expires.
 - Authorisation is decided on the server. `proxy.ts` sends anonymous visitors to `/sign-in`, and a role that asks for another desk to `/forbidden`. Desk pages check the role again.
 - Share user, role, and path types from `lib/auth/types.ts`. Client components may import that module. They must not import the database.
 - Secrets live in the environment. `.env.example` lists the names. Production refuses to sign sessions without `NATIONOS_SESSION_SECRET` of at least 32 characters. Do not commit a real secret.
-- Accounts sit in their own SQLite file (`NATIONOS_AUTH_DB_PATH`) so the store can be replaced without touching the fiscal schema.
+- Demo accounts are constants in `lib/auth/demo-users.ts`, with bcrypt hashes, so they need no database write. New citizens go through `accountStore()` in `lib/auth/accounts.ts`. Locally that is SQLite. On Vercel it is process memory unless `NATIONOS_AUTH_STORE` selects something else. Swap that function for a hosted database such as Neon. The cookie stays the same.
 - The `main` contract is preserved at `GET /api/v1/fiscal/overview`, `GET /api/v1/fiscal/revenue`, `POST /api/v1/budgets/recommend`, `GET|POST /api/v1/decisions`, `GET /api/v1/scenarios`, `POST /api/allocate`, and `POST /api/chat` with `{ "query" }`. The existing workspace still posts `{ "message" }` to `/api/chat`. Keep both shapes.
 
 ## Roles
@@ -42,4 +42,4 @@ Both roles may read `/overview`, `/revenue`, `/decisions`, and `/sources`. Only 
 - On Vercel the gateway signs in with `VERCEL_OIDC_TOKEN`, which the platform sets. Locally use `AI_GATEWAY_API_KEY`, or `vercel env pull`. A direct `XAI_API_KEY` is the fallback only when the gateway is not configured.
 - The model may state a number only after a tool read it from the repository. After the reply, any number that is not in those tool results is removed. A `{ "query" }` body stays on the ledger path and never calls the model.
 - The role comes from the session. A government seat may run the simulation tool. A citizen seat, and a visitor with no session, get read-only tools. If no key is set, or the model call fails, the existing rule-based answer is used and the screen says so.
-- On Vercel the app opens SQLite under `/tmp`, because the deployment disk is read-only. The published figures are copied in from the files shipped with the function. Demo users are seeded into that copy. Sign-up and saved decisions last only as long as that copy. Do not describe them as durable.
+- On Vercel the published figures are imported into SQLite under `/tmp`, because the deployment disk is read-only. Sessions are not stored there. Demo sign-in needs no write. A self-serve account lasts only in that process unless a real account database is configured. Saved decisions last only as long as that copy. Do not describe them as durable.

@@ -1,14 +1,10 @@
 import { randomBytes } from "node:crypto";
+import { findAccount, saveCitizen } from "./accounts";
 import { hashPassword, verifyPassword } from "./passwords";
-import {
-  createSessionRow,
-  deleteSessionRow,
-  findByEmail,
-  insertCitizen,
-  userForSession,
-} from "./store";
-import { newSessionId, readSessionClaims, SESSION_TTL_SECONDS, signSession } from "./token";
+import { SESSION_TTL_SECONDS, signSession, userFromToken } from "./token";
 import type { PublicUser } from "./types";
+
+export { userFromToken };
 
 type Attempt = { count: number; resetAt: number };
 const attempts = new Map<string, Attempt>();
@@ -42,7 +38,7 @@ export async function authenticate(
   email: string,
   password: string,
 ): Promise<{ user: PublicUser; token: string } | null> {
-  const account = findByEmail(email);
+  const account = findAccount(email);
   const matches = await verifyPassword(password, account?.passwordHash ?? placeholderHash());
   if (!account || !matches) return null;
   const user: PublicUser = {
@@ -61,25 +57,22 @@ export function registerCitizen(input: {
   email: string;
   password: string;
 }): PublicUser | "exists" {
-  return insertCitizen({ ...input, id: `user-${randomBytes(9).toString("base64url")}` });
+  return saveCitizen({ ...input, id: `user-${randomBytes(9).toString("base64url")}` });
 }
 
+/** The cookie carries the person. There is no session row to write. */
 export function openSession(user: PublicUser): { user: PublicUser; token: string } {
-  const sid = newSessionId();
-  const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  createSessionRow(sid, user.id, exp);
-  return { user, token: signSession({ sid, uid: user.id, role: user.role, exp }) };
-}
-
-export function userFromToken(token: string | undefined | null): PublicUser | null {
-  const claims = readSessionClaims(token);
-  if (!claims) return null;
-  const user = userForSession(claims.sid);
-  if (!user || user.id !== claims.uid || user.role !== claims.role) return null;
-  return user;
-}
-
-export function endSession(token: string | undefined | null): void {
-  const claims = readSessionClaims(token);
-  if (claims) deleteSessionRow(claims.sid);
+  const iat = Math.floor(Date.now() / 1000);
+  return {
+    user,
+    token: signSession({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      agency: user.agency,
+      iat,
+      exp: iat + SESSION_TTL_SECONDS,
+    }),
+  };
 }
