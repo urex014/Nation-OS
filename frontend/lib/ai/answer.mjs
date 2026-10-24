@@ -21,6 +21,8 @@ export function safeAiReason(error) {
 }
 
 export function aiStatusFor(reason) {
+  if (/credit card/i.test(reason)) return "error";
+  if (reason === "timeout") return "error";
   if (
     /x-vercel-oidc-token|oidc option|no authentication|no ai credentials|AI_GATEWAY_API_KEY/i.test(
       reason,
@@ -45,6 +47,8 @@ export async function answerChat(body, options = {}) {
       message,
       role: options.role,
       generate: options.generate,
+      oidcToken: options.oidcToken,
+      timeoutMs: options.timeoutMs,
     });
     return { ...answer, aiStatus: "ok" };
   } catch (error) {

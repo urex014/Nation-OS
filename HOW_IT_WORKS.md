@@ -107,7 +107,7 @@ The server limits how many questions one visit can ask. It does not write passwo
 
 **What it is.** Vercel hosts the site. The project folder to deploy is `frontend`. The server disk there cannot be changed.
 
-**What it does.** Published money tables are copied into `/tmp`, a scratch folder for that running copy. Sign-in does not use that folder. The cookie is enough. New accounts, saved plans, and decisions go to Neon when `DATABASE_URL` is set. The tables are created the first time someone needs them. Nobody has to run a script on the server. With no database address, public sign-up stays off and the two demo sign-ins still work. On your own computer, those same rows stay in a local file.
+**What it does.** Published money is read from a file built when the site is deployed. That file is not written at run time, and it is not copied into `/tmp`. Sign-in does not use that file. The cookie is enough. New accounts, saved plans, and decisions go to Neon when `DATABASE_URL` is set. The tables are created the first time someone needs them. With no database address, saving returns a clear error and nothing is kept on the computer. The two demo sign-ins still work. Your own computer needs `DATABASE_URL` too.
 
 **Why it matters.** A decision saved by an official is visible to a citizen on any copy of the site, because they read the same Neon database. A saved decision no longer disappears when one copy of the server stops.
 

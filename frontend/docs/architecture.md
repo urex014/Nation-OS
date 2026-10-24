@@ -2,7 +2,7 @@
 
 ## Runtime
 
-This is one Next.js App Router application. React renders the interface; Tailwind supplies styling. Next route handlers are the backend, and Node 24's synchronous SQLite library stores observations and decisions.
+This is one Next.js App Router application. React renders the interface; Tailwind supplies styling. Next route handlers are the backend. Published observations are read from SQLite. Accounts, plans, and decisions are written to Postgres.
 
 There is no second server to launch. The optional Python script only converts an NBS Excel workbook into portable normalized files. It never handles HTTP traffic.
 
@@ -10,7 +10,7 @@ There is no second server to launch. The optional Python script only converts an
 
 1. A server page calls a repository function in `lib/nigeria/repository.mjs`.
 2. The repository requests a cached SQLite connection.
-3. On first access, `database.mjs` creates the directory, applies `schema.sql`, enables foreign keys/WAL and imports observations if the source register is empty.
+3. `database.mjs` opens the sourced file read-only. `npm run db:init` builds that file. The app does not create it or copy it to `/tmp`.
 4. SQL selects the requested data and preserves units, missing values and reporting years.
 5. The server passes serializable objects to a page component.
 6. Interactive filters request JSON from the matching API route.
@@ -23,7 +23,7 @@ The overview is dynamic, so its values come from SQLite at request time rather t
 2. `http.mjs` checks content type, origin and the streamed 16 KB size limit.
 3. Planning validation checks the horizon, numerical bounds, scope and exact allocation sum.
 4. The pure planning model calculates a result using the database's observed IGR context.
-5. The server stores a run, or atomically creates a run, decision and audit event.
+5. The server stores a run, or a run, decision, and audit event, in Postgres. With no DATABASE_URL the write returns 503.
 6. A response updates the form; errors are displayed alongside it.
 
 Client-supplied calculated outputs are ignored. Creating a decision recomputes its authoritative result on the server.
@@ -57,9 +57,9 @@ A page reload clears an unsaved draft. Calculated runs and saved decisions survi
 
 ## Database lifecycle
 
-Each Node worker has a connection cache keyed by the resolved database path. WAL permits reads while short transactions write; a five-second busy timeout reduces transient lock failures. Transactions keep decision creation and audit events together.
+Each Node worker caches a read-only connection to the sourced file. Decision creation and audit events are a Postgres transaction.
 
-SQLite supports a single local workspace here. Synchronous queries are intentionally small (259 revenue rows), but this design is unsuitable for large concurrent analytics or person-level datasets. Use a network database and access-control layer for multi-user deployment.
+SQLite is the published snapshot only. It is not a place to save accounts or decisions. Those rows need Postgres (`DATABASE_URL` or `POSTGRES_URL`).
 
 `CREATE TABLE IF NOT EXISTS` supports fresh installs; it is not an automatic migration system for arbitrary schema changes. Add explicit numbered migrations and backups before altering a deployed schema.
 

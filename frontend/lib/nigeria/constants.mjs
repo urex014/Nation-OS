@@ -3,57 +3,57 @@ export const INDICATORS = {
   "SP.POP.TOTL": {
     label: "Population",
     unit: "people",
-    note: "World Bank population estimate; not a state census.",
+    note: "World Bank estimate for Nigeria. Not a state census.",
   },
   "NY.GDP.MKTP.CD": {
     label: "GDP",
     unit: "current US$",
-    note: "Economic output at current US-dollar prices; not government revenue.",
+    note: "The size of the economy in current US dollars. Not money the government collected.",
   },
   "NY.GDP.MKTP.KD.ZG": {
     label: "Real GDP growth",
     unit: "%",
-    note: "Annual real growth; series can be revised and rebased.",
+    note: "Yearly growth after inflation. The series can be revised.",
   },
   "FP.CPI.TOTL.ZG": {
     label: "Consumer inflation",
     unit: "%",
-    note: "Annual consumer-price inflation, not a future assumption.",
+    note: "How much consumer prices rose that year. Not a guess about the future.",
   },
   "SL.UEM.TOTL.ZS": {
     label: "Unemployment",
     unit: "%",
-    note: "Modelled ILO estimate; definitions differ from some national series.",
+    note: "An ILO estimate. Some Nigerian series define unemployment differently.",
   },
   "EG.ELC.ACCS.ZS": {
     label: "Electricity access",
     unit: "% of population",
-    note: "Access does not measure reliability or hours of supply.",
+    note: "This is access, not how reliable the supply is or how many hours it runs.",
   },
   "SE.PRM.ENRR": {
     label: "Primary enrolment",
     unit: "gross %",
-    note: "Gross enrolment can exceed 100%; it is not attendance or learning quality.",
+    note: "Gross enrolment can pass 100%. It is not attendance or a measure of learning.",
   },
   "SH.H2O.BASW.ZS": {
     label: "Basic drinking water",
     unit: "% of population",
-    note: "At least basic services; not the same as safely managed water.",
+    note: "At least a basic service. Not the same as safely managed water.",
   },
   "SH.DYN.MORT": {
     label: "Under-five mortality",
     unit: "per 1,000 live births",
-    note: "Estimated deaths before age five; not a healthcare-access rate.",
+    note: "Estimated deaths before age five. Not a measure of access to healthcare.",
   },
   "SH.XPD.CHEX.GD.ZS": {
     label: "Health expenditure",
     unit: "% of GDP",
-    note: "Current health expenditure across financing sources, not just government budgets.",
+    note: "Health spending from all sources, not only the government budget.",
   },
   "NY.GDP.TOTL.RT.ZS": {
     label: "Natural-resource rents",
     unit: "% of GDP",
-    note: "Estimated resource rents; not reserves or government resource receipts.",
+    note: "An estimate of resource rents. Not reserves, and not what government received.",
   },
 };
 export const SECTORS = {

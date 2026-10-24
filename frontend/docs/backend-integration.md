@@ -206,6 +206,6 @@ Recommended boundaries:
 
 Local origin checks are not authentication. Before exposing the app, implement identity, authorization by institution/role, authenticated reviewers, CSRF/session controls, transport security, rate limits, backup/restore procedures and monitored migrations.
 
-A writable local SQLite file is not suitable for ephemeral serverless instances, shared-network filesystems or multi-replica writes. Do not deploy this unchanged to a filesystem that disappears after each request. Use a durable single host/volume or migrate the backend database.
+Accounts, plans, decisions, and audit rows are written only to Postgres. The sourced SQLite file is read-only at run time. With no `DATABASE_URL` or `POSTGRES_URL`, those writes return 503.
 
-The audit table records application events, but local file access can alter it. It is not tamper-proof. No real citizen data should be added without a separate privacy/access design.
+The audit table records application events. It is not a tamper-proof legal archive. No real citizen data should be added without a separate privacy and access design.

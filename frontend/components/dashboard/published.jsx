@@ -4,7 +4,7 @@ import { Notice, Stat } from "../nigeria/ui";
 
 export function PublishedMoney({ snapshot }) {
   if (!snapshot) {
-    return <Notice>Published figures appear here once the local database is ready.</Notice>;
+    return <Notice>Published figures show up here once the figures file is built.</Notice>;
   }
   return (
     <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -40,7 +40,7 @@ export function DecisionList({ records }) {
   if (!records?.length) {
     return (
       <p className="text-sm leading-6 text-stone-600">
-        No decision has been saved in this workspace yet.
+        No decision has been saved yet.
       </p>
     );
   }

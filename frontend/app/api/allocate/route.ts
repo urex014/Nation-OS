@@ -28,7 +28,8 @@ export async function POST(request: Request): Promise<Response> {
       capitalUntouched: true,
     });
   } catch (error) {
+    const status = Number((error as { status?: number })?.status) || 400;
     const message = error instanceof Error ? error.message : "Allocation failed";
-    return Response.json({ error: message }, { status: 400 });
+    return Response.json({ error: message }, { status: status === 503 ? 503 : 400 });
   }
 }

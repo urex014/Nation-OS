@@ -5,19 +5,51 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 const directory = mkdtempSync(path.join(tmpdir(), "nationos-accounts-"));
-process.env.NATIONOS_AUTH_DB_PATH = path.join(directory, "auth.sqlite");
-process.env.NATIONOS_AUTH_STORE = "sqlite";
 delete process.env.DATABASE_URL;
 delete process.env.POSTGRES_URL;
+delete process.env.NATIONOS_AUTH_STORE;
 delete process.env.VERCEL;
 process.env.NATIONOS_BCRYPT_COST = "4";
 process.env.NATIONOS_SESSION_SECRET = "test-only-nationos-session-secret-32chars";
 process.env.NODE_ENV = "development";
 
-const { accountStore, findAccount, accountMode, publicSignUpEnabled } =
-  await import("../lib/auth/accounts.ts");
+const { accountMode, publicSignUpEnabled } = await import("../lib/auth/accounts.ts");
 const { registerCitizen } = await import("../lib/auth/service.ts");
 const { createPostgresAccounts } = await import("../lib/auth/postgres-accounts.ts");
+
+function fakeSql() {
+  const people = [];
+  const sql = async (strings, ...values) => {
+    const text = strings.join(" ").replace(/\s+/g, " ").toLowerCase();
+    if (text.includes("insert into users")) {
+      const email = String(values[1]).toLowerCase();
+      if (people.some((person) => person.email === email)) return [];
+      const row = {
+        id: values[0],
+        email,
+        name: values[2],
+        agency: values[3],
+        role: "citizen",
+        password_hash: values[4],
+      };
+      people.push(row);
+      return [row];
+    }
+    if (text.includes("delete from users")) {
+      const id = values[0];
+      const index = people.findIndex((person) => person.id === id);
+      if (index >= 0) people.splice(index, 1);
+      return [];
+    }
+    if (text.includes("from users")) {
+      const email = String(values[0]).toLowerCase();
+      const row = people.find((person) => person.email === email);
+      return row ? [row] : [];
+    }
+    return [];
+  };
+  return sql;
+}
 
 function restore(saved) {
   for (const [key, value] of Object.entries(saved)) {
@@ -27,7 +59,7 @@ function restore(saved) {
 }
 
 test("account methods are promises and a failed session removes the new row", async () => {
-  const store = await accountStore();
+  const store = createPostgresAccounts(fakeSql());
   const email = "async.flow@nationos.demo";
   const pending = store.insertCitizen({
     id: "user-async-flow",
@@ -61,10 +93,11 @@ test("account methods are promises and a failed session removes the new row", as
             throw new Error("sign failed");
           },
         },
+        store,
       ),
     /sign failed/,
   );
-  assert.equal(await findAccount(rollbackEmail), null);
+  assert.equal(await store.findByEmail(rollbackEmail), null);
 });
 
 test("sign-up checks the session secret before it saves anyone", async () => {
@@ -76,17 +109,22 @@ test("sign-up checks the session secret before it saves anyone", async () => {
   process.env.NATIONOS_SESSION_SECRET = "too-short";
   try {
     const email = "nosecret.citizen@nationos.demo";
+    const store = createPostgresAccounts(fakeSql());
     await assert.rejects(
       () =>
-        registerCitizen({
-          name: "No Secret",
-          agency: "Lagos",
-          email,
-          password: "Citizen-Demo-2026!",
-        }),
+        registerCitizen(
+          {
+            name: "No Secret",
+            agency: "Lagos",
+            email,
+            password: "Citizen-Demo-2026!",
+          },
+          undefined,
+          store,
+        ),
       /NATIONOS_SESSION_SECRET/,
     );
-    assert.equal(await findAccount(email), null);
+    assert.equal(await store.findByEmail(email), null);
   } finally {
     restore(saved);
   }
@@ -150,7 +188,7 @@ test("the shared schema is idempotent and names every runtime table", () => {
   assert.doesNotMatch(file, /drop table/i);
 });
 
-test("database URL selects postgres, and Vercel without one refuses sign-up", () => {
+test("a database URL is required everywhere, including off Vercel", () => {
   const saved = {
     VERCEL: process.env.VERCEL,
     NATIONOS_AUTH_STORE: process.env.NATIONOS_AUTH_STORE,
@@ -161,17 +199,19 @@ test("database URL selects postgres, and Vercel without one refuses sign-up", ()
     delete process.env.NATIONOS_AUTH_STORE;
     delete process.env.POSTGRES_URL;
     delete process.env.VERCEL;
+    delete process.env.DATABASE_URL;
+    assert.equal(accountMode(), "disabled");
+    assert.equal(publicSignUpEnabled(), false);
+    process.env.NATIONOS_AUTH_STORE = "memory";
+    assert.equal(accountMode(), "disabled");
+    assert.equal(publicSignUpEnabled(), false);
+    delete process.env.NATIONOS_AUTH_STORE;
     process.env.DATABASE_URL = "postgres://example";
     assert.equal(accountMode(), "postgres");
     assert.equal(publicSignUpEnabled(), true);
     process.env.VERCEL = "1";
     assert.equal(accountMode(), "postgres");
     delete process.env.DATABASE_URL;
-    assert.equal(accountMode(), "disabled");
-    assert.equal(publicSignUpEnabled(), false);
-    process.env.NATIONOS_AUTH_STORE = "memory";
-    assert.equal(publicSignUpEnabled(), false);
-    delete process.env.NATIONOS_AUTH_STORE;
     process.env.POSTGRES_URL = "postgres://other";
     assert.equal(accountMode(), "postgres");
   } finally {

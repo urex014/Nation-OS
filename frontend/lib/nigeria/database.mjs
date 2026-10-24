@@ -1,7 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
-import { mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { writableDatabasePath } from "../runtime/sqlite-file.mjs";
 import { importNigeriaData } from "./import-data.mjs";
 
 export const sourceDirectory = () =>
@@ -10,16 +9,35 @@ export const databasePath = () =>
   path.resolve(process.env.NATIONOS_DB_PATH || "data/nigeria/nationos.sqlite");
 const instances = (globalThis[Symbol.for("nationos.sqlite")] ||= new Map());
 
+const MISSING =
+  "Published figures are not built yet. Run npm run db:init. The sourced file is read-only at run time.";
+
+/** App reads. This does not create a file, copy it, or write a row. */
 export function getDatabase() {
-  const filename = writableDatabasePath(databasePath());
+  const filename = databasePath();
   if (instances.has(filename)) return instances.get(filename);
-  mkdirSync(path.dirname(filename), { recursive: true });
-  const db = new DatabaseSync(filename);
-  // WAL keeps reads responsive while a short save/review transaction is committed.
-  db.exec("pragma journal_mode=WAL; pragma foreign_keys=ON; pragma busy_timeout=5000;");
-  db.exec(readFileSync(path.resolve("lib/nigeria/schema.sql"), "utf8"));
-  if (!db.prepare("select count(*) as count from sources").get().count)
-    importNigeriaData(db, sourceDirectory());
+  if (!existsSync(filename)) throw Object.assign(Error(MISSING), { status: 503 });
+  const db = new DatabaseSync(filename, { readOnly: true });
+  db.exec("pragma query_only=ON; pragma foreign_keys=ON;");
   instances.set(filename, db);
   return db;
+}
+
+/**
+ * Builds the sourced file for db:init, the production build, and tests.
+ * The running app does not call this.
+ */
+export function prepareSourcedDatabase() {
+  const filename = databasePath();
+  const cached = instances.get(filename);
+  if (cached) {
+    cached.close();
+    instances.delete(filename);
+  }
+  mkdirSync(path.dirname(filename), { recursive: true });
+  const db = new DatabaseSync(filename);
+  db.exec("pragma journal_mode=DELETE; pragma foreign_keys=ON;");
+  db.exec(readFileSync(path.resolve("lib/nigeria/schema.sql"), "utf8"));
+  importNigeriaData(db, sourceDirectory());
+  db.close();
 }

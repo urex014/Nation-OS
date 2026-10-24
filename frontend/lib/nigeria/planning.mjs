@@ -91,7 +91,7 @@ export function allocateBudget(annualBudgetNaira, strategy = "balanced") {
       rows.map((row, index) => [row.key, preference.weights[index] / sum]),
     ),
     explanation:
-      "These weights express a selected policy preference, not an optimized or evidence-proven intervention. Largest remainders allocate rounding naira without changing the total.",
+      "These weights are a preference you picked. They aren't proof that one sector works better. Largest remainders is how rounding is shared so the total stays the same.",
   };
 }
 
@@ -123,14 +123,16 @@ export function projectPlan(input, context) {
   const total = (key) => annual.reduce((sum, row) => sum + row[key], 0);
   const flags = [];
   if (config.inflation > config.budgetGrowth)
-    flags.push("Budget growth is below assumed inflation, so purchasing power declines.");
+    flags.push(
+      "The budget is set to grow more slowly than your inflation guess, so buying power falls.",
+    );
   if (config.delivery < 80)
     flags.push(
-      "Delivery is below 80%; validate implementation capacity before increasing commitments.",
+      "Delivery is below 80%. Check whether the work can actually be carried out before you commit more.",
     );
   if (annual.some((row) => row.investmentToIgrPercent > 100))
     flags.push(
-      "Some years' investment exceeds projected IGR. This signals a funding question, not a calculated fiscal deficit.",
+      "In some years the plan is larger than the projected IGR. That's a funding question, not a calculated deficit.",
     );
   return {
     version: "ng-budget-arithmetic-v1",
@@ -151,15 +153,15 @@ export function projectPlan(input, context) {
       "Projected IGR = observed IGR × (1 + assumed revenue growth)^(year − observation year)",
     ],
     limitations: [
-      "All forward rates and allocation weights are user assumptions, not estimated causal effects.",
-      "Delivery-adjusted capital is a monetary proxy; it does not measure completed projects or benefits.",
-      "No jobs, GDP, attendance, transport-time or health improvements are predicted.",
+      "Every future rate and sector weight is a guess you typed in. None of them is a measured effect.",
+      "Delivery-adjusted capital is a money figure only. It doesn't count finished projects or benefits.",
+      "This doesn't predict jobs, GDP, school attendance, travel time, or health results.",
       context.warning,
     ],
     roadmap: [
-      "Before commitment: validate project-level costs, procurement and source coverage.",
-      "Quarterly: review disbursements, milestones and delivery evidence.",
-      "Annually: compare actual measured outcomes against the saved assumptions; record a separate review.",
+      "Before you commit: check project costs, procurement, and whether the sources cover the question.",
+      "Each quarter: look at money paid out, milestones, and evidence that work was delivered.",
+      "Each year: compare what actually happened with the guesses you saved, and write that review down separately.",
     ],
   };
 }

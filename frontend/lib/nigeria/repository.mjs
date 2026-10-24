@@ -69,7 +69,7 @@ export function getRevenue(year) {
     otherNaira: rows.reduce((sum, row) => sum + (row.other_kobo || 0), 0) / 100,
     sourceId: "nbs-igr-2019-2025",
     coverage: states.length,
-    note: "Internally generated revenue excludes federal transfers. Higher nominal collections do not establish better governance or service outcomes.",
+    note: "IGR (money the state raises itself) leaves out federal transfers. A higher amount doesn't mean the state is better run, or that services are better.",
   };
 }
 export function getRevenueHistory(scope = "all") {
@@ -136,6 +136,6 @@ export function getPlanningContext(scope) {
     referenceRevenueNaira: state?.totalNaira ?? revenue.totalNaira,
     sourceId: revenue.sourceId,
     warning:
-      "IGR is not the whole government budget or money available for new projects. Federal transfers, debt and existing commitments are excluded.",
+      "IGR (money the state raises itself) isn't the whole budget, and it isn't cash waiting for new projects. Federal transfers, debt, and money already committed are left out.",
   };
 }

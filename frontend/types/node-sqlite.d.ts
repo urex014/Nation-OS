@@ -7,7 +7,7 @@ declare module "node:sqlite" {
   }
 
   export class DatabaseSync {
-    constructor(path: string);
+    constructor(path: string, options?: { readOnly?: boolean; timeout?: number });
     exec(sql: string): void;
     prepare(sql: string): StatementSync;
     close(): void;

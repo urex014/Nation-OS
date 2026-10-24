@@ -26,7 +26,8 @@ const { IntelligenceChat } = await import("../components/nigeria/intelligence-ch
 const { POST: chatRoute } = await import("../app/api/chat/route.js");
 const { DraftProvider } = await import("../components/nigeria/draft-provider.jsx");
 const { getOverview, getJurisdictions } = await import("../lib/nigeria/repository.mjs");
-const { getDatabase } = await import("../lib/nigeria/database.mjs");
+const { getDatabase, prepareSourcedDatabase } = await import("../lib/nigeria/database.mjs");
+prepareSourcedDatabase();
 const { allocateBudget } = await import("../lib/nigeria/planning.mjs");
 const { POST: planRoute } = await import("../app/api/plans/route.js");
 const root = createRoot(document.getElementById("root"));
@@ -61,13 +62,13 @@ test("planner allocation and calculation buttons call the backend and expose for
     function button(text) {
       return [...document.querySelectorAll("button")].find((b) => b.textContent.includes(text));
     }
-    await act(async () => button("Apply preference weights").click());
+    await act(async () => button("Apply these weights").click());
     assert.match(document.body.textContent, /Largest remainders/);
-    await act(async () => button("Calculate & store run").click());
-    assert.match(document.body.textContent, /How this was calculated/);
-    assert.match(document.body.textContent, /ng-budget-arithmetic-v1/);
-    assert.equal(getDatabase().prepare("select count(*) n from plan_runs").get().n, 1);
-    assert.equal(button("Save draft decision").disabled, true);
+    assert.match(document.body.textContent, /Our guesses about the future/);
+    await act(async () => button("Work out this plan").click());
+    assert.match(document.body.textContent, /DATABASE_URL/);
+    assert.equal(getDatabase().prepare("select count(*) n from plan_runs").get().n, 0);
+    assert.equal(button("Save this draft"), undefined);
   } finally {
     globalThis.fetch = original;
   }

@@ -115,7 +115,7 @@ export function MobileMenu({ links, user, logoHref = "/", sticky = true }) {
 
   return (
     <div className={`${sticky ? "sticky top-0" : "relative"} z-40 md:hidden`}>
-      <div className="relative z-50 flex items-center justify-between gap-3 bg-[#0B3B2C] px-4 py-2 text-white">
+      <div className="relative z-50 flex items-center justify-between gap-3 bg-[#0B3B2C] px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))] text-white">
         <Logo inverse href={logoHref} onClick={close} className="min-h-11" />
         <button
           ref={buttonRef}

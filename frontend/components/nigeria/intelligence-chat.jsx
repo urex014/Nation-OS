@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDraft } from "./draft-provider";
 import { Heading, Card, Button, Notice, Source, Download } from "./ui";
+import { SideScroll } from "./side-scroll";
 import { PlanResult } from "./plan-result";
 import { Planner } from "./planner";
 import { request } from "../../lib/nigeria/client.mjs";
@@ -11,7 +12,7 @@ import { prompts } from "../../lib/nigeria/chat-topics.mjs";
 const welcome = {
   role: "assistant",
   paragraphs: [
-    "What would you like to understand about Nigeria? Ask about the national indicators, compare state revenue, or explore your current investment plan.",
+    "What do you want to know about Nigeria? Ask about national figures, compare what states collected, or look at the plan you're drafting.",
   ],
   sources: [],
 };
@@ -57,17 +58,17 @@ export function IntelligenceChat({ jurisdictions }) {
 
   return (
     <>
-      <Heading eyebrow="Project Intelligence" title="Ask the evidence">
-        Explore Nigeria’s data in conversation. Answers show the reporting period, supporting
-        sources and what the evidence cannot establish.
+      <Heading eyebrow="Plan a budget" title="Ask about the figures">
+        Ask in plain language. Answers name the year, the source, and what the figures can’t tell
+        you.
       </Heading>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <Card>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-4">
             <div>
-              <h2 className="font-semibold">Data conversation</h2>
+              <h2 className="font-semibold">Conversation</h2>
               <p className="mt-1 text-xs text-stone-500">
-                The badge says whether this answer used AI. Figures from AI are checked.
+                The badge says whether this answer used AI. Numbers from AI are checked.
               </p>
             </div>
             <Button
@@ -100,7 +101,7 @@ export function IntelligenceChat({ jurisdictions }) {
                 }
               >
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
-                  {message.role === "user" ? "You" : "NationOS · evidence assistant"}
+                  {message.role === "user" ? "You" : "NationOS"}
                   {message.mode ? ` · ${engineLabel(message.mode, message.aiStatus)}` : ""}
                 </p>
                 {message.paragraphs.map((paragraph, i) => (
@@ -109,8 +110,8 @@ export function IntelligenceChat({ jurisdictions }) {
                   </p>
                 ))}
                 {message.table && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                  <SideScroll>
+                    <table className="w-full min-w-[28rem] text-sm">
                       <thead>
                         <tr>
                           {message.table.columns.map((column) => (
@@ -128,7 +129,7 @@ export function IntelligenceChat({ jurisdictions }) {
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  </SideScroll>
                 )}
                 {!!message.sources?.length && (
                   <div className="flex flex-wrap gap-3 border-t border-stone-100 pt-3">
@@ -141,8 +142,8 @@ export function IntelligenceChat({ jurisdictions }) {
                 )}
                 {message.result && (
                   <details className="rounded-lg border border-stone-200 p-4">
-                    <summary className="text-sm font-medium">
-                      Inspect model, annual results and assumptions
+                    <summary className="text-sm font-medium max-md:flex max-md:min-h-11 max-md:items-center">
+                      See the yearly figures and the guesses
                     </summary>
                     <PlanResult result={message.result} />
                     <div className="mt-4">
@@ -155,7 +156,7 @@ export function IntelligenceChat({ jurisdictions }) {
             <div ref={end} />
             {busy && (
               <p role="status" className="text-sm text-stone-500">
-                Checking the imported data…
+                Checking the figures…
               </p>
             )}
           </div>
@@ -180,53 +181,55 @@ export function IntelligenceChat({ jurisdictions }) {
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
               maxLength={2000}
-              placeholder="e.g. How has Kano’s IGR changed since 2019?"
+              placeholder="For example: How has Kano’s IGR changed since 2019?"
               disabled={busy}
             />
-            <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <span className="text-xs text-stone-400">
-                Conversation stays on this page. Saved decisions are shared from the database.
+                This chat stays on this page. Saved decisions are stored in the shared database.
               </span>
               <Button disabled={busy || !question.trim()} type="submit">
-                {busy ? "Checking…" : "Send question"}
+                {busy ? "Checking…" : "Send"}
               </Button>
             </div>
           </form>
         </Card>
         <div className="space-y-5">
-          <Card title="Start with a question">
+          <Card title="Try one of these">
             <div className="space-y-2">
               {prompts.map((prompt) => (
                 <button
                   key={prompt}
                   disabled={busy}
                   onClick={() => send(prompt)}
-                  className="w-full rounded-md border border-stone-200 p-3 text-left text-xs leading-5 text-stone-600 hover:border-emerald-600 hover:text-emerald-900 disabled:opacity-40"
+                  className="w-full rounded-md border border-stone-200 p-3 text-left text-xs leading-5 text-stone-600 hover:border-emerald-600 hover:text-emerald-900 disabled:opacity-40 max-md:min-h-11 max-md:text-base"
                 >
                   {prompt}
                 </button>
               ))}
             </div>
           </Card>
-          <Card title="Evidence available">
+          <Card title="What you can ask about">
             <ul className="space-y-3 text-xs leading-6 text-stone-500">
               <li>37 jurisdictions · NBS IGR, 2019–2025</li>
               <li>11 national indicators · individual reporting years</li>
               <li>2025 approved federal budget</li>
-              <li>Your editable 5- or 10-year investment assumptions</li>
+              <li>Your 5- or 10-year guesses for a plan</li>
             </ul>
             <p className="mt-4 border-t border-stone-100 pt-4 text-xs leading-6 text-stone-500">
-              Answers use supported question patterns and explicit arithmetic. Missing data and
+              Answers follow questions we can match, and the arithmetic is shown. Missing data and
               policy effects are not invented.
             </p>
           </Card>
         </div>
       </div>
       <details className="mt-8 rounded-xl border border-stone-200 bg-white p-5">
-        <summary className="font-medium">Investment assumptions & decision builder</summary>
+        <summary className="font-medium max-md:flex max-md:min-h-11 max-md:items-center">
+          Guesses and the decision builder
+        </summary>
         <p className="mt-3 text-sm leading-6 text-stone-500">
-          Edit the inputs used when you ask “Model my current investment plan”. Calculate here to
-          save a proposal with its reasoning and review roadmap.
+          Change the inputs used when you ask “Model my current investment plan”. Work out the plan
+          here if you want to save it with your reason.
         </p>
         <div className="mt-8">
           <Planner jurisdictions={jurisdictions} />

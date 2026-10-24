@@ -111,7 +111,7 @@ export function answerQuestion(input) {
     if (scope !== "all" || /\b(states|which state)\b/.test(q))
       return respond(
         [
-          `The imported ${indicator.label.toLowerCase()} series is national. I cannot report it for ${jurisdictions.find((s) => s.id === scope)?.name || "individual states"} or copy Nigeria's value into a state record.`,
+          `That ${indicator.label.toLowerCase()} figure is for Nigeria as a whole. I cannot report it for ${jurisdictions.find((s) => s.id === scope)?.name || "individual states"}, and I won't copy the national number onto a state.`,
           "Ask for Nigeria's figure, or ask about this state's IGR, which is available for every jurisdiction.",
         ],
         [indicator.sourceId],

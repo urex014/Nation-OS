@@ -3,6 +3,7 @@ import { useState } from "react";
 import { request } from "../../lib/nigeria/client.mjs";
 import { naira, number } from "../../lib/nigeria/format.mjs";
 import { Heading, Card, Field, Button, Notice, Source } from "./ui";
+import { SideScroll } from "./side-scroll";
 import { Trend } from "./trend";
 export function Revenue({ initial, jurisdictions }) {
   const [data, setData] = useState(initial),
@@ -25,12 +26,12 @@ export function Revenue({ initial, jurisdictions }) {
   const revenue = data.revenue;
   return (
     <>
-      <Heading eyebrow="Budget & Revenue" title="Understand the revenue base">
-        Compare published state collections across time. Revenue is shown in nominal naira;
-        inflation, economic size and population affect comparisons.
+      <Heading eyebrow="Money in" title="What the states collected">
+        Compare published collections over time. Amounts are in the naira of that year. Inflation,
+        the size of the economy, and population all change what a comparison means.
       </Heading>
       <Card title="Choose a comparison">
-        <div className="grid items-end gap-4 md:grid-cols-4">
+        <div className="grid items-end gap-4 lg:grid-cols-4">
           <Field label="Reporting year">
             <select value={year} onChange={(e) => setYear(e.target.value)}>
               {revenue.years.map((y) => (
@@ -39,7 +40,7 @@ export function Revenue({ initial, jurisdictions }) {
             </select>
           </Field>
           {[
-            [scope, setScope, "First jurisdiction"],
+            [scope, setScope, "First place"],
             [compare, setCompare, "Compare with"],
           ].map(([value, set, label]) => (
             <Field key={label} label={label}>
@@ -72,15 +73,16 @@ export function Revenue({ initial, jurisdictions }) {
         ))}
       </div>
       <Notice>
-        {revenue.note} Improving other states requires evidence about their tax base, administration
-        and services; these totals alone cannot identify the cause of a gap.
+        {revenue.note} To understand why another state collects less, you need evidence about its
+        tax base, how it collects, and its services. These totals alone can’t explain the gap.
       </Notice>
       <Card className="mt-6" title={`State and FCT collections · ${revenue.year}`}>
         <p className="mb-4 text-sm">
-          Combined IGR: <strong>{naira(revenue.totalNaira)}</strong> · 37 jurisdictions
+          Combined IGR (money states raise themselves): <strong>{naira(revenue.totalNaira)}</strong>{" "}
+          · 37 places
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <SideScroll>
+          <table className="w-full min-w-[40rem] text-sm">
             <thead>
               <tr>
                 {[
@@ -110,10 +112,10 @@ export function Revenue({ initial, jurisdictions }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </SideScroll>
         <p className="my-4 text-xs text-stone-500">
-          Other collections retain the NBS classification for each year; component definitions can
-          differ. Missing values are not treated as zero in the source observations.
+          Other collections keep the NBS label for that year, and those labels can change. Missing
+          cells are not zero.
         </p>
         <Source id={revenue.sourceId} />
       </Card>

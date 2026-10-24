@@ -57,7 +57,10 @@ export async function POST(request) {
       );
     }
     assertChatBudget(chatLimitKey(request));
-    const answer = await answerChat(body, { role: await roleFrom(request) });
+    const answer = await answerChat(body, {
+      role: await roleFrom(request),
+      oidcToken: request.headers.get("x-vercel-oidc-token") || "",
+    });
     if (body.stream === true) {
       const text = (answer.paragraphs || []).join("\n\n");
       return new Response(streamText(text), {

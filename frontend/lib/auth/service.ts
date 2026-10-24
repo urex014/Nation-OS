@@ -66,19 +66,23 @@ const liveGate: SessionGate = {
 export async function registerCitizen(
   input: { name: string; agency: string; email: string; password: string },
   gate: SessionGate = liveGate,
+  store?: Parameters<typeof saveCitizen>[1],
 ): Promise<{ user: PublicUser; token: string } | "exists" | "disabled"> {
-  if (!publicSignUpEnabled()) return "disabled";
+  if (!store && !publicSignUpEnabled()) return "disabled";
   gate.assertSecret();
-  const created = await saveCitizen({
-    ...input,
-    id: `user-${randomBytes(9).toString("base64url")}`,
-  });
+  const created = await saveCitizen(
+    {
+      ...input,
+      id: `user-${randomBytes(9).toString("base64url")}`,
+    },
+    store,
+  );
   if (created === "exists" || created === "disabled") return created;
   try {
     return gate.open(created);
   } catch (error) {
     try {
-      await deleteAccount(created.id);
+      await deleteAccount(created.id, store);
     } catch (rollbackError) {
       const reason = error instanceof Error ? error.message : "session error";
       throw new Error(

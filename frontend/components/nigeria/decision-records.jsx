@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Heading, Card, Button, Notice, Download, Field } from "./ui";
+import { SideScroll } from "./side-scroll";
 import { PlanResult } from "./plan-result";
 import { STATUSES } from "../../lib/nigeria/constants.mjs";
 import { request } from "../../lib/nigeria/client.mjs";
@@ -33,17 +34,17 @@ export function DecisionRecords({ initial, canReview = false }) {
   }
   return (
     <>
-      <Heading eyebrow="Decision & Audit Records" title="Keep the reasoning with the decision">
-        Saved records retain their calculated plan, assumptions and source metadata. Status reviews
-        append an audit event and preserve the original calculation.
+      <Heading eyebrow="Saved decisions" title="Keep the reason with the decision">
+        A saved record keeps the plan, the guesses, and the sources. A status review adds a note
+        and leaves the original calculation as it was.
       </Heading>
       {error && <Notice error>{error}</Notice>}
       <Card title={`${list.total} saved decision records`}>
         {!list.total ? (
           <p className="text-sm text-stone-500">
             {canReview
-              ? "No records yet. Calculate a plan in Project Intelligence, then save it with your reasoning."
-              : "No decision has been saved yet. When an official saves one, it appears here with the reason and the source."}
+              ? "Nothing saved yet. Work out a plan, then save it with your reason."
+              : "No decision has been saved yet. When an official saves one, it shows up here with the reason and the source."}
           </p>
         ) : (
           <>
@@ -52,20 +53,22 @@ export function DecisionRecords({ initial, canReview = false }) {
                 <button
                   key={r.id}
                   disabled={busy}
-                  className="flex w-full items-center justify-between gap-4 py-4 text-left"
+                  className="flex min-h-11 w-full items-center justify-between gap-4 py-3 text-left"
                   onClick={() => inspect(r.id)}
                 >
-                  <span>
-                    <strong className="block text-sm">{r.title}</strong>
+                  <span className="min-w-0">
+                    <strong className="block break-words text-sm">{r.title}</strong>
                     <span className="text-xs text-stone-500">
                       {r.createdAt} · revision {r.revision}
                     </span>
                   </span>
-                  <span className="rounded-full bg-stone-100 px-3 py-1 text-xs">{r.status}</span>
+                  <span className="shrink-0 rounded-full bg-stone-100 px-3 py-1 text-xs">
+                    {r.status}
+                  </span>
                 </button>
               ))}
             </div>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-col gap-3 md:flex-row">
               <Button
                 secondary
                 disabled={busy || list.offset === 0}
@@ -87,11 +90,11 @@ export function DecisionRecords({ initial, canReview = false }) {
       {record && (
         <>
           <Card className="mt-6" title={record.title}>
-            <p className="whitespace-pre-wrap text-sm leading-6">{record.reason}</p>
+            <p className="whitespace-pre-wrap break-words text-sm leading-6">{record.reason}</p>
             <p className="my-4 text-xs text-stone-500">
               Record {record.id} · revision {record.revision} · saved {record.createdAt}
             </p>
-            <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-col items-stretch gap-4 md:flex-row md:flex-wrap md:items-end">
               {canReview && (
                 <>
                   <Field label="Review status">
@@ -115,37 +118,37 @@ export function DecisionRecords({ initial, canReview = false }) {
                       })
                     }
                   >
-                    Record review
+                    Save this review
                   </Button>
                 </>
               )}
               <Button secondary disabled={busy} onClick={() => inspect(record.id)}>
-                Reload record
+                Reload
               </Button>
               <Download value={record} />
             </div>
             <p className="mt-4 text-xs text-stone-500">
               {canReview
-                ? "Local operator review only. “Reviewed” does not signify formal government approval."
+                ? "This review is a note in the record. “Reviewed” is not formal government approval."
                 : "You can read this record. Only a government account can change its status."}
             </p>
           </Card>
           <PlanResult result={record.result} />
-          <Card className="mt-6" title="Audit trail">
+          <Card className="mt-6" title="Review history">
             <ol className="space-y-4 text-sm">
               {record.audit.map((e, i) => (
                 <li key={i}>
                   <strong>{e.action}</strong>
                   <span className="ml-3 text-xs text-stone-500">{e.createdAt}</span>
-                  <pre className="mt-2 overflow-x-auto text-xs">
-                    {JSON.stringify(e.details, null, 2)}
-                  </pre>
+                  <SideScroll>
+                    <pre className="mt-2 text-xs">{JSON.stringify(e.details, null, 2)}</pre>
+                  </SideScroll>
                 </li>
               ))}
             </ol>
             <p className="mt-5 text-xs text-stone-500">
-              Source snapshots are included in the JSON export. The local database is not a
-              tamper-proof or multi-user audit service.
+              The download includes the sources as they were when this was saved. A saved record is
+              not a tamper-proof legal archive.
             </p>
           </Card>
         </>

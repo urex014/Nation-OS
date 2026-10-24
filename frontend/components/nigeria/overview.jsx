@@ -11,9 +11,9 @@ export function Overview({ data }) {
   const gdp = data.indicators.find((i) => i.code === "NY.GDP.MKTP.CD");
   return (
     <>
-      <Heading eyebrow="National Overview" title="A clearer picture of Nigeria">
-        A country overview grounded in published observations. Explore all 36 states and the Federal
-        Capital Territory, then take the evidence into a planning review.
+      <Heading eyebrow="The country" title="A clearer picture of Nigeria">
+        A country view built from published figures. Look through all 36 states and the Federal
+        Capital Territory, then take those figures into a planning review.
       </Heading>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
@@ -24,23 +24,23 @@ export function Overview({ data }) {
         <Stat
           label="GDP · current US dollars"
           value={indicatorValue(gdp)}
-          note={`World Bank · ${gdp.year}; not government income`}
+          note={`World Bank · ${gdp.year}; not money the government collected`}
         />
         <Stat
           label="Approved federal budget"
           value={naira(data.budget.approvedNaira)}
-          note={`${data.budget.year} appropriation · not actual spending`}
+          note={`${data.budget.year} approved total · not what was actually spent`}
         />
         <Stat
-          label="Combined state & FCT IGR"
+          label="Combined state and FCT IGR"
           value={naira(data.revenue.totalNaira)}
-          note={`NBS · ${data.revenue.year} · federal transfers excluded`}
+          note={`NBS · ${data.revenue.year} · IGR is money states raise themselves · transfers left out`}
         />
       </div>
       <div className="my-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <Card title="States & territories">
           <p className="text-xs text-stone-500">
-            Select a jurisdiction · darker green indicates higher total IGR in {data.revenue.year}.
+            Pick a state. Darker green means higher IGR in {data.revenue.year}.
           </p>
           <svg
             viewBox="0 0 650 560"
@@ -84,27 +84,27 @@ export function Overview({ data }) {
           <Card title={state.name}>
             <p className="text-xs text-stone-500">
               {state.type === "territory" ? "Federal Capital Territory" : "State"} ·{" "}
-              {data.revenue.year} internally generated revenue
+              {data.revenue.year} IGR (money the state raises itself)
             </p>
             <p className="my-4 text-4xl font-semibold">{naira(state.totalNaira)}</p>
             <dl className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <dt>Share of combined IGR</dt>
-                <dd>{number(state.nationalSharePercent)}%</dd>
+              <div className="flex justify-between gap-3">
+                <dt className="min-w-0">Share of all states’ IGR</dt>
+                <dd className="shrink-0">{number(state.nationalSharePercent)}%</dd>
               </div>
-              <div className="flex justify-between">
-                <dt>Nominal revenue rank</dt>
-                <dd>{state.rank} / 37</dd>
+              <div className="flex justify-between gap-3">
+                <dt className="min-w-0">Rank by amount</dt>
+                <dd className="shrink-0">{state.rank} / 37</dd>
               </div>
-              <div className="flex justify-between">
-                <dt>Annual nominal change</dt>
-                <dd>{number(state.growthPercent)}%</dd>
+              <div className="flex justify-between gap-3">
+                <dt className="min-w-0">Change from the year before, not adjusted for inflation</dt>
+                <dd className="shrink-0">{number(state.growthPercent)}%</dd>
               </div>
             </dl>
             <p className="my-5 text-xs leading-5 text-stone-500">
-              Revenue differences reflect different economies, tax bases and collections. This is
-              not a ranking of government performance. Comparable current state population and GDP
-              are not supplied.
+              States differ because their economies, tax bases, and collections differ. This is not
+              a ranking of how well a government is run. We don’t have current state population or
+              GDP you can compare.
             </p>
             <Source id={state.sourceId} />
           </Card>
@@ -114,10 +114,10 @@ export function Overview({ data }) {
         </div>
       </div>
       <Notice>
-        Federal budget and combined state IGR cover different levels of government. They must not be
-        added together or treated as available project funding.
+        The federal budget and combined state IGR are different levels of government. Don’t add them
+        together, and don’t treat them as money waiting for projects.
       </Notice>
-      <h2 className="mb-4 mt-8 text-xl font-semibold">National indicators</h2>
+      <h2 className="mb-4 mt-8 text-xl font-semibold">National figures</h2>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {data.indicators.map((i) => (
           <Card key={i.code} title={i.label}>

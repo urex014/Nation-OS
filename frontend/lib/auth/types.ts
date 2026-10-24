@@ -39,17 +39,17 @@ export const ROLE_PROFILES: Record<Role, RoleProfile> = {
     title: "Government official",
     path: "/dashboard/government",
     summary:
-      "Decision support for budget and tax choices. Simulations start from published figures and stay labelled as projections.",
+      "Help with budget and tax choices. Every what-if starts from published figures and is labelled a projection.",
     duties: [
-      "Read Lagos internally generated revenue, the tax part of it, and the federal budget headline before changing a plan.",
-      "Run a projection: move the published tax collection by a percent, or split that published revenue across six sectors.",
-      "The projection is arithmetic. It does not approve a budget or predict jobs, schools, or hospital results.",
+      "Read Lagos IGR (money the state raises itself), the tax part of it, and the federal budget headline before you change a plan.",
+      "Try a projection: move the published tax collection by a percent, or split that published revenue across six sectors.",
+      "The projection is simple arithmetic. It doesn't approve a budget, and it doesn't predict jobs, schools, or hospital results.",
     ],
     links: [
-      { href: "/budget", label: "Project intelligence", note: "Ask the data and draft a plan" },
-      { href: "/scenarios", label: "Scenario lab", note: "Five- and ten-year sensitivity" },
-      { href: "/revenue", label: "Budget and revenue", note: "State collections side by side" },
-      { href: "/decisions", label: "Decision records", note: "Save a reason and review it" },
+      { href: "/budget", label: "Plan a budget", note: "Ask questions and draft a plan" },
+      { href: "/scenarios", label: "What-if tests", note: "Five- and ten-year comparisons" },
+      { href: "/revenue", label: "Money in", note: "What each state collected" },
+      { href: "/decisions", label: "Saved decisions", note: "Save a reason and review it" },
     ],
   },
   citizen: {
@@ -57,17 +57,17 @@ export const ROLE_PROFILES: Record<Role, RoleProfile> = {
     title: "Citizen",
     path: "/dashboard/citizen",
     summary:
-      "A read-only view of the published budget, revenue, and decisions, with the source beside each figure.",
+      "A read-only look at the published budget, revenue, and decisions, with the source next to each figure.",
     duties: [
-      "See Lagos revenue, including tax, and how it ranks among states. Higher naira is not a governance score.",
+      "See Lagos revenue, including tax, and how it ranks among states. More naira is not a score for how well a government is run.",
       "Read the federal budget headline with its note: it is not Lagos spending.",
-      "Open saved decisions and the publisher of each series. This seat cannot run the government simulation.",
+      "Open saved decisions and who published each series. This seat can't run the government what-if.",
     ],
     links: [
-      { href: "/revenue", label: "Budget and revenue", note: "Published collections" },
-      { href: "/decisions", label: "Decision records", note: "Reasons officials saved" },
-      { href: "/sources", label: "Data sources", note: "Who published each series" },
-      { href: "/overview", label: "National overview", note: "Country indicators and the map" },
+      { href: "/revenue", label: "Money in", note: "Published collections" },
+      { href: "/decisions", label: "Saved decisions", note: "Reasons officials saved" },
+      { href: "/sources", label: "Sources", note: "Who published each series" },
+      { href: "/overview", label: "The country", note: "National figures and the map" },
     ],
   },
 };

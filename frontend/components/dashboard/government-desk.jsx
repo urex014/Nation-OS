@@ -10,13 +10,13 @@ export function GovernmentDesk({ user, snapshot }) {
   const profile = ROLE_PROFILES.government;
   return (
     <>
-      <Heading eyebrow={profile.title} title="Decision support">
+      <Heading eyebrow={profile.title} title="Help with decisions">
         {profile.summary} Signed in as {user.name} · {user.agency}.
       </Heading>
       <PublishedMoney snapshot={snapshot} />
       {snapshot && (
         <div className="mb-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <Card title="How to read this desk">
+          <Card title="How to use this desk">
             <ul className="list-disc space-y-3 pl-5 text-sm leading-6 text-stone-700">
               {profile.duties.map((duty) => (
                 <li key={duty}>{duty}</li>
@@ -24,17 +24,17 @@ export function GovernmentDesk({ user, snapshot }) {
             </ul>
             <p className="mt-4 text-sm leading-6 text-stone-700">{snapshot.warning}</p>
           </Card>
-          <Card title="Background, not an input">
+          <Card title="Background, not something you edit">
             <p className="text-sm leading-6 text-stone-700">
-              The federal headline is a national figure. {snapshot.budget.note} The simulation does
-              not spend it.
+              The federal headline is a national figure. {snapshot.budget.note} The what-if doesn’t
+              spend it.
             </p>
             {snapshot.inflation && (
               <p className="mt-3 text-sm leading-6 text-stone-700">
                 National consumer inflation was {number(snapshot.inflation.value, 2)}% in{" "}
                 {snapshot.inflation.year}
                 {snapshot.inflation.source ? ` (${snapshot.inflation.source.publisher})` : ""}.{" "}
-                {snapshot.inflation.note} The slider does not apply this rate.
+                {snapshot.inflation.note} The slider doesn’t use this rate.
               </p>
             )}
           </Card>
@@ -43,12 +43,12 @@ export function GovernmentDesk({ user, snapshot }) {
       {snapshot ? (
         <Simulator snapshot={snapshot} />
       ) : (
-        <Notice>The simulation waits until the published Lagos revenue is loaded.</Notice>
+        <Notice>The what-if waits until the published Lagos revenue is loaded.</Notice>
       )}
       <div className="mt-6">
         <Advisor
           heading="AI advisor"
-          intro="Ask what a budget or tax change would mean. The advisor uses the published figures. If no AI key is set, you still get the rule-based answer."
+          intro="Ask what a budget or tax change would mean. The advisor uses the published figures. If AI isn't set up, you still get an answer from the data."
           prompts={[
             "What if Lagos tax collections were 10% lower than the published figure?",
             "What is the federal budget headline, and is it Lagos spending?",
@@ -62,7 +62,7 @@ export function GovernmentDesk({ user, snapshot }) {
             {profile.links.map((link) => (
               <li key={link.href}>
                 <Link
-                  className="font-medium text-emerald-800 underline underline-offset-4"
+                  className="inline-flex font-medium text-emerald-800 underline underline-offset-4 max-md:min-h-11 max-md:items-center"
                   href={link.href}
                 >
                   {link.label}
