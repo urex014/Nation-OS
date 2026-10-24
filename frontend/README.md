@@ -1,0 +1,171 @@
+# NationOS — Nigeria planning workspace
+
+NationOS connects public Nigerian observations with explainable investment planning and decision history. It is a local research and hackathon workspace, not an official government information system.
+
+This rebuild replaces the fictional Aderin dataset. It runs entirely in this `frontend/` folder: **Next.js 16.4.3, React 19.3.0, Tailwind CSS 4.3.3, Next.js API routes and SQLite**. There is no separate Python server or Supabase requirement. The advisor can call Grok through the Vercel AI Gateway. With no gateway token and no xAI key, it stays on the rule-based answers.
+
+## Run locally
+
+Use **Node.js 24 LTS** and npm. SQLite uses Node's built-in `node:sqlite`; do not install a database server.
+
+```powershell
+cd frontend
+npm ci
+npm run db:init
+npm run dev
+```
+
+Open **http://127.0.0.1:4173**. The first screen is the public landing page. **Sign in** opens one authentication page. Checked-in normalized data is sufficient; downloading the original datasets again is optional. The first database connection also initializes an absent database automatically.
+
+Copy `.env.example` to `.env.local` before any shared or production run and set `NATIONOS_SESSION_SECRET` to a random string of at least 32 characters. A local `npm run dev` signs the session with a built-in development value when that variable is unset. Do not deploy that fallback.
+
+## Sign in
+
+`main` does not define accounts or roles. This workspace adds two demonstration seats. Passwords are hashed with bcrypt. A signed `httpOnly` cookie is checked on the server, and each role is sent to its own desk. Self-serve registration creates a **citizen** only. A government seat is seeded, not chosen on the form. A step-by-step tour is in [HOW_IT_WORKS.md](../HOW_IT_WORKS.md). Design rules are in [DESIGN_PRINCIPLES.md](../DESIGN_PRINCIPLES.md).
+
+| Role                | Desk                    | Email                      | Password                |
+| ------------------- | ----------------------- | -------------------------- | ----------------------- |
+| Government official | `/dashboard/government` | `government@nationos.demo` | `Government-Demo-2026!` |
+| Citizen             | `/dashboard/citizen`    | `citizen@nationos.demo`    | `Citizen-Demo-2026!`    |
+
+These passwords are for the local hackathon demo. They are not production credentials.
+
+For a production-style local run:
+
+```powershell
+npm run build
+npm start
+```
+
+Both commands bind to your local computer. Stop a running dev server before starting production on the same port. Run all npm commands from this folder because database and schema paths resolve against the current working directory.
+
+## What each page does
+
+| Route                   | Purpose                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `/`                     | Public landing page: transparency for citizens, decision support for government                         |
+| `/sign-in`              | Sign in, or create a citizen account                                                                    |
+| `/overview`             | Country indicators, approved federal budget, actual state boundaries, observed state revenue            |
+| `/dashboard/government` | Government decision-support desk and projections from published figures                                 |
+| `/dashboard/citizen`    | Read-only transparency desk for budget, revenue, and decisions                                          |
+| `/revenue`              | Compare any two jurisdictions and reporting years; all 37 state/FCT rows                                |
+| `/budget`               | Chat with the imported data, compare states, inspect sources, model plans and open the decision builder |
+| `/scenarios`            | Compare four conditional cases using the current unsaved planner configuration                          |
+| `/decisions`            | Retrieve saved reasoning, model/source snapshots, status reviews and audit events                       |
+| `/sources`              | Publishers, source periods, attribution, checksums and coverage gaps                                    |
+
+The sidebar and restrained green/white dashboard follow the existing fiscal workspace layout. Draft inputs survive navigation within the open application but reset on reload. Saved runs and decisions persist in SQLite.
+
+## Data included
+
+Primary sources were used instead of a secondary Kaggle repackaging:
+
+- **NBS:** 259 jurisdiction/year IGR rows, covering 36 states plus FCT for 2019–2025.
+- **World Bank:** 11 national indicators over 2015–2025, 121 rows including missing observations.
+- **geoBoundaries / GRID3:** 37 simplified state/FCT boundary geometries representing 2022.
+- **State House:** the approved 2025 federal budget headline, ₦54.99 trillion, explicitly distinguished from spending.
+
+Each indicator keeps its reporting year. National observations are not copied into state records. Source artifacts, normalization rules and limitations are documented in [Data and models](docs/data-and-models.md). Original publisher links appear in the application and source manifest.
+
+There is no invented citizen registry, religion data, company register, bank register, current state GDP or money-in-circulation estimate. Missing observations remain missing. Combined state IGR excludes federal transfers and is not an available investment fund.
+
+## Explainable modelling
+
+Project Intelligence retrieves SQLite observations, handles state/year follow-ups, cites sources, and can calculate the current investment draft. With no AI credentials this path is rule-based. With the AI Gateway or a direct xAI key, Grok may answer, but only with numbers a tool returned. The badge names the path. See [Chat behaviour and API](docs/chat.md).
+
+The model uses explicit arithmetic rather than hidden AI-generated forecasts. You enter an investment envelope, six sector allocations, inflation, budget growth, IGR growth, delivery and maintenance assumptions.
+
+Results show annual nominal budgets, purchasing power, maintenance and a delivery-adjusted monetary proxy. They **do not claim to predict GDP, jobs, school attendance, health outcomes or completed projects**. Allocation starting points express editable policy preferences, not an algorithm's claim about the best policy.
+
+Formulas, scenario changes, flags and a review roadmap are visible alongside each result. See [Model definitions](docs/data-and-models.md#planning-arithmetic).
+
+## Code map
+
+```text
+app/                         App Router pages and nine API route groups
+components/nigeria/          Page components, forms, tables, map and presentation
+components/workspace/        Persistent sidebar and page frame
+lib/nigeria/                 SQLite, repositories, validation and pure calculations
+data/nigeria/raw/            Original publisher artifacts
+data/nigeria/normalized/     Reproducible NDJSON and source manifest
+scripts/nigeria/             Data download and offline normalization
+scripts/init-db.mjs          Non-destructive observation import
+tests/                       Isolated database/model/API tests and HTTP smoke check
+docs/                        Detailed architecture and backend contract
+```
+
+Source files contain comments explaining boundaries and non-obvious decisions. Maintained code/docs are limited to 300 lines per file. Generated lockfiles and publisher/generated data artifacts are exempt.
+
+## Backend handover
+
+The backend is already implemented in Next API routes. A developer extending or replacing it should start with [Backend integration](docs/backend-integration.md), which specifies request/response formats, validation, table relationships, units, persistence and missing production controls. [Architecture](docs/architecture.md) explains the complete request/data flow.
+
+No database credentials belong in browser code. Local development can sign sessions without a configured secret. Set `NATIONOS_SESSION_SECRET` before any shared or production run.
+
+## Configuration and storage
+
+Copy `.env.example` to `.env.local` only if overriding defaults:
+
+| Variable                  | Default                            | Meaning                                             |
+| ------------------------- | ---------------------------------- | --------------------------------------------------- |
+| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`     | Writable SQLite database file                       |
+| `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`          | Normalized input directory                          |
+| `NATIONOS_AUTH_DB_PATH`   | `data/auth.sqlite`                 | Account and session database                        |
+| `NATIONOS_SESSION_SECRET` | development fallback               | HMAC secret; required in production, 32+ characters |
+| `NATIONOS_BCRYPT_COST`    | `12`                               | Password hash cost                                  |
+| `NATION_DB_PATH`          | `data/nationos.sqlite`             | SQLite file for the `main` fiscal routes            |
+| `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning` | Gateway model. The catalog has no `xai/grok-4-fast` |
+| `AI_GATEWAY_API_KEY`      | unset                              | Local AI Gateway key. Optional                      |
+| `VERCEL_OIDC_TOKEN`       | set by Vercel                      | Gateway auth on Vercel. `vercel env pull` locally   |
+| `XAI_API_KEY`             | unset                              | Direct xAI key, only if the gateway is not set      |
+| `XAI_MODEL`               | `grok-4.20-non-reasoning`          | Model id for that direct key                        |
+
+Next reads `.env.local`; standalone Node scripts use process environment variables. For a script override in PowerShell, set `$env:NATIONOS_DB_PATH='your-path.sqlite'` first.
+
+SQLite files, WAL files, environment files and local recovery archives are ignored by Git. Shut down all app processes before copying the database for backup; copying only the main file while WAL writes are active can lose recent transactions. Keep your backup outside this working folder.
+
+Locally, SQLite files live under `data/`. On Vercel the disk is read-only, so each database is opened under `/tmp`. The published Nigeria files are included in the function bundle and imported on first use. Demo users are seeded into that `/tmp` copy, so the two demo sign-ins work without a write to the deployment. Sign-up and saved decisions are written only in that copy. They do not last across instances. Sign-in uses hashed passwords, an httpOnly session, and per-role desks. Set a real session secret, serve the app over HTTPS, and replace the demonstration accounts before exposing it to untrusted users.
+
+## Deploy to Vercel
+
+The Vercel project root is this `frontend/` folder, not the repository root.
+
+1. Import the Git repository. Set **Root Directory** to `frontend`. Use the Node.js 24 runtime.
+2. Set `NATIONOS_SESSION_SECRET` to a random string of at least 32 characters. Production will not start sessions without it.
+3. Leave the AI key empty if you want the AI Gateway. Vercel sets `VERCEL_OIDC_TOKEN` on the deployment. Optional: set `AI_MODEL`. The default is `spacexai/grok-4.20-non-reasoning`.
+4. Deploy. Open the site, sign in with either demo account, and ask one question. The badge should say the answer was checked by AI. With no gateway access, the same question still answers and the badge says rule-based.
+5. For a local gateway call, set `AI_GATEWAY_API_KEY`, or run `vercel link` and `vercel env pull` to receive a `VERCEL_OIDC_TOKEN` that lasts about 12 hours. A direct `XAI_API_KEY` is the alternative only when neither gateway credential is set.
+
+Do not commit `.env.local` or a pulled token. Names and comments are in `.env.example`.
+
+The fiscal routes from `main` are also mounted here: `GET /api/v1/fiscal/overview`, `GET /api/v1/fiscal/revenue`, `POST /api/v1/budgets/recommend`, `GET` and `POST /api/v1/decisions`, `GET /api/v1/scenarios`, and `POST /api/allocate`. `POST /api/chat` still accepts the workspace `{ "message" }` body. A body with `{ "query" }` follows the `main` contract and returns `{ "answer" }`. Those routes require a signed-in session, as the rest of `/api` does.
+
+## Refresh observations
+
+Internet is needed only for refreshing source artifacts. Python 3 is used solely as an offline standard-library XLSX parser.
+
+```powershell
+npm run data:fetch
+npm run data:normalize
+npm run db:init
+```
+
+Review changed publisher schemas, source terms and normalized diffs before importing. The importer checks row coverage and safe integer amounts. It upserts observations without deleting saved decisions; those retain their original model and source snapshots. Updating the fixed federal budget headline requires reviewing the official statement and changing the normalizer deliberately.
+
+Source periods are intentional snapshots, not a claim that every dataset is the newest available. See the Sources page before presenting a figure.
+
+## Verification
+
+```powershell
+npm run check
+npm run test:ui
+npm run lint
+npm run format:check
+npm run build
+# With the app running:
+npm run check:http
+```
+
+Domain tests use a temporary SQLite file. They verify source coverage, missing values, revenue reconciliation, allocation rounding, model direction, persisted decision snapshots, optimistic review revisions, sign-in, role redirects, and the `main` fiscal sentences. React/jsdom tests exercise keyboard selection and planner buttons against a real temporary database/API handler. The HTTP smoke check signs in against the running app, then reads the pages and APIs.
+
+A complete pre-rebuild local source archive remains ignored in `.recovery/` for recovery only. It is not imported or served. No original synthetic observations remain in the active application.

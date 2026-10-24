@@ -1,0 +1,45 @@
+# NationOS design and engineering principles
+
+Use this page when adding a screen or an API. The visual system is the one already rendered on `main` and carried by the `ITAI` workspace: forest `#0B3B2C`, emerald `#10754A`, paper `#F8FAF9` / `#f4f3ee`, ink `#18352e`, and white cards. The logo is the mark in `public/logo-mark.svg` (two bars and an emerald chevron). Use `public/logo-full-dark.png` on the forest bar and `public/logo-full.png` on paper. Do not introduce a second palette, font, or component kit.
+
+`main` has no accounts and no roles. The two roles below were added for this hackathon. Where `main` and `ITAI` describe the same fiscal endpoint, follow `main`.
+
+## Visual
+
+- One idea above the fold. The landing page has a single sentence as the value proposition, one primary action (sign in), and a secondary text link.
+- Hierarchy comes from size, weight, and space, not from extra colours. Eyebrows are 12px, uppercase, tracked. The title uses the serif already in the theme. Body copy is 16px with relaxed line height.
+- Space on an 8px scale: 16, 24, 32, 48, 64, 96. Sections breathe. Cards use the existing `rounded-xl` white surface and stone border.
+- Colour contrast meets WCAG AA. Body text is ink or stone-700 on paper. White text sits on `#0B3B2C`. The emerald “OS” highlight is the light emerald only on that forest ground; on paper it switches to emerald-800. Do not convey state by colour alone.
+- Mobile first. Sections stack, actions are full width until `sm`, and targets are at least 44px tall. The workspace sidebar collapses behind Menu below `lg`, as it already does.
+- Keyboard and screen readers: one `h1` per page, a skip link, real labels, `aria-pressed` on the auth switch, `aria-current` on the active nav item, and `role="alert"` on form errors. Focus uses the existing outline.
+- No motion that is required to understand the page. No remote fonts or hero images, so the first paint stays small.
+- Tone is civic and calm. Name the publisher and the year. Say when a figure is not Lagos spending. Do not invent a number, a person, or an official seal.
+
+## Engineering
+
+- The UI and the HTTP API are one Next.js app. New backend behaviour goes in `app/api`, not a second server.
+- Validate input with zod. Return `{ "error": "..." }` and, for forms, `fieldErrors`. Unexpected failures stay generic.
+- Passwords are hashed with bcrypt before they are stored. Compare them on the server. Never return a hash.
+- The session is an HMAC-signed token in an `httpOnly`, `SameSite=Lax` cookie. The signature is not enough: the session row must still exist, and its role must match the token. Signing out deletes the row.
+- Authorisation is decided on the server. `proxy.ts` sends anonymous visitors to `/sign-in`, and a role that asks for another desk to `/forbidden`. Desk pages check the role again.
+- Share user, role, and path types from `lib/auth/types.ts`. Client components may import that module. They must not import the database.
+- Secrets live in the environment. `.env.example` lists the names. Production refuses to sign sessions without `NATIONOS_SESSION_SECRET` of at least 32 characters. Do not commit a real secret.
+- Accounts sit in their own SQLite file (`NATIONOS_AUTH_DB_PATH`) so the store can be replaced without touching the fiscal schema.
+- The `main` contract is preserved at `GET /api/v1/fiscal/overview`, `GET /api/v1/fiscal/revenue`, `POST /api/v1/budgets/recommend`, `GET|POST /api/v1/decisions`, `GET /api/v1/scenarios`, `POST /api/allocate`, and `POST /api/chat` with `{ "query" }`. The existing workspace still posts `{ "message" }` to `/api/chat`. Keep both shapes.
+
+## Roles
+
+| Role         | Desk                    | Who                                | Registration                                     |
+| ------------ | ----------------------- | ---------------------------------- | ------------------------------------------------ |
+| `government` | `/dashboard/government` | Lagos budget and finance officials | Seeded only. Sign-up must never grant this role. |
+| `citizen`    | `/dashboard/citizen`    | Members of the public              | Seeded, and the only role sign-up can create.    |
+
+Both roles may read `/overview`, `/revenue`, `/decisions`, and `/sources`. Only `government` may open `/budget` and `/scenarios`, or post a plan, allocation, scenario, or decision. The government desk simulates from published Lagos IGR. It labels the result a projection and cites the source. It does not invent a tax rate or a Lagos appropriation. The citizen desk is read-only.
+
+## Advice and deploy
+
+- The advisor uses the Vercel AI SDK. The default model is Grok through the AI Gateway: `spacexai/grok-4.20-non-reasoning`. `AI_MODEL` overrides that gateway id. The catalog does not list `xai/grok-4-fast`.
+- On Vercel the gateway signs in with `VERCEL_OIDC_TOKEN`, which the platform sets. Locally use `AI_GATEWAY_API_KEY`, or `vercel env pull`. A direct `XAI_API_KEY` is the fallback only when the gateway is not configured.
+- The model may state a number only after a tool read it from the repository. After the reply, any number that is not in those tool results is removed. A `{ "query" }` body stays on the ledger path and never calls the model.
+- The role comes from the session. A government seat may run the simulation tool. A citizen seat, and a visitor with no session, get read-only tools. If no key is set, or the model call fails, the existing rule-based answer is used and the screen says so.
+- On Vercel the app opens SQLite under `/tmp`, because the deployment disk is read-only. The published figures are copied in from the files shipped with the function. Demo users are seeded into that copy. Sign-up and saved decisions last only as long as that copy. Do not describe them as durable.

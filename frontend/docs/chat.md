@@ -1,0 +1,81 @@
+# Project Intelligence conversation
+
+Project Intelligence (`/budget`) is a conversational entry point to the imported Nigerian data. It preserves the green/white workspace styling and keeps the existing investment planner under an expandable decision builder.
+
+## What it answers
+
+- National indicators: population, GDP, growth, inflation, unemployment, electricity, education, water, mortality, health expenditure and resource rents.
+- State/FCT revenue: individual observations, highest/lowest nominal collections, comparisons and historical trends over 2019–2025.
+- The imported 2025 approved federal budget headline.
+- Conditional five/ten-year modelling using the current investment draft, with formulas and assumptions available for inspection.
+
+Example: “Compare Lagos and Rivers revenue”, then “What about Kano?” or “And in 2020?”. Naming Nigeria explicitly resets geography to national scope. New standalone questions reset reporting-year context; follow-ups preserve it.
+
+Questions such as “How would the next 5 years look like?” also run the current investment draft. Five/ten in words are supported. The answer is explicitly conditional on the form's budget and assumptions, not a general prediction of Nigeria's future.
+
+Suggested questions provide reliable starting points. Unsupported questions return a capability explanation or data gap, rather than an invented answer.
+
+## How responses work
+
+With no AI credentials, the answer is **local and rule-based**. Topic aliases and state names select repository queries. JavaScript formats the observations. No user-generated SQL is run.
+
+When `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN` is set, the same `{ "message" }` route calls Grok through the Vercel AI Gateway. The default model is `spacexai/grok-4.20-non-reasoning` (fast, tool-calling). `AI_MODEL` overrides that gateway id. The live catalog has no `xai/grok-4-fast`. On Vercel the platform sets `VERCEL_OIDC_TOKEN`, so production does not need a pasted key. Locally, use the gateway key or `vercel env pull`. `XAI_API_KEY` with `@ai-sdk/xai` is used only when the gateway is not configured. The direct model id defaults to `grok-4.20-non-reasoning`.
+
+The model must call a tool. Tools read national indicators, one state's revenue, a two-state comparison, and the federal headline. A government session may also run the tax or plan projection. A citizen session, or no session, does not receive that tool. The role comes from the session cookie, not the body. After the reply, any number that is not in the tool results is removed. The badge reads `AI · figures checked`, `AI · unsupported figure removed`, or `Rule-based`. If the model call fails, the rule-based answer is returned and the log line does not include the question or the key.
+
+`{ "query" }` still returns `{ "answer" }` from the ledger and never calls the model. `stream: true` on a `{ "message" }` request returns the already-checked text as `text/plain`, with `X-NationOS-Mode`. Message chat is limited to 30 requests per 15 minutes in this process.
+
+Files:
+
+| File                                     | Responsibility                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| components/nigeria/intelligence-chat.jsx | Transcript, composer, suggested questions, sources and expandable planner |
+| lib/nigeria/chat-topics.mjs              | Supported topic aliases and example prompts                               |
+| lib/nigeria/chat.mjs                     | Rule-based retrieval, context, and response assembly                      |
+| lib/ai/                                  | Gateway model, tools, number check, and fallback                          |
+| app/api/chat/route.js                    | `{ "message" }` and `{ "query" }` boundary                                |
+| tests/chat.mjs, tests/ai.mjs             | Retrieval, mocked tool calls, and the number check                        |
+
+The rule-based chat cannot cover every phrasing. The AI path covers more wording, but it still may only repeat numbers the tools returned. The screen badge names which path answered.
+
+## API contract
+
+POST `/api/chat`, application/json, same write-origin/16 KB limits as other routes:
+
+```json
+{
+  "message": "Compare Lagos and Rivers revenue",
+  "context": null
+}
+```
+
+Optional `context` contains only `scope` (known ISO ID or all), `year` (integer or null) and `topic` (known indicator code, revenue, plan or null). Return the previous response's context for follow-ups. The server validates it; it does not trust a transcript's assertions as evidence.
+
+Optional `config` is the existing complete planning DTO. It is used only when asking to model/simulate/calculate a plan, draft, budget or investment. All model inputs pass the existing planning validator. “5” or “10” in that request selects the horizon. An explicit state name selects geography; other budget changes must be made in the visible form rather than inferred from ambiguous text.
+
+Responses:
+
+```text
+{
+  mode: "local-data" | "ai" | "ai-checked",
+  paragraphs: string[],
+  context: {scope, year, topic} | null,
+  sources: sourceMetadata[],
+  table?: {columns: string[], rows: string[][]},
+  result?: validatedPlanResult
+}
+```
+
+`local-data` is the rule-based engine. `ai` means every number in the reply was in a tool result. `ai-checked` means at least one unsupported number was removed.
+
+Errors use `{error: string}`, HTTP 400 for invalid questions/context/configuration, plus shared HTTP origin/size/content-type errors. Messages must contain 1–2,000 characters.
+
+No database table or migration is added. Chat calculations do not create saved decisions or plan runs. Conversation state is local React memory and clears on navigation/reload or New conversation. To retain reasoning, calculate and save through the decision builder. Existing saved decisions remain in SQLite.
+
+## Evidence safeguards
+
+National metrics are never assigned to individual states. Missing years remain missing. State revenue excludes federal transfers, and federal appropriation is not actual spending. Ranking collections cannot establish governance quality or causal explanations.
+
+Requests for unsupported citizen, banking, business, transport or food-price datasets explicitly report the gap. Suggestions about investigating compliance, tax bases or outcomes are labelled investigation steps, not proven policy recommendations. Model answers retain the existing limitations on predicting GDP, jobs or service outcomes.
+
+Source links go to the application's source register, which preserves publisher URLs, periods, terms and checksums. Text is rendered as React text rather than raw HTML.

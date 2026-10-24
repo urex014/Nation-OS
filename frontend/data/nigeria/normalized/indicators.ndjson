@@ -1,0 +1,121 @@
+{"code":"SP.POP.TOTL","name":"Population, total","year":2025,"value":237527782,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2024,"value":232679478,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2023,"value":227882945,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2022,"value":223150896,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2021,"value":218529286,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2020,"value":213996181,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2019,"value":209485641,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2018,"value":204938755,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2017,"value":200254579,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2016,"value":195443700,"sourceId":"worldbank-wdi-ng"}
+{"code":"SP.POP.TOTL","name":"Population, total","year":2015,"value":190671878,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2025,"value":290794361542.112,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2024,"value":252261880140.271,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2023,"value":487387801877.803,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2022,"value":646950257575.455,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2021,"value":609147716965.348,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2020,"value":598586817817.392,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2019,"value":668219992686.575,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2018,"value":421739251509.08,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2017,"value":375745731053.427,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2016,"value":404649125252.16,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.CD","name":"GDP (current US$)","year":2015,"value":493026682800.63,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2025,"value":4.01336180700973,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2024,"value":4.07106650147703,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2023,"value":3.31590368111438,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2022,"value":4.31882949157136,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2021,"value":1.109252540249,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2020,"value":-6.36889840468527,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2019,"value":2.20842927835211,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2018,"value":1.92275734199798,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2017,"value":0.805886619091581,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2016,"value":-1.61686894903467,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.MKTP.KD.ZG","name":"GDP growth (annual %)","year":2015,"value":2.65269329541779,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2025,"value":23.0101235833333,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2024,"value":33.2416590552748,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2023,"value":24.6595502031139,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2022,"value":18.8471877843274,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2021,"value":16.9528457221607,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2020,"value":13.2460234276598,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2019,"value":11.3964223378114,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2018,"value":12.0951065173431,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2017,"value":16.5022662139641,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2016,"value":15.6968126387972,"sourceId":"worldbank-wdi-ng"}
+{"code":"FP.CPI.TOTL.ZG","name":"Inflation, consumer prices (annual %)","year":2015,"value":9.00943498007706,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2025,"value":3.064,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2024,"value":3.045,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2023,"value":3.074,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2022,"value":3.827,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2021,"value":5.404,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2020,"value":5.714,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2019,"value":5.206,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2018,"value":5.069,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2017,"value":4.83,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2016,"value":4.499,"sourceId":"worldbank-wdi-ng"}
+{"code":"SL.UEM.TOTL.ZS","name":"Unemployment, total (% of total labor force) (modeled ILO estimate)","year":2015,"value":4.134,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2025,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2024,"value":62.5,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2023,"value":61.2,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2022,"value":60.5,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2021,"value":59.5,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2020,"value":55.4,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2019,"value":55.4,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2018,"value":56.5,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2017,"value":54.4,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2016,"value":59.3,"sourceId":"worldbank-wdi-ng"}
+{"code":"EG.ELC.ACCS.ZS","name":"Access to electricity (% of population)","year":2015,"value":52.5,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2025,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2024,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2023,"value":89.5871124267578,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2022,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2021,"value":83.8092555956779,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2020,"value":84.371583976485,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2019,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2018,"value":81.6278513667331,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2017,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2016,"value":78.8780517578125,"sourceId":"worldbank-wdi-ng"}
+{"code":"SE.PRM.ENRR","name":"School enrollment, primary (% gross)","year":2015,"value":25.5657563073792,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2025,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2024,"value":82.2488935172216,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2023,"value":81.0772897042816,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2022,"value":79.457946920672,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2021,"value":77.8385518833185,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2020,"value":76.2190366017765,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2019,"value":74.5993213952744,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2018,"value":72.9796602996736,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2017,"value":71.3599849035344,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2016,"value":69.7405688273521,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.H2O.BASW.ZS","name":"People using at least basic drinking water services (% of population)","year":2015,"value":68.1220021164846,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2025,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2024,"value":115.6,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2023,"value":116.8,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2022,"value":117.5,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2021,"value":117.6,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2020,"value":117.4,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2019,"value":117.4,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2018,"value":117.2,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2017,"value":117.2,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2016,"value":117.4,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.DYN.MORT","name":"Mortality rate, under-5 (per 1,000 live births)","year":2015,"value":117.8,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2025,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2024,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2023,"value":4.19086456,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2022,"value":4.21020174,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2021,"value":4.07625723,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2020,"value":3.38063431,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2019,"value":2.98547053,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2018,"value":3.09069347,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2017,"value":3.74762511,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2016,"value":3.64773679,"sourceId":"worldbank-wdi-ng"}
+{"code":"SH.XPD.CHEX.GD.ZS","name":"Current health expenditure (% of GDP)","year":2015,"value":3.58194995,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2025,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2024,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2023,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2022,"value":null,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2021,"value":8.55295423830806,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2020,"value":5.07484002483035,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2019,"value":8.35322267194456,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2018,"value":9.79850822600435,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2017,"value":7.80498492445019,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2016,"value":4.65772615666869,"sourceId":"worldbank-wdi-ng"}
+{"code":"NY.GDP.TOTL.RT.ZS","name":"Total natural resources rents (% of GDP)","year":2015,"value":4.55410681800406,"sourceId":"worldbank-wdi-ng"}

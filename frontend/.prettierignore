@@ -1,4 +1,9 @@
-.next
-node_modules
-data
+node_modules/
+.next/
+.npm-cache/
+.recovery/
+data/nigeria/raw/
+data/nigeria/normalized/
+data/cited/map-paths.json
 package-lock.json
+next-env.d.ts
