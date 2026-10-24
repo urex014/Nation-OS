@@ -3,7 +3,14 @@ import { spawnSync } from "node:child_process";
 for (const args of [
   ["scripts/check-lines.mjs"],
   ["--test", "tests/nigeria.mjs", "tests/chat.mjs", "tests/origin.mjs", "tests/runtime.mjs", "tests/ai.mjs"],
-  ["node_modules/tsx/dist/cli.mjs", "--test", "tests/auth.mjs", "tests/main-contract.test.ts"],
+  [
+    "node_modules/tsx/dist/cli.mjs",
+    "--test",
+    "tests/auth.mjs",
+    "tests/accounts.mjs",
+    "tests/runtime-pg.mjs",
+    "tests/main-contract.test.ts",
+  ],
   [
     "node_modules/tsx/dist/cli.mjs",
     "--test",

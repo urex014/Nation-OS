@@ -8,6 +8,7 @@ export function Advisor({ heading, intro, prompts }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [mode, setMode] = useState("");
+  const [aiStatus, setAiStatus] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -18,6 +19,7 @@ export function Advisor({ heading, intro, prompts }) {
     setError("");
     setAnswer("");
     setMode("");
+    setAiStatus("");
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -29,6 +31,7 @@ export function Advisor({ heading, intro, prompts }) {
         throw Error(data.error || "The advisor could not answer.");
       }
       setMode(response.headers.get("x-nationos-mode") || "local-data");
+      setAiStatus(response.headers.get("x-nationos-ai-status") || "");
       const reader = response.body?.getReader();
       if (!reader) {
         setAnswer(await response.text());
@@ -57,7 +60,7 @@ export function Advisor({ heading, intro, prompts }) {
         <h2 className="font-semibold">{heading}</h2>
         {mode && (
           <p className="rounded-full bg-stone-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-stone-600">
-            {engineLabel(mode)}
+            {engineLabel(mode, aiStatus)}
           </p>
         )}
       </div>
@@ -105,7 +108,9 @@ export function Advisor({ heading, intro, prompts }) {
           <Notice error>{error}</Notice>
         </div>
       )}
-      {answer && <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-stone-700">{answer}</p>}
+      {answer && (
+        <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-stone-700">{answer}</p>
+      )}
     </section>
   );
 }

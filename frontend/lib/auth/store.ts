@@ -51,24 +51,29 @@ function publish(row: UserRow): PublicUser {
 }
 
 export const sqliteAccounts: AccountStore = {
-  findByEmail(email: string) {
-    const row = authDb().prepare("select * from users where email = ?").get(email) as
-      UserRow | undefined;
+  async findByEmail(email: string) {
+    const row = authDb()
+      .prepare("select * from users where email = ?")
+      .get(email.toLowerCase()) as UserRow | undefined;
     if (!row) return null;
     return { ...publish(row), passwordHash: row.password_hash, role: row.role as Role };
   },
-  insertCitizen(input) {
+  async insertCitizen(input) {
     const email = input.email.toLowerCase();
+    const passwordHash = await hashPassword(input.password);
     try {
       authDb()
         .prepare(
           "insert into users (id, email, name, agency, role, password_hash) values (?, ?, ?, ?, 'citizen', ?)",
         )
-        .run(input.id, email, input.name, input.agency, hashPassword(input.password));
+        .run(input.id, email, input.name, input.agency, passwordHash);
     } catch (error) {
       if (String(error).includes("UNIQUE")) return "exists";
       throw error;
     }
     return { id: input.id, email, name: input.name, agency: input.agency, role: "citizen" };
+  },
+  async deleteById(id: string) {
+    authDb().prepare("delete from users where id = ?").run(id);
   },
 };

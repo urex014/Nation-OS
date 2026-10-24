@@ -12,7 +12,7 @@
     "check:http": "node tests/http.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:init": "node scripts/init-db.mjs",
+    "db:init": "tsx scripts/init-db.mjs",
     "data:fetch": "node scripts/nigeria/fetch.mjs",
     "data:normalize": "python scripts/nigeria/normalize.py",
     "test:ui": "tsx --test tests/ui.test.jsx"
@@ -22,6 +22,7 @@
     "ai": "^7.0.152",
     "bcryptjs": "^3.0.3",
     "next": "16.4.3",
+    "postgres": "^3.4.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "^4.6.7"

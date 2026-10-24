@@ -1,12 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
 const directory = mkdtempSync(path.join(tmpdir(), "nationos-auth-"));
 process.env.NATIONOS_AUTH_DB_PATH = path.join(directory, "auth.sqlite");
+process.env.NATIONOS_AUTH_STORE = "sqlite";
+delete process.env.DATABASE_URL;
+delete process.env.POSTGRES_URL;
+delete process.env.VERCEL;
 process.env.NATIONOS_BCRYPT_COST = "4";
 process.env.NATIONOS_SESSION_SECRET = "test-only-nationos-session-secret-32chars";
 process.env.NODE_ENV = "development";
@@ -116,10 +120,23 @@ test("unknown people and wrong passwords share one error", async () => {
   assert.equal((await missing.json()).error, (await wrong.json()).error);
 });
 
-test("on Vercel a new citizen is carried by the cookie, not by a database file", async () => {
-  const previous = process.env.VERCEL;
+test("on Vercel without a database, public sign-up is refused", async () => {
+  const saved = {
+    VERCEL: process.env.VERCEL,
+    NATIONOS_AUTH_STORE: process.env.NATIONOS_AUTH_STORE,
+    DATABASE_URL: process.env.DATABASE_URL,
+    POSTGRES_URL: process.env.POSTGRES_URL,
+  };
   process.env.VERCEL = "1";
+  delete process.env.NATIONOS_AUTH_STORE;
+  delete process.env.DATABASE_URL;
+  delete process.env.POSTGRES_URL;
   try {
+    const { accountMode, publicSignUpEnabled } = await import("../lib/auth/accounts.ts");
+    assert.equal(accountMode(), "disabled");
+    assert.equal(publicSignUpEnabled(), false);
+    if (existsSync(process.env.NATIONOS_AUTH_DB_PATH))
+      unlinkSync(process.env.NATIONOS_AUTH_DB_PATH);
     const created = await signUp(
       post("http://127.0.0.1:4173/api/auth/sign-up", {
         name: "New Citizen",
@@ -128,19 +145,21 @@ test("on Vercel a new citizen is carried by the cookie, not by a database file",
         password: "Citizen-Demo-2026!",
       }),
     );
-    const { accountStore } = await import("../lib/auth/accounts.ts");
-    const { memoryAccounts } = await import("../lib/auth/memory-accounts.ts");
-    assert.equal(accountStore(), memoryAccounts);
-    assert.equal(created.status, 201);
-    const current = await session(
-      new Request("http://127.0.0.1:4173/api/auth/session", {
-        headers: { cookie: cookiePair(created) },
+    assert.equal(created.status, 503);
+    assert.match((await created.json()).error, /Demonstration accounts can still sign in/);
+    assert.equal(existsSync(process.env.NATIONOS_AUTH_DB_PATH), false);
+    const demo = await signIn(
+      post("http://127.0.0.1:4173/api/auth/sign-in", {
+        email: "citizen@nationos.demo",
+        password: "Citizen-Demo-2026!",
       }),
     );
-    assert.equal((await current.json()).user.role, "citizen");
+    assert.equal(demo.status, 200);
   } finally {
-    if (previous === undefined) delete process.env.VERCEL;
-    else process.env.VERCEL = previous;
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
   }
 });
 

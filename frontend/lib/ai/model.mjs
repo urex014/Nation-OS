@@ -3,8 +3,14 @@ export const DEFAULT_GATEWAY_MODEL = "spacexai/grok-4.20-non-reasoning";
 /** Same family on the direct xAI API, which does not use the gateway prefix. */
 export const DEFAULT_XAI_MODEL = "grok-4.20-non-reasoning";
 
+/**
+ * On Vercel the OIDC token is usually the x-vercel-oidc-token request header,
+ * not a project environment variable. Treat every Vercel run as worth trying.
+ */
 export function gatewayReady() {
-  return Boolean(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN);
+  return Boolean(
+    process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || process.env.VERCEL === "1",
+  );
 }
 
 export function aiConfigured() {

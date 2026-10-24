@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 
-/** Production refuses a weak cost. Tests set NATIONOS_BCRYPT_COST=4. */
+/**
+ * Cost for a new password hash. Production never stores a new hash below 12.
+ * Tests may set NATIONOS_BCRYPT_COST=4. Checking a password uses the cost
+ * already inside that hash, so the demo seats can stay at cost 10.
+ */
 export function bcryptCost(): number {
   const raw = Number(process.env.NATIONOS_BCRYPT_COST ?? 12);
   const cost = Number.isInteger(raw) ? raw : 12;
@@ -8,10 +12,15 @@ export function bcryptCost(): number {
   return Math.min(14, Math.max(4, cost));
 }
 
-export function hashPassword(password: string): string {
-  return bcrypt.hashSync(password, bcryptCost());
+export function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, bcryptCost());
 }
 
 export function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
+  return new Promise((resolve, reject) => {
+    bcrypt.compare(password, hash, (error, same) => {
+      if (error) reject(error);
+      else resolve(Boolean(same));
+    });
+  });
 }

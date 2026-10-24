@@ -24,13 +24,24 @@
   input,
   select,
   textarea {
-    @apply w-full rounded-sm border border-stone-300 bg-white px-3 py-2 text-sm;
+    @apply w-full rounded-sm border border-stone-300 bg-white px-3 py-2;
+    /* 16px stops iPhone from zooming the page when a field is tapped. */
+    font-size: max(16px, 1rem);
   }
   input[type="checkbox"] {
     width: auto;
   }
   textarea {
     min-height: 110px;
+    font-size: max(16px, 1rem);
+  }
+  input.text-sm,
+  select.text-sm,
+  textarea.text-sm,
+  input.text-xs,
+  select.text-xs,
+  textarea.text-xs {
+    font-size: max(16px, 1rem);
   }
   th {
     @apply bg-stone-50 text-xs font-semibold uppercase tracking-wide text-stone-600;

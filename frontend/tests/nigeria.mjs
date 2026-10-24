@@ -4,6 +4,8 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 // Isolate every write from the app's working SQLite file.
+delete process.env.DATABASE_URL;
+delete process.env.POSTGRES_URL;
 const temporary = mkdtempSync(path.join(tmpdir(), "nationos-ng-"));
 process.env.NATIONOS_DB_PATH = path.join(temporary, "test.sqlite");
 const { getDatabase, sourceDirectory } = await import("../lib/nigeria/database.mjs");
@@ -73,8 +75,8 @@ test("model preserves nominal sums and responds in the declared direction", () =
   assert.throws(() => plans.validatePlan({ ...config, years: 7 }), { status: 400 });
   assert.throws(() => plans.validatePlan({ ...config, inflation: NaN }), { status: 400 });
 });
-test("decision snapshots are server-computed, persistent and revision-protected", () => {
-  const d = decisions.createDecision({
+test("decision snapshots are server-computed, persistent and revision-protected", async () => {
+  const d = await decisions.createDecision({
     title: "Review education funding",
     reason: "Validate costs and procurement first.",
     config,
@@ -83,20 +85,24 @@ test("decision snapshots are server-computed, persistent and revision-protected"
   assert.equal(d.result.totals.nominalNaira, 5000000000);
   assert.equal(d.audit.length, 1);
   assert.equal(d.sources.length, 4);
-  const r = decisions.reviewDecision(d.id, { status: "Reviewed", expectedRevision: 1 });
+  const r = await decisions.reviewDecision(d.id, { status: "Reviewed", expectedRevision: 1 });
   assert.equal(r.revision, 2);
   assert.equal(r.audit.length, 2);
   assert.deepEqual(r.result, d.result);
-  assert.throws(() => decisions.reviewDecision(d.id, { status: "Rejected", expectedRevision: 1 }), {
-    status: 409,
-  });
+  await assert.rejects(
+    () => decisions.reviewDecision(d.id, { status: "Rejected", expectedRevision: 1 }),
+    { status: 409 },
+  );
   importNigeriaData(getDatabase(), sourceDirectory());
-  assert.equal(decisions.getDecision(d.id).status, "Reviewed");
-  assert.equal(decisions.listDecisions().total, 1);
-  assert.equal(Object.getPrototypeOf(decisions.listDecisions().records[0]), Object.prototype);
+  assert.equal((await decisions.getDecision(d.id)).status, "Reviewed");
+  assert.equal((await decisions.listDecisions()).total, 1);
+  assert.equal(
+    Object.getPrototypeOf((await decisions.listDecisions()).records[0]),
+    Object.prototype,
+  );
   getDatabase().close();
   globalThis[Symbol.for("nationos.sqlite")].clear();
-  assert.equal(decisions.getDecision(d.id).revision, 2);
+  assert.equal((await decisions.getDecision(d.id)).revision, 2);
 });
 test("tax and sector illustrations start from published Lagos kobo", () => {
   const row = getDatabase()

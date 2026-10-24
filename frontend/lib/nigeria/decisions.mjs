@@ -1,8 +1,14 @@
 import { randomUUID } from "node:crypto";
+import { databaseUrl } from "../runtime/database-url.ts";
 import { getDatabase } from "./database.mjs";
 import { getPlanningContext, getSources } from "./repository.mjs";
 import { projectPlan } from "./planning.mjs";
 import { STATUSES } from "./constants.mjs";
+
+async function remote() {
+  if (!databaseUrl()) return null;
+  return import("./records-pg.mjs");
+}
 
 function prepareRun(config) {
   const context = getPlanningContext(config?.scope);
@@ -18,12 +24,14 @@ function insertRun(db, run) {
     JSON.stringify(run.sources),
   );
 }
-export function calculateAndStore(config) {
+export async function calculateAndStore(config) {
   const run = prepareRun(config);
-  insertRun(getDatabase(), run);
+  const pg = await remote();
+  if (pg) await pg.insertPlan(run);
+  else insertRun(getDatabase(), run);
   return { runId: run.id, result: run.result, sources: run.sources };
 }
-export function createDecision(input) {
+export async function createDecision(input) {
   if (typeof input.title !== "string" || !input.title.trim() || input.title.length > 160)
     throw Object.assign(Error("Enter a title of 1–160 characters."), { status: 400 });
   if (typeof input.reason !== "string" || !input.reason.trim() || input.reason.length > 4000)
@@ -31,9 +39,11 @@ export function createDecision(input) {
       status: 400,
     });
   // A submitted run/output is never trusted. The server recomputes the authoritative snapshot.
-  const run = prepareRun(input.config),
-    db = getDatabase(),
-    id = randomUUID();
+  const run = prepareRun(input.config);
+  const pg = await remote();
+  if (pg) return pg.getDecision(await pg.saveDecision(input, run));
+  const db = getDatabase();
+  const id = randomUUID();
   db.exec("begin immediate");
   try {
     insertRun(db, run);
@@ -55,7 +65,9 @@ export function createDecision(input) {
   }
   return getDecision(id);
 }
-export function getDecision(id) {
+export async function getDecision(id) {
+  const pg = await remote();
+  if (pg) return pg.getDecision(id);
   const row = getDatabase()
     .prepare(
       `select d.*,r.result_json,r.source_snapshot_json from decisions d
@@ -85,7 +97,7 @@ export function getDecision(id) {
       })),
   };
 }
-export function listDecisions(limit = 20, offset = 0) {
+export async function listDecisions(limit = 20, offset = 0) {
   if (
     !Number.isInteger(limit) ||
     limit < 1 ||
@@ -94,6 +106,8 @@ export function listDecisions(limit = 20, offset = 0) {
     offset < 0
   )
     throw Object.assign(Error("Invalid pagination."), { status: 400 });
+  const pg = await remote();
+  if (pg) return pg.listDecisions(limit, offset);
   const db = getDatabase();
   const total = db.prepare("select count(*) as total from decisions").get().total;
   const records = db
@@ -104,9 +118,14 @@ export function listDecisions(limit = 20, offset = 0) {
     .map((row) => ({ ...row }));
   return { records, total, limit, offset, hasMore: offset + records.length < total };
 }
-export function reviewDecision(id, input) {
+export async function reviewDecision(id, input) {
   if (!STATUSES.includes(input.status) || !Number.isInteger(input.expectedRevision))
     throw Object.assign(Error("Send a valid status and expectedRevision."), { status: 400 });
+  const pg = await remote();
+  if (pg) {
+    await pg.reviewDecision(id, input);
+    return pg.getDecision(id);
+  }
   const db = getDatabase();
   db.exec("begin immediate");
   try {

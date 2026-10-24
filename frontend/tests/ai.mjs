@@ -8,6 +8,7 @@ delete process.env.AI_GATEWAY_API_KEY;
 delete process.env.VERCEL_OIDC_TOKEN;
 delete process.env.XAI_API_KEY;
 delete process.env.AI_MODEL;
+delete process.env.VERCEL;
 
 const directory = mkdtempSync(path.join(tmpdir(), "nationos-ai-"));
 process.env.NATIONOS_DB_PATH = path.join(directory, "nigeria.sqlite");
@@ -18,12 +19,22 @@ const { groundReply } = await import("../lib/ai/ground.mjs");
 const { advise } = await import("../lib/ai/advise.mjs");
 const { answerChat } = await import("../lib/ai/answer.mjs");
 const { createTools } = await import("../lib/ai/tools.mjs");
-const { aiConfigured, activeModelId, gatewayModelId, DEFAULT_GATEWAY_MODEL, DEFAULT_XAI_MODEL } =
-  await import("../lib/ai/model.mjs");
+const {
+  aiConfigured,
+  activeModelId,
+  gatewayModelId,
+  gatewayReady,
+  DEFAULT_GATEWAY_MODEL,
+  DEFAULT_XAI_MODEL,
+} = await import("../lib/ai/model.mjs");
 const { POST } = await import("../app/api/chat/route.js");
 
 test("citizen tools are read-only and a zero change keeps the published Lagos tax", async () => {
   assert.equal(aiConfigured(), false);
+  assert.equal(gatewayReady(), false);
+  process.env.VERCEL = "1";
+  assert.equal(gatewayReady(), true);
+  delete process.env.VERCEL;
   assert.equal(gatewayModelId(), DEFAULT_GATEWAY_MODEL);
   assert.equal(activeModelId(), DEFAULT_XAI_MODEL);
   const citizen = createTools("citizen");
@@ -60,14 +71,14 @@ test("a mocked model cannot keep a number the tools did not return", async () =>
 });
 
 test("with no key the chat stays on the rule-based engine", async () => {
-  const local = await answerChat({ message: "Compare Lagos and Rivers revenue" });
-  assert.equal(local.mode, "local-data");
-  assert.equal(local.table.rows.length, 2);
   const logged = [];
   const write = console.error;
   console.error = (line) => logged.push(String(line));
+  let local;
   let fallen;
+  let missingOidc;
   try {
+    local = await answerChat({ question: "Compare Lagos and Rivers revenue" });
     fallen = await answerChat(
       { message: "Compare Lagos and Rivers revenue" },
       {
@@ -77,11 +88,30 @@ test("with no key the chat stays on the rule-based engine", async () => {
         },
       },
     );
+    missingOidc = await answerChat(
+      { message: "Compare Lagos and Rivers revenue" },
+      {
+        forceAi: true,
+        generate: async () => {
+          throw Error(
+            "The 'x-vercel-oidc-token' header is missing from the request. Do you have the OIDC option enabled in the Vercel project settings?",
+          );
+        },
+      },
+    );
   } finally {
     console.error = write;
   }
+  assert.equal(local.mode, "local-data");
+  assert.equal(local.aiStatus, "not_configured");
+  assert.equal(local.table.rows.length, 2);
   assert.equal(fallen.mode, "local-data");
-  assert.deepEqual(logged, ["AI advisor failed; using rule-based answers."]);
+  assert.equal(fallen.aiStatus, "error");
+  assert.equal(missingOidc.aiStatus, "not_configured");
+  assert.match(logged[0], /fell back \(not_configured\)/);
+  assert.match(logged[1], /fell back \(error\): model unavailable/);
+  assert.match(logged[2], /x-vercel-oidc-token/);
+  assert.doesNotMatch(logged.join("\n"), /eyJ|sk_|bearer /i);
   await assert.rejects(
     () => answerChat({ message: " " }, { forceAi: true, generate: async () => "no" }),
     { status: 400 },
@@ -107,6 +137,7 @@ test("a streamed message is labelled with the engine that answered", async () =>
   );
   assert.equal(stream.status, 200);
   assert.equal(stream.headers.get("x-nationos-mode"), "local-data");
+  assert.equal(stream.headers.get("x-nationos-ai-status"), "not_configured");
   assert.match(await stream.text(), /Lagos/);
 });
 

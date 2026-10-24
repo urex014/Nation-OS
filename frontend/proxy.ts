@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { userFromToken } from "./lib/auth/service";
+import { userFromToken } from "./lib/auth/token";
 import { SESSION_COOKIE } from "./lib/auth/token";
 import {
   GOVERNMENT_PATHS,

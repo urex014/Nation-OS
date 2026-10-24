@@ -4,6 +4,7 @@ export async function request(path, body, method = "POST") {
     method: body === undefined ? "GET" : method,
     headers: body === undefined ? {} : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
+    cache: "no-store",
     signal: AbortSignal.timeout(30000),
   });
   const data = await response.json();
