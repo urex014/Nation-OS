@@ -30,6 +30,11 @@ export function ScenarioLab() {
         Bring the guesses from the budget planner into four comparisons. Each one changes a single
         guess. These are what-if cases, not forecasts or odds.
       </Heading>
+      {config.projectNaira ? (
+        <p className="mb-4 text-sm text-stone-700">
+          Project from the link: {naira(config.projectNaira)} of {naira(config.annualBudgetNaira)}.
+        </p>
+      ) : null}
       <Card title="Compare assumptions">
         <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center">
           <label className="text-sm">

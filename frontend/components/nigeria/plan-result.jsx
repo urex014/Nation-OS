@@ -30,6 +30,17 @@ export function PlanResult({ result }) {
       {result.flags.map((f) => (
         <Notice key={f}>{f}</Notice>
       ))}
+      {result.alternatives?.length ? (
+        <Card title="Other ways to do this">
+          {result.alternatives.map((item) => (
+            <p key={item.id || item.title} className="border-b border-stone-100 py-2 text-sm">
+              {item.best ? "Best fit: " : ""}
+              {item.title}. {item.summary} {item.tradeoff}
+            </p>
+          ))}
+          {result.bestReason ? <p className="pt-2 text-sm">{result.bestReason}</p> : null}
+        </Card>
+      ) : null}
       <Card title="Annual investment path">
         <SideScroll>
           <table className="w-full min-w-[44rem] text-sm">

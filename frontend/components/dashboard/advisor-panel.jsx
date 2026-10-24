@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { engineLabel } from "../../lib/ai/labels.mjs";
+import { AnswerBits } from "./answer-bits";
 import { useAdvisor } from "./advisor-state";
 import { chipsFor, useWide } from "./nation-button";
 
@@ -155,6 +156,7 @@ export function AdvisorPanel() {
                 >
                   <p className="whitespace-pre-wrap">{message.text}</p>
                   <ReplyTable table={message.table} />
+                  <AnswerBits message={message} />
                 </div>
                 <time
                   className="mt-1 block text-[11px] text-stone-500"

@@ -1,4 +1,4 @@
-import { allocateBudget } from "./planning.mjs";
+import { allocateBudget } from "./allocate.mjs";
 
 /**
  * Move the published tax collection by a whole percent.

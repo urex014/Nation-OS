@@ -11,6 +11,7 @@ import {
 import { projectPlan } from "./planning.mjs";
 import { naira, number, indicatorValue } from "./format.mjs";
 import { topics } from "./chat-topics.mjs";
+import { budgetFallback } from "./chat-budget.mjs";
 
 const fail = (message) => {
   throw Object.assign(Error(message), { status: 400 });
@@ -62,6 +63,11 @@ export function answerQuestion(input) {
   const topic =
     matchedTopic || (revenueIntent ? "revenue" : !budgetIntent && followup ? previous.topic : null);
   const context = { scope, year, topic: topic || null };
+  const special = budgetFallback(input.message, input.role === "government" ? "government" : "citizen", {
+    context: previous,
+    history: input.history,
+    page: input.page,
+  });
   function respond(paragraphs, sourceIds = [], extra = {}) {
     return {
       mode: "local-data",
@@ -70,6 +76,18 @@ export function answerQuestion(input) {
       sources: getSources().filter((s) => sourceIds.includes(s.id)),
       ...extra,
     };
+  }
+  if (special) {
+    return respond(special.paragraphs, special.sourceIds || [], {
+      work: special.work || [],
+      links: special.links || [],
+      warnings: special.warnings || [],
+      alternatives: special.alternatives || [],
+      bestReason: special.bestReason || null,
+      result: special.result,
+      table: special.table,
+      context: { ...context, ...(special.context || {}) },
+    });
   }
   const horizonQuestion =
     /\b(next|coming|future|look|outlook)\b/.test(q) && /\b(5|10|five|ten) years?\b/.test(q);

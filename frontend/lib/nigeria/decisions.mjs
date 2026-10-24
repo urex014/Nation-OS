@@ -16,6 +16,9 @@ function prepareRun(config) {
 
 export async function calculateAndStore(config) {
   const run = prepareRun(config);
+  if (run.result.blocked && !run.result.config.overrideProjectCap) {
+    return { runId: null, result: run.result, sources: run.sources, blocked: true };
+  }
   const pg = await remote();
   await pg.insertPlan(run);
   return { runId: run.id, result: run.result, sources: run.sources };
@@ -30,6 +33,9 @@ export async function createDecision(input) {
     });
   // A submitted run/output is never trusted. The server recomputes the authoritative snapshot.
   const run = prepareRun(input.config);
+  if (run.result.blocked && !run.result.config.overrideProjectCap) {
+    throw Object.assign(Error(run.result.blocked), { status: 400 });
+  }
   const pg = await remote();
   return pg.getDecision(await pg.saveDecision(input, run));
 }

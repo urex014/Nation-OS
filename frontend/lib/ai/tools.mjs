@@ -1,17 +1,10 @@
 import { tool } from "ai";
 import { z } from "zod";
+import { createBudgetTools } from "./budget-tools.mjs";
+import { createLedgerTools } from "./ledger-tools.mjs";
 import { naira, indicatorValue } from "../nigeria/format.mjs";
-import { illustrateTax } from "../nigeria/illustrate.mjs";
-import { projectPlan, validatePlan } from "../nigeria/planning.mjs";
-import { compareScenarios } from "../nigeria/scenarios.mjs";
 import { getDatabase } from "../nigeria/database.mjs";
-import {
-  getIndicators,
-  getJurisdictions,
-  getPlanningContext,
-  getRevenue,
-  getSources,
-} from "../nigeria/repository.mjs";
+import { getIndicators, getJurisdictions, getRevenue, getSources } from "../nigeria/repository.mjs";
 
 function findState(name) {
   const query = String(name || "")
@@ -45,7 +38,7 @@ function remember(transcript, result) {
   return result;
 }
 
-export function createTools(role, transcript = []) {
+export function createTools(role, transcript = [], request = {}) {
   const read = {
     getNationalIndicators: tool({
       description: "Read a published national indicator for Nigeria. Never copy it onto one state.",
@@ -189,95 +182,10 @@ export function createTools(role, transcript = []) {
     }),
   };
 
-  if (role !== "government") return read;
-
   return {
     ...read,
-    runSimulation: tool({
-      description:
-        "Project a tax-collection change or a validated investment plan. The result is conditional, not a decision.",
-      inputSchema: z.object({
-        kind: z.enum(["tax", "plan", "scenarios"]),
-        state: z.string().optional(),
-        year: z.number().int().optional(),
-        taxPercent: z.number().int().min(-50).max(50).optional(),
-        plan: z.any().optional(),
-      }),
-      execute: async ({ kind, state, year, taxPercent, plan }) => {
-        if (kind === "tax") {
-          const match = findState(state || "Lagos");
-          let revenue;
-          try {
-            revenue = year == null ? getRevenue() : getRevenue(year);
-          } catch (error) {
-            return remember(transcript, {
-              missing: true,
-              year: year ?? null,
-              note: error.status ? error.message : "That revenue year is not loaded.",
-            });
-          }
-          const row = match && revenue.states.find((item) => item.id === match.id);
-          if (!row || row.taxNaira == null) {
-            return remember(transcript, {
-              missing: true,
-              state: state || "Lagos",
-              year: year ?? null,
-              note: "Published tax for that state and year is missing. Do not estimate it.",
-            });
-          }
-          const stored = getDatabase()
-            .prepare(
-              "select tax_kobo, other_kobo from state_revenue where state_id = ? and year = ?",
-            )
-            .get(match.id, revenue.year);
-          const illustrated = illustrateTax(stored.tax_kobo, stored.other_kobo, taxPercent ?? 0);
-          return remember(transcript, {
-            projection: true,
-            conditional: true,
-            state: row.name,
-            year: revenue.year,
-            taxPercent: taxPercent ?? 0,
-            publishedTaxNaira: row.taxNaira,
-            projectedTaxNaira: illustrated.taxKobo / 100,
-            projectedIgrNaira: illustrated.totalKobo / 100,
-            displayPublishedTax: naira(row.taxNaira),
-            displayProjectedTax: naira(illustrated.taxKobo / 100),
-            displayProjectedIgr: naira(illustrated.totalKobo / 100),
-            ...sourceBrief(revenue.sourceId),
-            note: illustrated.projection,
-          });
-        }
-        try {
-          const config = validatePlan(plan);
-          const context = getPlanningContext(config.scope);
-          const result = projectPlan(config, context);
-          const scenarios = kind === "scenarios" ? compareScenarios(config, context) : null;
-          return remember(transcript, {
-            projection: true,
-            conditional: true,
-            scope: context.name,
-            years: result.config.years,
-            nominalNaira: result.totals.nominalNaira,
-            constantPriceNaira: result.totals.constantPriceNaira,
-            displayNominal: naira(result.totals.nominalNaira),
-            displayConstant: naira(result.totals.constantPriceNaira),
-            scenarios: scenarios?.map((item) => ({
-              label: item.label,
-              nominalNaira: item.result.totals.nominalNaira,
-              displayNominal: naira(item.result.totals.nominalNaira),
-            })),
-            ...sourceBrief(context.sourceId),
-            note: result.limitations[0],
-            warning: context.warning,
-          });
-        } catch (error) {
-          return remember(transcript, {
-            missing: true,
-            note: error.status ? error.message : "The plan could not be checked.",
-          });
-        }
-      },
-    }),
+    ...createBudgetTools(role, transcript, { findState, sourceBrief }),
+    ...createLedgerTools(role, transcript, request),
   };
 }
 
