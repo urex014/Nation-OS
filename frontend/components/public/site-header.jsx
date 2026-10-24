@@ -11,7 +11,7 @@ const PAGE_LINKS = [
 
 export function SiteHeader({ user }) {
   const links = user
-    ? [{ href: homeFor(user.role), label: "Your desk" }, ...PAGE_LINKS]
+    ? [{ href: homeFor(user.role), label: "Overview" }, ...PAGE_LINKS]
     : PAGE_LINKS;
   return (
     <header className="bg-[#0B3B2C] text-white max-md:sticky max-md:top-0 max-md:z-40">
@@ -28,7 +28,7 @@ export function SiteHeader({ user }) {
             href={homeFor(user.role)}
             className="shrink-0 rounded-md bg-white px-4 py-2.5 text-sm font-medium text-[#0B3B2C] focus-visible:outline-white"
           >
-            Your desk
+            Overview
           </Link>
         ) : (
           <Link

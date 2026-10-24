@@ -54,13 +54,13 @@ export function AuthPanel() {
         return;
       }
       if (!data.dashboardPath) {
-        setError("We couldn't open your desk.");
+        setError("We couldn't open the overview.");
         return;
       }
       moved = true;
       // The cookie is set. Refresh the sign-in page so its server redirect runs
       // with that cookie. router.replace alone reused the signed-out shell, so
-      // the desk stayed blank until a manual reload.
+      // the overview stayed blank until a manual reload.
       startTransition(() => {
         router.replace(data.dashboardPath);
         router.refresh();
@@ -115,7 +115,7 @@ export function AuthPanel() {
       </h1>
       <p className="mt-3 text-sm leading-6 text-stone-600">
         {mode === "sign-in"
-          ? "We'll check your role, then open the right desk."
+          ? "We'll check your role, then open the overview."
           : "New accounts are for the public. This form can't make you a government user."}
       </p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>

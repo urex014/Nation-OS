@@ -37,9 +37,9 @@ function cookiePair(response) {
   return raw.split(";")[0];
 }
 
-test("each demonstration role receives only its own desk", async () => {
+test("each demonstration role lands on the overview", async () => {
   const cases = [
-    ["government@nationos.demo", "Government-Demo-2026!", "/dashboard/government"],
+    ["government@nationos.demo", "Government-Demo-2026!", "/overview"],
     ["citizen@nationos.demo", "Citizen-Demo-2026!", "/overview"],
   ];
   for (const [email, password, dashboardPath] of cases) {
@@ -200,11 +200,11 @@ test("proxy rejects anonymous officers and the wrong role", async () => {
     }),
   );
   const cookie = cookiePair(signedIn);
-  const denied = await proxy(
+  const retired = await proxy(
     new NextRequest("http://127.0.0.1:4173/dashboard/government", { headers: { cookie } }),
   );
-  assert.equal(denied.status, 307);
-  assert.match(denied.headers.get("location") ?? "", /\/forbidden$/);
+  assert.equal(retired.status, 307);
+  assert.match(retired.headers.get("location") ?? "", /\/overview$/);
   const deniedTool = await proxy(
     new NextRequest("http://127.0.0.1:4173/budget", { headers: { cookie } }),
   );
@@ -213,10 +213,11 @@ test("proxy rejects anonymous officers and the wrong role", async () => {
     new NextRequest("http://127.0.0.1:4173/api/plans", { method: "POST", headers: { cookie } }),
   );
   assert.equal(deniedWrite.status, 403);
-  const allowed = await proxy(
+  const citizenDesk = await proxy(
     new NextRequest("http://127.0.0.1:4173/dashboard/citizen", { headers: { cookie } }),
   );
-  assert.equal(allowed.headers.get("x-middleware-next"), "1");
+  assert.equal(citizenDesk.status, 307);
+  assert.match(citizenDesk.headers.get("location") ?? "", /\/overview$/);
   const government = await signIn(
     post("http://127.0.0.1:4173/api/auth/sign-in", {
       email: "government@nationos.demo",
@@ -249,26 +250,31 @@ test("validation rejects a short sign-up password", async () => {
   assert.equal(body.fieldErrors.email, "Enter a valid email address.");
 });
 
-test("a citizen lands on the overview, listed first in the menu", async () => {
+test("both roles land on the overview, and citizens keep it first", async () => {
   const { landingFor } = await import("../lib/auth/types.ts");
   const { workspaceItems } = await import("../lib/auth/workspace-nav.ts");
   assert.equal(landingFor("citizen"), "/overview");
-  assert.equal(landingFor("government"), "/dashboard/government");
+  assert.equal(landingFor("government"), "/overview");
   assert.deepEqual(
-    workspaceItems({ role: "citizen" }).map(([path]) => path),
-    ["/overview", "/dashboard/citizen", "/revenue", "/decisions", "/sources"],
+    workspaceItems({ role: "citizen" }).map(([path, label]) => [path, label]),
+    [
+      ["/overview", "The country"],
+      ["/revenue", "Money in"],
+      ["/decisions", "Saved decisions"],
+      ["/sources", "Sources"],
+    ],
   );
   assert.deepEqual(
     workspaceItems({ role: "government" }).map(([path]) => path),
-    [
-      "/dashboard/government",
-      "/overview",
-      "/revenue",
-      "/budget",
-      "/scenarios",
-      "/decisions",
-      "/sources",
-    ],
+    ["/overview", "/revenue", "/budget", "/scenarios", "/decisions", "/sources"],
+  );
+  assert.equal(
+    workspaceItems({ role: "citizen" }).some(([, label]) => /desk/i.test(label)),
+    false,
+  );
+  assert.equal(
+    workspaceItems({ role: "government" }).some(([, label]) => /desk/i.test(label)),
+    false,
   );
 });
 

@@ -54,24 +54,20 @@ assert.equal(fiscal.status, 200);
 assert.equal((await fiscal.json()).currency, "NGN");
 
 const citizen = await signIn("citizen@nationos.demo", "Citizen-Demo-2026!");
-const ownDesk = await fetch(base + "/dashboard/citizen", {
-  headers: { cookie: citizen },
-  redirect: "manual",
-});
-assert.equal(ownDesk.status, 200);
-assert.match(await ownDesk.text(), /Transparency desk/);
-const otherDesk = await fetch(base + "/dashboard/government", {
-  headers: { cookie: citizen },
-  redirect: "manual",
-});
-assert.equal(otherDesk.status, 307);
-assert.match(otherDesk.headers.get("location") ?? "", /\/forbidden$/);
+for (const path of ["/dashboard/citizen", "/dashboard/government", "/dashboard"]) {
+  const retired = await fetch(base + path, {
+    headers: { cookie: citizen },
+    redirect: "manual",
+  });
+  assert.equal(retired.status, 307, path);
+  assert.match(retired.headers.get("location") ?? "", /\/overview$/);
+}
 const governmentDesk = await fetch(base + "/dashboard/government", {
   headers: { cookie: government },
   redirect: "manual",
 });
-assert.equal(governmentDesk.status, 200);
-assert.match(await governmentDesk.text(), /Decision support/);
+assert.equal(governmentDesk.status, 307);
+assert.match(governmentDesk.headers.get("location") ?? "", /\/overview$/);
 const citizenTool = await fetch(base + "/budget", {
   headers: { cookie: citizen },
   redirect: "manual",
@@ -85,4 +81,4 @@ const chat = await fetch(base + "/api/chat", {
 });
 assert.equal(chat.status, 200);
 assert.equal((await chat.json()).table.rows.length, 2);
-console.log("Public pages, role desks, workspace APIs, and the main fiscal contract verified.");
+console.log("Public pages, retired desks, workspace APIs, and the main fiscal contract verified.");

@@ -6,11 +6,11 @@ const AdvisorContext = createContext(null);
 
 export function useAdvisor() {
   const value = useContext(AdvisorContext);
-  if (!value) throw new Error("The advisor panel is only on government pages.");
+  if (!value) throw new Error("Nation AI is only available inside the workspace.");
   return value;
 }
 
-export function AdvisorProvider({ enabled, children }) {
+export function AdvisorProvider({ enabled, role = "citizen", children }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -60,7 +60,7 @@ export function AdvisorProvider({ enabled, children }) {
         body: JSON.stringify({ message }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw Error(data.error || "The advisor could not answer.");
+      if (!response.ok) throw Error(data.error || "Nation AI could not answer.");
       const reply = Array.isArray(data.paragraphs)
         ? data.paragraphs.filter(Boolean).join("\n\n")
         : "";
@@ -83,7 +83,7 @@ export function AdvisorProvider({ enabled, children }) {
         {
           id: crypto.randomUUID(),
           role: "advisor",
-          text: error instanceof Error ? error.message : "The advisor could not answer.",
+          text: error instanceof Error ? error.message : "Nation AI could not answer.",
           at: Date.now(),
           error: true,
         },
@@ -95,8 +95,8 @@ export function AdvisorProvider({ enabled, children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ enabled, open, messages, busy, openPanel, closePanel, toggle, ask }),
-    [enabled, open, messages, busy, openPanel, closePanel, toggle, ask],
+    () => ({ enabled, role, open, messages, busy, openPanel, closePanel, toggle, ask }),
+    [enabled, role, open, messages, busy, openPanel, closePanel, toggle, ask],
   );
 
   return <AdvisorContext.Provider value={value}>{children}</AdvisorContext.Provider>;

@@ -21,12 +21,12 @@ Copy `.env.example` to `.env.local` before any shared or production run and set 
 
 ## Sign in
 
-`main` does not define accounts or roles. This workspace adds two demonstration seats. Passwords are hashed with bcrypt. A signed `httpOnly` cookie is checked on the server, and each role is sent to its own desk. Self-serve registration creates a **citizen** only. A government seat is seeded, not chosen on the form. A step-by-step tour is in [HOW_IT_WORKS.md](../HOW_IT_WORKS.md). Design rules are in [DESIGN_PRINCIPLES.md](../DESIGN_PRINCIPLES.md).
+`main` does not define accounts or roles. This workspace adds two demonstration seats. Passwords are hashed with bcrypt. A signed `httpOnly` cookie is checked on the server, and both roles open the country overview. Self-serve registration creates a **citizen** only. A government seat is seeded, not chosen on the form. A step-by-step tour is in [HOW_IT_WORKS.md](../HOW_IT_WORKS.md). Design rules are in [DESIGN_PRINCIPLES.md](../DESIGN_PRINCIPLES.md).
 
-| Role                | Desk                    | Email                      | Password                |
-| ------------------- | ----------------------- | -------------------------- | ----------------------- |
-| Government official | `/dashboard/government` | `government@nationos.demo` | `Government-Demo-2026!` |
-| Citizen             | `/dashboard/citizen`    | `citizen@nationos.demo`    | `Citizen-Demo-2026!`    |
+| Role                | Lands on    | Email                      | Password                |
+| ------------------- | ----------- | -------------------------- | ----------------------- |
+| Government official | `/overview` | `government@nationos.demo` | `Government-Demo-2026!` |
+| Citizen             | `/overview` | `citizen@nationos.demo`    | `Citizen-Demo-2026!`    |
 
 These passwords are for the local hackathon demo. They are not production credentials.
 
@@ -45,11 +45,10 @@ Both commands bind to your local computer. Stop a running dev server before star
 | ----------------------- | ------------------------------------------------------------------------------------------------------- |
 | `/`                     | Public landing page: transparency for citizens, decision support for government                         |
 | `/sign-in`              | Sign in, or create a citizen account                                                                    |
-| `/overview`             | Country indicators, approved federal budget, actual state boundaries, observed state revenue            |
-| `/dashboard/government` | Government decision-support desk and projections from published figures                                 |
-| `/dashboard/citizen`    | Read-only transparency desk for budget, revenue, and decisions                                          |
+| `/overview`             | Country indicators, approved federal budget, actual state boundaries, observed state revenue. Both roles land here. |
+| `/dashboard`, `/dashboard/government`, `/dashboard/citizen` | Old desk addresses. They redirect to `/overview`. |
 | `/revenue`              | Compare any two jurisdictions and reporting years; all 37 state/FCT rows                                |
-| `/budget`               | Chat with the imported data, compare states, inspect sources, model plans and open the decision builder |
+| `/budget`               | Tax slider from the old government desk, then chat, plans, and the decision builder. Government only. |
 | `/scenarios`            | Compare four conditional cases using the current unsaved planner configuration                          |
 | `/decisions`            | Retrieve saved reasoning, model/source snapshots, status reviews and audit events                       |
 | `/sources`              | Publishers, source periods, attribution, checksums and coverage gaps                                    |

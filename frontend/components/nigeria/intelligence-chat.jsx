@@ -17,7 +17,7 @@ const welcome = {
   sources: [],
 };
 
-export function IntelligenceChat({ jurisdictions }) {
+export function IntelligenceChat({ jurisdictions, children }) {
   const { config } = useDraft();
   const [messages, setMessages] = useState([welcome]);
   const [question, setQuestion] = useState("");
@@ -58,17 +58,22 @@ export function IntelligenceChat({ jurisdictions }) {
 
   return (
     <>
-      <Heading eyebrow="Plan a budget" title="Ask about the figures">
-        Ask in plain language. Answers name the year, the source, and what the figures can’t tell
-        you.
+      <Heading eyebrow="Project intelligence" title="Ask about the figures">
+        Ask the way you would ask a person. Answers name the year and the source, and they say what
+        the figures can’t tell you. The tax slider below starts from the published Lagos collection.
       </Heading>
+      {children}
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <Card>
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-4">
+        <section
+          className="project-intelligence min-w-0 p-4 sm:p-5"
+          aria-label="Project intelligence"
+        >
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="font-semibold">Conversation</h2>
-              <p className="mt-1 text-xs text-stone-500">
-                The badge says whether this answer used AI. Numbers from AI are checked.
+              <h2 className="font-semibold">Project intelligence</h2>
+              <p className="mt-1 text-xs" style={{ color: "var(--pi-muted)" }}>
+                Chat with the published figures. The badge says if AI helped, and the numbers are
+                checked.
               </p>
             </div>
             <Button
@@ -89,76 +94,85 @@ export function IntelligenceChat({ jurisdictions }) {
             aria-label="Data conversation"
             aria-live="polite"
             aria-busy={busy}
-            className="max-h-[650px] space-y-6 overflow-y-auto pr-1"
+            className="flex max-h-[32rem] flex-col gap-3 overflow-y-auto pr-1"
           >
-            {messages.map((message, index) => (
-              <article
-                key={index}
-                className={
-                  message.role === "user"
-                    ? "ml-6 rounded-lg bg-stone-100 p-4 md:ml-16"
-                    : "space-y-4 py-2"
-                }
-              >
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
-                  {message.role === "user" ? "You" : "NationOS"}
-                  {message.mode ? ` · ${engineLabel(message.mode, message.aiStatus)}` : ""}
-                </p>
-                {message.paragraphs.map((paragraph, i) => (
-                  <p key={i} className="whitespace-pre-wrap text-sm leading-7 text-stone-700">
-                    {paragraph}
-                  </p>
-                ))}
-                {message.table && (
-                  <SideScroll>
-                    <table className="w-full min-w-[28rem] text-sm">
-                      <thead>
-                        <tr>
-                          {message.table.columns.map((column) => (
-                            <th key={column}>{column}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {message.table.rows.map((row, i) => (
-                          <tr key={i}>
-                            {row.map((cell, j) => (
-                              <td key={j}>{cell}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </SideScroll>
-                )}
-                {!!message.sources?.length && (
-                  <div className="flex flex-wrap gap-3 border-t border-stone-100 pt-3">
-                    {message.sources.map((source) => (
-                      <Source key={source.id} id={source.id}>
-                        {source.publisher} · {source.period}
-                      </Source>
+            {messages.map((message, index) => {
+              const mine = message.role === "user";
+              return (
+                <article
+                  key={index}
+                  className={mine ? "ml-8 max-w-[85%] self-end" : "mr-6 max-w-[92%] self-start"}
+                >
+                  <div
+                    className={`rounded-2xl px-3 py-2 text-sm leading-6 ${mine ? "pi-user rounded-br-md" : "pi-assistant rounded-bl-md"}`}
+                  >
+                    {message.paragraphs.map((paragraph, i) => (
+                      <p key={i} className="whitespace-pre-wrap">
+                        {paragraph}
+                      </p>
                     ))}
+                    {message.table && (
+                      <div className="mt-3">
+                        <SideScroll>
+                          <table className="w-full min-w-[28rem] text-sm">
+                            <thead>
+                              <tr>
+                                {message.table.columns.map((column) => (
+                                  <th key={column}>{column}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {message.table.rows.map((row, i) => (
+                                <tr key={i}>
+                                  {row.map((cell, j) => (
+                                    <td key={j}>{cell}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </SideScroll>
+                      </div>
+                    )}
                   </div>
-                )}
-                {message.result && (
-                  <details className="rounded-lg border border-stone-200 p-4">
-                    <summary className="text-sm font-medium max-md:flex max-md:min-h-11 max-md:items-center">
-                      See the yearly figures and the guesses
-                    </summary>
-                    <PlanResult result={message.result} />
-                    <div className="mt-4">
-                      <Download value={message} />
+                  {message.mode ? (
+                    <p className="mt-2 inline-flex rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-semibold text-stone-600">
+                      {engineLabel(message.mode, message.aiStatus)}
+                    </p>
+                  ) : null}
+                  {!!message.sources?.length && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {message.sources.map((source) => (
+                        <Source key={source.id} id={source.id}>
+                          {source.publisher} · {source.period}
+                        </Source>
+                      ))}
                     </div>
-                  </details>
-                )}
-              </article>
-            ))}
-            <div ref={end} />
+                  )}
+                  {message.result && (
+                    <details className="mt-2 rounded-lg border border-stone-200 p-4">
+                      <summary className="text-sm font-medium max-md:flex max-md:min-h-11 max-md:items-center">
+                        See the yearly figures and the guesses
+                      </summary>
+                      <PlanResult result={message.result} />
+                      <div className="mt-4">
+                        <Download value={message} />
+                      </div>
+                    </details>
+                  )}
+                </article>
+              );
+            })}
             {busy && (
-              <p role="status" className="text-sm text-stone-500">
+              <p
+                className="pi-assistant mr-6 self-start rounded-2xl px-3 py-2 text-sm"
+                role="status"
+              >
                 Checking the figures…
               </p>
             )}
+            <div ref={end} />
           </div>
           {error && (
             <div className="mt-4">
@@ -166,34 +180,39 @@ export function IntelligenceChat({ jurisdictions }) {
             </div>
           )}
           <form
-            className="mt-6 border-t border-stone-100 pt-5"
+            className="mt-4 flex items-end gap-2 border-t border-stone-200/80 pt-3"
             onSubmit={(event) => {
               event.preventDefault();
               send(question);
             }}
           >
-            <label htmlFor="intelligence-question" className="mb-2 block text-sm font-medium">
-              Ask a question
+            <label htmlFor="intelligence-question" className="min-w-0 flex-1 text-sm">
+              <span className="sr-only">Ask a question</span>
+              <textarea
+                ref={input}
+                id="intelligence-question"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                maxLength={2000}
+                rows={2}
+                style={{ minHeight: "44px" }}
+                className="max-h-32 resize-y rounded-2xl"
+                placeholder="For example: How has Kano’s IGR changed since 2019?"
+                disabled={busy}
+              />
             </label>
-            <textarea
-              ref={input}
-              id="intelligence-question"
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              maxLength={2000}
-              placeholder="For example: How has Kano’s IGR changed since 2019?"
-              disabled={busy}
-            />
-            <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <span className="text-xs text-stone-400">
-                This chat stays on this page. Saved decisions are stored in the shared database.
-              </span>
-              <Button disabled={busy || !question.trim()} type="submit">
-                {busy ? "Checking…" : "Send"}
-              </Button>
-            </div>
+            <button
+              type="submit"
+              disabled={busy || !question.trim()}
+              className="inline-flex min-h-11 shrink-0 items-center rounded-md bg-emerald-900 px-4 text-sm font-medium text-white disabled:opacity-40"
+            >
+              {busy ? "Checking…" : "Send"}
+            </button>
           </form>
-        </Card>
+          <p className="mt-2 text-xs" style={{ color: "var(--pi-muted)" }}>
+            This chat stays on this page. Saved decisions are stored in the shared database.
+          </p>
+        </section>
         <div className="space-y-5">
           <Card title="Try one of these">
             <div className="space-y-2">
@@ -202,7 +221,7 @@ export function IntelligenceChat({ jurisdictions }) {
                   key={prompt}
                   disabled={busy}
                   onClick={() => send(prompt)}
-                  className="w-full rounded-md border border-stone-200 p-3 text-left text-xs leading-5 text-stone-600 hover:border-emerald-600 hover:text-emerald-900 disabled:opacity-40 max-md:min-h-11 max-md:text-base"
+                  className="w-full rounded-full border border-stone-200 px-3 py-2 text-left text-xs leading-5 text-stone-600 hover:border-emerald-600 hover:text-emerald-900 disabled:opacity-40 max-md:min-h-11 max-md:text-base"
                 >
                   {prompt}
                 </button>

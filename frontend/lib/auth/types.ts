@@ -37,7 +37,7 @@ export const ROLE_PROFILES: Record<Role, RoleProfile> = {
   government: {
     role: "government",
     title: "Government official",
-    path: "/dashboard/government",
+    path: "/overview",
     summary:
       "Help with budget and tax choices. Every what-if starts from published figures and is labelled a projection.",
     duties: [
@@ -55,7 +55,7 @@ export const ROLE_PROFILES: Record<Role, RoleProfile> = {
   citizen: {
     role: "citizen",
     title: "Citizen",
-    path: "/dashboard/citizen",
+    path: "/overview",
     summary:
       "A read-only look at the published budget, revenue, and decisions, with the source next to each figure.",
     duties: [
@@ -71,10 +71,6 @@ export const ROLE_PROFILES: Record<Role, RoleProfile> = {
     ],
   },
 };
-
-const BY_PATH = Object.fromEntries(
-  Object.values(ROLE_PROFILES).map((profile) => [profile.path, profile.role]),
-) as Record<string, Role>;
 
 export const SHARED_PATHS = ["/overview", "/revenue", "/decisions", "/sources"] as const;
 export const GOVERNMENT_PATHS = ["/budget", "/scenarios"] as const;
@@ -93,17 +89,20 @@ export function isRole(value: string): value is Role {
   return (ROLES as readonly string[]).includes(value);
 }
 
+/** Desk pages are gone. Shared routes are not reserved for one role. */
 export function roleForDashboard(pathname: string): Role | null {
-  return BY_PATH[pathname] ?? null;
+  void pathname;
+  return null;
 }
 
+/** First remaining section for both seats. The tax slider lives on /budget. */
 export function homeFor(role: Role): string {
   return ROLE_PROFILES[role].path;
 }
 
-/** Where a person lands after sign-in. Citizens open the country overview. */
+/** Where a person lands after sign-in. Both seats open the country overview. */
 export function landingFor(role: Role): string {
-  return role === "citizen" ? "/overview" : homeFor(role);
+  return homeFor(role);
 }
 
 /** True when this request would change a plan, a decision, or a simulation. */
@@ -113,7 +112,7 @@ export function isGovernmentWrite(pathname: string, method: string): boolean {
   return pathname.startsWith("/api/decisions/");
 }
 
-/** Sends a person to their desk, or back to a page that role may open. */
+/** Sends a person to the overview, or back to a page that role may open. */
 export function destinationFor(role: Role, next?: string | null): string {
   const home = landingFor(role);
   if (

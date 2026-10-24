@@ -51,7 +51,11 @@ export function proxy(request: NextRequest) {
   if (pathname === "/sign-in" && user) {
     return NextResponse.redirect(new URL(landingFor(user.role), request.url));
   }
-  if (pathname === "/dashboard") {
+  if (
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/government" ||
+    pathname === "/dashboard/citizen"
+  ) {
     return user
       ? NextResponse.redirect(new URL(landingFor(user.role), request.url))
       : signedOut(request);

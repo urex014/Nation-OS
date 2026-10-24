@@ -8,7 +8,7 @@ import { destinationFor } from "../../lib/auth/types";
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Sign in · NationOS",
-  description: "Sign in to the NationOS desk for your Lagos State role.",
+  description: "Sign in to NationOS. Both roles open the country overview.",
 };
 
 export default async function Page({ searchParams }) {

@@ -235,7 +235,7 @@ test("sign-in does not load the fiscal database or the model, and fields stay 16
   assert.match(panel, /AbortController/);
   assert.match(panel, /15000/);
   assert.match(panel, /router\.replace/);
-  assert.doesNotMatch(panel, /router\.refresh/);
+  assert.match(panel, /router\.refresh/);
   assert.match(panel, /Signing in…/);
   assert.match(css, /font-size:\s*max\(16px,\s*1rem\)/);
   assert.match(layout, /initialScale:\s*1/);

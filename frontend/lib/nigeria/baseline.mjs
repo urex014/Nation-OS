@@ -14,7 +14,7 @@ function sourceBrief(source) {
   };
 }
 
-/** Published Lagos money for both desks. Missing rows stay missing. */
+/** Published Lagos money for the budget what-if. Missing rows stay missing. */
 export async function publicMoneySnapshot() {
   try {
     const overview = getOverview();

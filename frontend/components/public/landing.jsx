@@ -5,11 +5,11 @@ import { SiteHeader } from "./site-header";
 const work = [
   {
     title: "Transparency for citizens",
-    body: "Read the published budget, revenue, and decisions in plain language. Each figure names its source. You can't edit anything on the citizen desk.",
+    body: "Read the published budget, revenue, and decisions in plain language. Each figure names its source. You can't edit a plan or a saved decision.",
   },
   {
     title: "Help for government decisions",
-    body: "Officials start from the same published figures, then write down why a choice was saved. A public sign-up can't open this desk.",
+    body: "Officials start from the same published figures, then write down why a choice was saved. A public sign-up can't open the budget tools.",
   },
   {
     title: "What-ifs with the source attached",
@@ -19,11 +19,7 @@ const work = [
 
 const steps = [
   ["01", "Read the published figures", "Start from numbers that name a publisher and a year."],
-  [
-    "02",
-    "Try a split",
-    "Change the guesses. You see the formula, not a hidden score.",
-  ],
+  ["02", "Try a split", "Change the guesses. You see the formula, not a hidden score."],
   ["03", "Write down why", "A decision keeps the question, the result, and the review history."],
 ];
 
@@ -77,21 +73,21 @@ export function Landing({ user, evidence }) {
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-stone-700">
               Citizens get a plain view of the published budget, revenue, and decisions, with the
-              source next to each figure. Government officials can try a budget split or a change
-              in tax collections, starting from those same published numbers.
+              source next to each figure. Government officials can try a budget split or a change in
+              tax collections, starting from those same published numbers.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={user ? "/dashboard" : "/sign-in"}
                 className="rounded-md bg-[#0B3B2C] px-5 py-3 text-center text-sm font-medium text-white"
               >
-                {user ? "Open your desk" : "Sign in to your desk"}
+                {user ? "Open the overview" : "Sign in"}
               </Link>
               <a
                 href="#work"
                 className="rounded-md border border-stone-300 bg-white px-5 py-3 text-center text-sm font-medium"
               >
-                See how the two desks differ
+                See how the two roles differ
               </a>
             </div>
           </div>
@@ -128,8 +124,8 @@ export function Landing({ user, evidence }) {
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
             <h2 className="font-serif text-3xl font-semibold tracking-tight">Who it is for</h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-              Sign-in opens the right desk for each person. One role can&apos;t open the other
-              role&apos;s desk.
+              Sign-in opens the overview. Government can also open the budget and what-if pages. A
+              citizen cannot.
             </p>
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {Object.values(ROLE_PROFILES).map((role) => (
@@ -165,7 +161,7 @@ export function Landing({ user, evidence }) {
           <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-16 md:flex-row md:items-end md:justify-between md:py-20">
             <div className="max-w-xl">
               <h2 className="font-serif text-3xl font-semibold tracking-tight">
-                Open the desk for your role.
+                Open the overview for your role.
               </h2>
               <p className="mt-4 text-base leading-7 text-emerald-50">
                 One demo seat is a government official. One is a citizen. A new account is always a

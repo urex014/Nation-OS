@@ -1,14 +1,11 @@
-import { connection } from "next/server";
-import { CitizenDesk } from "../../../components/dashboard/citizen-desk";
-import { requireRole } from "../../../lib/auth/current";
-import { publicMoneySnapshot } from "../../../lib/nigeria/baseline.mjs";
+import { redirect } from "next/navigation";
+import { currentUser } from "../../../lib/auth/current";
+import { landingFor } from "../../../lib/auth/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const metadata = { title: "Citizen desk · NationOS" };
 
 export default async function Page() {
-  await connection();
-  const user = await requireRole("citizen");
-  return <CitizenDesk user={user} snapshot={await publicMoneySnapshot()} />;
+  const user = await currentUser();
+  redirect(user ? landingFor(user.role) : "/sign-in");
 }
