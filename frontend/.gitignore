@@ -48,6 +48,8 @@ next-env.d.ts
 /.rebuild/
 
 *.sqlite
+!data/nationos.sqlite
+!data/nigeria/nationos.sqlite
 *.sqlite-wal
 *.sqlite-shm
 *.sqlite-journal

@@ -3,8 +3,9 @@ import { recreateLedger } from "@/lib/db/schema";
 import { buildFaac } from "@/lib/db/seed/faac";
 import { JURISDICTIONS } from "@/lib/db/seed/jurisdictions";
 import { FISCAL_YEAR, INDICATORS, PROJECTS, RECEIPTS, SNAPSHOT } from "@/lib/db/seed/cited";
+import { seedIntelligence } from "@/lib/db/seed/intelligence";
 
-export const SEED_VERSION = "3";
+export const SEED_VERSION = "4";
 
 export function seed(db: DatabaseSync): void {
   db.exec("BEGIN IMMEDIATE");
@@ -79,6 +80,8 @@ export function seed(db: DatabaseSync): void {
       row.status,
     );
   }
+
+  seedIntelligence(db);
 
   db.prepare(
     "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",

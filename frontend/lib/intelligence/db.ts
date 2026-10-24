@@ -23,7 +23,7 @@ export function getDb(): DatabaseSync {
 }
 
 export function getReadDb(): DatabaseSync {
-  return getDb();
+  return getReadOnlyDb();
 }
 
 export function getWriteDb(): DatabaseSync {

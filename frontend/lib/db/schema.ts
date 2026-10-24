@@ -1,6 +1,12 @@
 import type { DatabaseSync } from "node:sqlite";
 
 export const LEDGER_TABLES = [
+  "decision_analyses",
+  "ingestion_jobs",
+  "project_status_history",
+  "project_financial_records",
+  "project_sources",
+  "government_projects",
   "line_items",
   "projects",
   "priorities",

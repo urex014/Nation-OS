@@ -9,6 +9,7 @@ const traced = [
   "./lib/nigeria/schema.sql",
   "./db/schema.sql",
   "./data/nigeria/normalized/**/*",
+  "./data/intelligence/normalized/**/*",
   "./data/nigeria/nationos.sqlite",
   "./data/nationos.sqlite",
 ];
