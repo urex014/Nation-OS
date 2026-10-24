@@ -22,11 +22,11 @@ The two demo sign-ins are in the [README](README.md).
 
 ## Sign-in
 
-**What it is.** One page, `/sign-in`, for both seats. A cookie is a small note the browser sends back so the server remembers the visit.
+**What it is.** One page, `/sign-in`, for both seats. A cookie is a small signed note the browser sends back. The note already says who you are, which seat you have, and when it expires. It lasts 12 hours.
 
-**What it does.** The person types an email and a password. The server checks them. It then sets a cookie and sends the browser to the right desk. Sign out deletes that visit.
+**What it does.** The person types an email and a password. The server checks the password. It then sets the cookie and sends the browser to the right desk. Later pages trust that note after they check the signature. They do not look up a saved visit. Sign out throws the cookie away.
 
-**Why it matters.** The browser does not get to pick the role. A citizen who opens the government desk, the plan page, or the what-if page is sent to a short “not for this seat” page.
+**Why it matters.** The browser does not get to pick the role. A citizen who opens the government desk, the plan page, or the what-if page is sent to a short “not for this seat” page. The two demo people are written in the program, so signing in as them does not save a file. A copied cookie keeps working until it expires. That is the trade for not keeping a visit list on the server.
 
 ```mermaid
 flowchart TD
@@ -107,9 +107,9 @@ The server limits how many questions one visit can ask. It does not write passwo
 
 **What it is.** Vercel hosts the site. The project folder to deploy is `frontend`. The server disk there cannot be changed.
 
-**What it does.** The app copies its database work into `/tmp`, a scratch folder for that running copy. The published tables are included in the upload. Demo users are created in that scratch copy, so the two demo sign-ins work. A new citizen account, and a saved decision, are written only in that scratch copy.
+**What it does.** Published money tables are copied into `/tmp`, a scratch folder for that running copy. Sign-in does not use that folder. The cookie is enough. A new citizen account is kept in memory on that copy, unless you plug in a real database such as Neon. A saved decision is still written only in the scratch folder.
 
-**Why it matters.** Those writes disappear when that copy stops, and they are not shared with the next copy. Say that out loud if someone asks whether sign-up lasts.
+**Why it matters.** The demo sign-ins work on every copy, because those two people are part of the program. A self-serve account works in the browser that just signed up, because the cookie carries the seat. It does not survive a new copy, and signing in again will fail, until a real database is connected. Saved decisions disappear when that copy stops.
 
 On Vercel you do not paste an AI key. Vercel gives the app a short-lived pass called `VERCEL_OIDC_TOKEN`. That pass lets the AI Gateway call Grok. Locally, use a gateway key, or run `vercel env pull`, or use a direct xAI key. The names are in `frontend/.env.example`. The steps are in the frontend README.
 
@@ -123,14 +123,14 @@ The advisor may use Grok. It can only repeat numbers a tool just read. Any other
 
 There are two seats. The public seat cannot run the what-if or open the plan page. A new account cannot become a government seat.
 
-The app deploys as one Next.js site. The demo sign-ins work on Vercel because the starter accounts are created in scratch storage.
+The app deploys as one Next.js site. The demo sign-ins work on Vercel because those accounts are part of the program, and the cookie does not need a saved visit.
 
 ## Words we use
 
 | Word       | Plain meaning                                                           |
 | ---------- | ----------------------------------------------------------------------- |
-| Cookie     | A small note the browser sends back so the server knows the visit       |
-| Session    | That signed-in visit                                                    |
+| Cookie     | A signed note that says who you are and which seat you have             |
+| Session    | That signed-in visit. It lives in the cookie, not in a database row     |
 | Role       | Government official, or citizen                                         |
 | Database   | A file that holds the saved numbers                                     |
 | API        | A web address the page calls so the server can do the work              |
