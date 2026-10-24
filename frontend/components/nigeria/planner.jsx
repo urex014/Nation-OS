@@ -36,13 +36,12 @@ export function Planner({ jurisdictions }) {
   const total = Object.values(config.allocations).reduce((a, b) => a + b, 0);
   return (
     <>
-      <Heading eyebrow="Project Intelligence" title="Build an explainable investment plan">
-        Choose a geographic scope, allocate an investment envelope and test five or ten years of
-        explicit assumptions. This model calculates funding paths; it does not predict
-        public-service outcomes.
+      <Heading eyebrow="Plan a budget" title="Try a plan you can explain">
+        Pick a place, split the money, and try five or ten years of guesses. This works out a
+        funding path. It doesn’t predict how public services will turn out.
       </Heading>
       <Card title="Planning scope">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           <Field label="Jurisdiction">
             <select value={config.scope} onChange={(e) => change("scope", e.target.value)}>
               <option value="all">36 states and FCT combined</option>
@@ -71,7 +70,7 @@ export function Planner({ jurisdictions }) {
         </div>
       </Card>
       <Card className="my-6" title="Investment envelope & sector allocations">
-        <div className="grid items-end gap-4 md:grid-cols-3">
+        <div className="grid items-end gap-4 lg:grid-cols-3">
           <Field label="First-year investment · ₦ billions">
             <input
               type="number"
@@ -106,13 +105,13 @@ export function Planner({ jurisdictions }) {
               })
             }
           >
-            Apply preference weights
+            Apply these weights
           </Button>
         </div>
         {allocationNote && (
           <p className="my-4 text-xs leading-5 text-stone-500">{allocationNote}</p>
         )}
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
           {Object.entries(SECTORS).map(([key, label]) => (
             <Field key={key} label={`${label} · ₦ billions`}>
               <input
@@ -133,11 +132,12 @@ export function Planner({ jurisdictions }) {
         <p
           className={`mt-4 text-sm ${total === config.annualBudgetNaira ? "text-emerald-800" : "text-red-700"}`}
         >
-          Allocated {naira(total)} / {naira(config.annualBudgetNaira)}. Amounts must match exactly.
+          Allocated {naira(total)} of {naira(config.annualBudgetNaira)}. The amounts have to match
+          exactly.
         </p>
       </Card>
-      <Card title="Forward assumptions · all editable, none measured">
-        <div className="grid gap-4 md:grid-cols-3">
+      <Card title="Our guesses about the future. You can change any of them.">
+        <div className="grid gap-4 lg:grid-cols-3">
           {[
             ["inflation", "Annual inflation", 0, 100],
             ["budgetGrowth", "Annual budget growth", -20, 25],
@@ -158,14 +158,15 @@ export function Planner({ jurisdictions }) {
           ))}
         </div>
         <p className="my-5 text-xs leading-5 text-stone-500">
-          Delivery is a spending adjustment assumption. It is not a measured implementation
-          probability. Revenue growth starts from the latest observed NBS year.
+          Delivery is a guess about how much of the capital budget gets spent. It isn’t a measured
+          chance that a project finishes. IGR means money the state raises itself. Revenue growth
+          starts from the latest NBS year we have.
         </p>
         <Button
           disabled={busy || total !== config.annualBudgetNaira}
           onClick={() => act(async () => setResult(await request("plans", { config })))}
         >
-          {busy ? "Working…" : "Calculate & store run"}
+          {busy ? "Working…" : "Work out this plan"}
         </Button>
       </Card>
       {error && (
@@ -176,34 +177,34 @@ export function Planner({ jurisdictions }) {
       {result && (
         <>
           <PlanResult result={result.result} />
-          <Card className="mt-6" title="Save the decision and its reasoning">
+            <Card className="mt-6" title="Save the decision and why you made it">
             <div className="space-y-4">
-              <Field label="Proposal title">
+              <Field label="Title">
                 <input maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} />
               </Field>
-              <Field label="Why this allocation? What evidence and gaps should the next reviewer understand?">
+              <Field label="Why this split? What should the next person know, including what's missing?">
                 <textarea
                   maxLength={4000}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                 />
               </Field>
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 md:flex-row">
                 <Button
                   disabled={busy || !title.trim() || !reason.trim()}
                   onClick={() =>
                     act(async () => setSaved(await request("decisions", { title, reason, config })))
                   }
                 >
-                  Save draft decision
+                  Save this draft
                 </Button>
                 <Download value={result} />
               </div>
               {saved && (
                 <Notice>
-                  Saved locally.{" "}
+                  Saved with the other decisions.{" "}
                   <Link className="underline" href="/decisions">
-                    Open decision records
+                    Open saved decisions
                   </Link>
                   .
                 </Notice>

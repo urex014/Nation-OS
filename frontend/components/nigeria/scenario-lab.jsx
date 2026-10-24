@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useDraft } from "./draft-provider";
 import { Heading, Card, Button, Notice, Download } from "./ui";
+import { SideScroll } from "./side-scroll";
 import { PlanResult } from "./plan-result";
 import { request } from "../../lib/nigeria/client.mjs";
 import { naira } from "../../lib/nigeria/format.mjs";
@@ -25,12 +26,12 @@ export function ScenarioLab() {
   const cases = data?.scenarios || [];
   return (
     <>
-      <Heading eyebrow="Scenario Lab" title="Test what changes the plan">
-        Carry your investment assumptions from Project Intelligence into four one-variable
-        comparisons. These are conditional stress cases, not forecasts or probability estimates.
+      <Heading eyebrow="What-if tests" title="See what changes the plan">
+        Bring the guesses from the budget planner into four comparisons. Each one changes a single
+        guess. These are what-if cases, not forecasts or odds.
       </Heading>
       <Card title="Compare assumptions">
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center">
           <label className="text-sm">
             Horizon{" "}
             <select
@@ -45,21 +46,21 @@ export function ScenarioLab() {
             </select>
           </label>
           <Button disabled={busy} onClick={run}>
-            {busy ? "Calculating…" : "Run sensitivity comparison"}
+            {busy ? "Calculating…" : "Compare these guesses"}
           </Button>
           {data && <Download value={data} />}
         </div>
         <p className="mt-4 text-sm text-stone-500">
-          First-year envelope: {naira(config.annualBudgetNaira)}. All comparisons retain the same
-          sector allocations.
+          First-year amount: {naira(config.annualBudgetNaira)}. Every comparison keeps the same
+          sector split.
         </p>
       </Card>
       {error && <Notice error>{error}</Notice>}
       {data && (
         <>
-          <Card className="mt-6" title="Conditional investment paths">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+          <Card className="mt-6" title="What the plan does in each case">
+            <SideScroll>
+              <table className="w-full min-w-[40rem] text-sm">
                 <thead>
                   <tr>
                     {[
@@ -94,7 +95,7 @@ export function ScenarioLab() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </SideScroll>
           </Card>
           <PlanResult result={(cases.find((s) => s.id === selected) || cases[0]).result} />
         </>

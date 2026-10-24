@@ -27,7 +27,7 @@ type StatusError = { status?: number; message?: string };
 export function httpFailure(error: unknown) {
   const status = Number((error as StatusError)?.status) || 500;
   const message =
-    status >= 400 && status < 500 && error instanceof Error
+    error instanceof Error && (status === 503 || (status >= 400 && status < 500))
       ? error.message
       : "The request could not be completed.";
   return jsonError(message, status);

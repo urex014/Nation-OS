@@ -33,13 +33,22 @@ process.env.NODE_ENV = "development";
 const stamp = `${Date.now()}-${process.pid}`;
 const email = `Shared.Person.${stamp}@nationos.demo`;
 
-test("a write in this process is read by another process", { timeout: 120000 }, async () => {
+test("a write in this process is read by another process", { timeout: 120000 }, async (t) => {
   const { ensureRuntimeSchema, closeSql, getSql } = await import("../lib/runtime/postgres.ts");
   let decision;
   let ledger;
   try {
+    try {
+      await ensureRuntimeSchema();
+    } catch (error) {
+      t.skip(
+        `Skipped: Postgres is not reachable (${error instanceof Error ? error.message : error}). Set NATIONOS_TEST_DATABASE_URL. Runtime writes are not stored locally.`,
+      );
+      return;
+    }
     await ensureRuntimeSchema();
-    await ensureRuntimeSchema();
+    const { prepareSourcedDatabase } = await import("../lib/nigeria/database.mjs");
+    prepareSourcedDatabase();
     const { registerCitizen } = await import("../lib/auth/service.ts");
     const { createDecision } = await import("../lib/nigeria/decisions.mjs");
     const { saveDecision } = await import("../lib/db/decisions.ts");

@@ -2,16 +2,18 @@ import Link from "next/link";
 // Presentation helpers deliberately contain no data or model logic.
 export function Heading({ eyebrow, title, children }) {
   return (
-    <header className="mb-8">
+    <header className="mb-8 scroll-mt-24">
       <p className="mb-2 text-xs uppercase tracking-widest text-emerald-700">{eyebrow}</p>
-      <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="break-words text-3xl font-semibold tracking-tight">{title}</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-500">{children}</p>
     </header>
   );
 }
 export function Card({ title, children, className = "" }) {
   return (
-    <section className={`rounded-xl border border-stone-200 bg-white p-6 ${className}`}>
+    <section
+      className={`min-w-0 rounded-xl border border-stone-200 bg-white p-5 sm:p-6 ${className}`}
+    >
       {title && <h2 className="mb-5 font-semibold">{title}</h2>}
       {children}
     </section>
@@ -21,7 +23,7 @@ export function Stat({ label, value, note }) {
   return (
     <Card>
       <p className="text-xs text-stone-500">{label}</p>
-      <p className="my-3 text-2xl font-semibold">{value}</p>
+      <p className="my-3 break-words text-2xl font-semibold">{value}</p>
       <p className="text-xs leading-5 text-stone-500">{note}</p>
     </Card>
   );
@@ -30,7 +32,7 @@ export function Button({ children, secondary, ...props }) {
   return (
     <button
       {...props}
-      className={`rounded-md px-4 py-2.5 text-sm disabled:opacity-40 ${secondary ? "border border-stone-300 bg-white" : "bg-emerald-900 text-white hover:bg-emerald-800"}`}
+      className={`rounded-md px-4 py-2.5 text-sm disabled:opacity-40 max-md:inline-flex max-md:min-h-11 max-md:w-full max-md:items-center max-md:justify-center ${secondary ? "border border-stone-300 bg-white" : "bg-emerald-900 text-white hover:bg-emerald-800"}`}
     >
       {children}
     </button>
@@ -54,9 +56,12 @@ export function Notice({ children, error }) {
     </p>
   );
 }
-export function Source({ id, children = "Source and methodology" }) {
+export function Source({ id, children = "Where this comes from" }) {
   return (
-    <Link className="text-xs text-emerald-700 underline underline-offset-4" href={`/sources#${id}`}>
+    <Link
+      className="text-xs text-emerald-700 underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
+      href={`/sources#${id}`}
+    >
       {children}
     </Link>
   );
@@ -74,7 +79,7 @@ export function Download({ value }) {
   }
   return (
     <Button secondary onClick={download}>
-      Export JSON
+      Download JSON
     </Button>
   );
 }

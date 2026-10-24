@@ -1,9 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { DatabaseSync } from "node:sqlite";
-import { getDb } from "@/lib/db/connection";
 import type { Recommendation } from "@/lib/domain/recommend";
 import type { RecommendInput } from "@/lib/domain/recommend";
-import { databaseUrl } from "@/lib/runtime/database-url";
+import { DATABASE_REQUIRED, databaseUrl } from "@/lib/runtime/database-url";
 import type { DecisionRecord } from "@/lib/types";
 
 type DecisionRow = {
@@ -20,18 +18,9 @@ type DecisionRow = {
 };
 
 export async function listDecisions(): Promise<DecisionRecord[]> {
-  if (databaseUrl()) {
-    const { listLedgerDecisions } = await import("@/lib/db/decisions-pg");
-    return listLedgerDecisions();
-  }
-  return listDecisionsFrom(getDb());
-}
-
-export function listDecisionsFrom(db: DatabaseSync): DecisionRecord[] {
-  const rows = db
-    .prepare("SELECT * FROM decisions ORDER BY created_at DESC")
-    .all() as DecisionRow[];
-  return rows.map(mapDecision);
+  if (!databaseUrl()) throw Object.assign(new Error(DATABASE_REQUIRED), { status: 503 });
+  const { listLedgerDecisions } = await import("@/lib/db/decisions-pg");
+  return listLedgerDecisions();
 }
 
 function decisionTitle(strategy: string): string {
@@ -45,7 +34,7 @@ export async function saveDecision(
   input: RecommendInput,
   result: Recommendation,
 ): Promise<DecisionRecord> {
-  if (!databaseUrl()) return saveDecisionOn(getDb(), input, result);
+  if (!databaseUrl()) throw Object.assign(new Error(DATABASE_REQUIRED), { status: 503 });
   const { insertLedgerDecision, latestLedgerDecision } = await import("@/lib/db/decisions-pg");
   const previous = await latestLedgerDecision();
   const record = composeDecision(
@@ -54,33 +43,6 @@ export async function saveDecision(
     previous ? { ...previous, horizon: Number(previous.horizon) } : undefined,
   );
   await insertLedgerDecision(record);
-  return record;
-}
-
-export function saveDecisionOn(
-  db: DatabaseSync,
-  input: RecommendInput,
-  result: Recommendation,
-): DecisionRecord {
-  const previous = db.prepare("SELECT * FROM decisions ORDER BY created_at DESC LIMIT 1").get() as
-    DecisionRow | undefined;
-  const record = composeDecision(input, result, previous);
-  db.prepare(
-    `INSERT INTO decisions
-      (id, created_at, title, question, horizon, strategy, assumptions, tradeoffs, budgets, revisions)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    record.id,
-    record.createdAt,
-    record.title,
-    record.question,
-    record.horizon,
-    record.strategy,
-    JSON.stringify(record.assumptions),
-    JSON.stringify(record.tradeoffs),
-    JSON.stringify(record.budgets),
-    JSON.stringify(record.revisions),
-  );
   return record;
 }
 
@@ -134,19 +96,4 @@ function diffDecision(
     }
   }
   return revisions;
-}
-
-function mapDecision(row: DecisionRow): DecisionRecord {
-  return {
-    id: row.id,
-    createdAt: row.created_at,
-    title: row.title,
-    question: row.question,
-    horizon: row.horizon,
-    strategy: row.strategy,
-    assumptions: JSON.parse(row.assumptions) as string[],
-    tradeoffs: JSON.parse(row.tradeoffs) as string[],
-    budgets: JSON.parse(row.budgets) as Record<string, number>,
-    revisions: JSON.parse(row.revisions) as DecisionRecord["revisions"],
-  };
 }

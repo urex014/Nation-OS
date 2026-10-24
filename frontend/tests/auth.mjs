@@ -182,19 +182,9 @@ test("sign-up cannot choose a privileged role", async () => {
       password: "Auditor-Demo-2026!",
     }),
   );
-  assert.equal(created.status, 201);
-  const createdBody = await created.json();
-  assert.equal(createdBody.user.role, "citizen");
-  assert.equal(createdBody.dashboardPath, "/dashboard/citizen");
-  const duplicate = await signUp(
-    post("http://127.0.0.1:4173/api/auth/sign-up", {
-      name: "New Officer",
-      agency: "A demonstration agency",
-      email: "new.officer@nationos.demo",
-      password: "Auditor-Demo-2026!",
-    }),
-  );
-  assert.equal(duplicate.status, 409);
+  assert.equal(created.status, 503);
+  assert.match((await created.json()).error, /DATABASE_URL/);
+  assert.equal(existsSync(process.env.NATIONOS_AUTH_DB_PATH), false);
 });
 
 test("proxy rejects anonymous officers and the wrong role", async () => {

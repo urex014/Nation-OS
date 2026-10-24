@@ -1,64 +1,28 @@
 import type { AccountRecord, AccountStore } from "./account-store";
 import { DEMO_USERS } from "./demo-users";
-import { memoryAccounts } from "./memory-accounts";
-import { databaseUrl } from "../runtime/database-url";
+import { DATABASE_REQUIRED, databaseUrl, requireDatabaseUrl } from "../runtime/database-url";
 import type { PublicUser } from "./types";
 
 export type { AccountRecord, AccountStore };
 export { databaseUrl };
 
-export const SIGN_UP_DISABLED =
-  "Public sign-up is off until a shared database is connected. Demonstration accounts can still sign in.";
+export const SIGN_UP_DISABLED = `${DATABASE_REQUIRED} Demonstration accounts can still sign in.`;
 
-export type AccountMode = "memory" | "sqlite" | "postgres" | "disabled";
+export type AccountMode = "postgres" | "disabled";
 
-/**
- * Postgres when a database URL is set.
- * SQLite on your own computer.
- * On Vercel, with no database URL, public sign-up is off.
- * An explicit sqlite or memory choice is only for a single machine or a test.
- */
+/** Postgres when a database URL is set. Otherwise sign-up stays off, including on your own computer. */
 export function accountMode(): AccountMode {
-  const choice = process.env.NATIONOS_AUTH_STORE?.trim() || "";
-  const url = databaseUrl();
-  if (choice === "postgres" || (!choice && url)) return "postgres";
-  if (choice === "memory") return "memory";
-  if (choice === "sqlite") return "sqlite";
-  if (process.env.VERCEL === "1") return "disabled";
-  return "sqlite";
+  return databaseUrl() ? "postgres" : "disabled";
 }
 
-/** Memory and local files are not shared across Vercel copies, so sign-up stays off. */
 export function publicSignUpEnabled(): boolean {
-  const mode = accountMode();
-  if (mode === "disabled") return false;
-  if (mode === "postgres" && !databaseUrl()) return false;
-  if (process.env.VERCEL === "1" && mode !== "postgres") return false;
-  return true;
+  return accountMode() === "postgres";
 }
-
-const disabledAccounts: AccountStore = {
-  async findByEmail() {
-    return null;
-  },
-  async insertCitizen() {
-    throw new Error(SIGN_UP_DISABLED);
-  },
-  async deleteById() {},
-};
 
 export async function accountStore(): Promise<AccountStore> {
-  const mode = accountMode();
-  if (mode === "memory") return memoryAccounts;
-  if (mode === "sqlite") {
-    const { sqliteAccounts } = await import("./store");
-    return sqliteAccounts;
-  }
-  if (mode === "postgres") {
-    const { postgresAccounts } = await import("./postgres-accounts");
-    return postgresAccounts();
-  }
-  return disabledAccounts;
+  requireDatabaseUrl();
+  const { postgresAccounts } = await import("./postgres-accounts");
+  return postgresAccounts();
 }
 
 export async function findAccount(email: string): Promise<AccountRecord | null> {
@@ -77,19 +41,22 @@ export async function findAccount(email: string): Promise<AccountRecord | null> 
   return (await accountStore()).findByEmail(email);
 }
 
-export async function saveCitizen(input: {
-  id: string;
-  email: string;
-  name: string;
-  agency: string;
-  password: string;
-}): Promise<PublicUser | "exists" | "disabled"> {
-  if (!publicSignUpEnabled()) return "disabled";
+export async function saveCitizen(
+  input: {
+    id: string;
+    email: string;
+    name: string;
+    agency: string;
+    password: string;
+  },
+  store?: AccountStore,
+): Promise<PublicUser | "exists" | "disabled"> {
+  if (!store && !publicSignUpEnabled()) return "disabled";
   if (DEMO_USERS.some((user) => user.email === input.email.toLowerCase())) return "exists";
-  return (await accountStore()).insertCitizen(input);
+  return (store ?? (await accountStore())).insertCitizen(input);
 }
 
-export async function deleteAccount(id: string): Promise<void> {
-  if (accountMode() === "disabled") return;
-  await (await accountStore()).deleteById(id);
+export async function deleteAccount(id: string, store?: AccountStore): Promise<void> {
+  if (!store && accountMode() === "disabled") return;
+  await (store ?? (await accountStore())).deleteById(id);
 }

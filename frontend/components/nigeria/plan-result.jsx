@@ -1,37 +1,38 @@
 import { Card, Stat, Notice, Source } from "./ui";
+import { SideScroll } from "./side-scroll";
 import { naira, number } from "../../lib/nigeria/format.mjs";
 import { SECTORS } from "../../lib/nigeria/constants.mjs";
 // The complete server result is visible, including limitations and review milestones.
 export function PlanResult({ result }) {
   return (
     <div className="mt-6 space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Stat
           label="Total nominal investment"
           value={naira(result.totals.nominalNaira)}
-          note={`${result.config.years}-year commitment assumption`}
+          note={`A ${result.config.years}-year guess, not a promise`}
         />
         <Stat
           label="Constant-price investment"
           value={naira(result.totals.constantPriceNaira)}
-          note={`In ${result.config.startYear} purchasing power`}
+          note={`In ${result.config.startYear} buying power`}
         />
         <Stat
           label="Delivery-adjusted capital"
           value={naira(result.totals.deliveryAdjustedCapitalNaira)}
-          note="Monetary proxy, not completed projects"
+          note="A money figure, not finished projects"
         />
       </div>
       <Notice>
-        {result.context.name}: observed {result.context.revenueYear} IGR{" "}
+        {result.context.name}: published {result.context.revenueYear} IGR (money raised){" "}
         {naira(result.context.referenceRevenueNaira)}. {result.context.warning}
       </Notice>
       {result.flags.map((f) => (
         <Notice key={f}>{f}</Notice>
       ))}
       <Card title="Annual investment path">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <SideScroll>
+          <table className="w-full min-w-[44rem] text-sm">
             <thead>
               <tr>
                 {[
@@ -61,7 +62,7 @@ export function PlanResult({ result }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </SideScroll>
       </Card>
       <Card title="Sector allocation">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -73,32 +74,31 @@ export function PlanResult({ result }) {
           ))}
         </div>
         <p className="mt-4 text-xs text-stone-500">
-          First-year allocations. Later allocations retain these proportions as the total budget
-          changes. Sector weights express a preference; sector-specific service effects have not
-          been estimated.
+          These are the first-year amounts. Later years keep the same shares as the total changes.
+          The weights are a preference. We haven’t measured how each sector would change services.
         </p>
       </Card>
-      <Card title="How this was calculated">
+      <Card title="How we worked this out">
         <ul className="space-y-3 text-sm">
           {result.formulas.map((f) => (
             <li key={f}>{f}</li>
           ))}
         </ul>
         <p className="my-4 text-xs text-stone-500">
-          t = years since the first planning year; percentage inputs are converted to fractions.
-          Model: {result.version}.
+          t is the number of years after the first planning year. Percentages are turned into
+          fractions. Model: {result.version}.
         </p>
         <Source id={result.context.sourceId} />
       </Card>
       <div className="grid gap-6 md:grid-cols-2">
-        <Card title="Review roadmap">
+        <Card title="What to check later">
           <ol className="list-inside list-decimal space-y-3 text-sm leading-6">
             {result.roadmap.map((r) => (
               <li key={r}>{r}</li>
             ))}
           </ol>
         </Card>
-        <Card title="Limits of this model">
+        <Card title="What this can't tell you">
           <ul className="space-y-3 text-sm leading-6">
             {result.limitations.map((l) => (
               <li key={l}>{l}</li>

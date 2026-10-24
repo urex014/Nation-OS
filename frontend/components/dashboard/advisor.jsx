@@ -28,7 +28,7 @@ export function Advisor({ heading, intro, prompts }) {
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw Error(data.error || "The advisor could not answer.");
+        throw Error(data.error || "The advisor couldn't answer.");
       }
       setMode(response.headers.get("x-nationos-mode") || "local-data");
       setAiStatus(response.headers.get("x-nationos-ai-status") || "");
@@ -48,7 +48,7 @@ export function Advisor({ heading, intro, prompts }) {
       all += decoder.decode();
       setAnswer(all);
     } catch (caught) {
-      setError(caught.message || "The advisor could not answer.");
+      setError(caught.message || "The advisor couldn't answer.");
     } finally {
       setBusy(false);
     }
@@ -75,7 +75,7 @@ export function Advisor({ heading, intro, prompts }) {
               setQuestion(prompt);
               ask(prompt);
             }}
-            className="rounded-md border border-stone-200 px-3 py-2 text-left text-xs leading-5 text-stone-600 hover:border-emerald-700 disabled:opacity-40"
+            className="rounded-md border border-stone-200 px-3 py-2 text-left text-xs leading-5 text-stone-600 hover:border-emerald-700 disabled:opacity-40 max-md:min-h-11 max-md:w-full max-md:text-base"
           >
             {prompt}
           </button>

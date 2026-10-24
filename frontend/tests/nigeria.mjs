@@ -8,13 +8,13 @@ delete process.env.DATABASE_URL;
 delete process.env.POSTGRES_URL;
 const temporary = mkdtempSync(path.join(tmpdir(), "nationos-ng-"));
 process.env.NATIONOS_DB_PATH = path.join(temporary, "test.sqlite");
-const { getDatabase, sourceDirectory } = await import("../lib/nigeria/database.mjs");
+const { getDatabase, prepareSourcedDatabase } = await import("../lib/nigeria/database.mjs");
+prepareSourcedDatabase();
 const repo = await import("../lib/nigeria/repository.mjs");
 const plans = await import("../lib/nigeria/planning.mjs");
 const decisions = await import("../lib/nigeria/decisions.mjs");
 const { compareScenarios } = await import("../lib/nigeria/scenarios.mjs");
 const { illustrateSplit, illustrateTax } = await import("../lib/nigeria/illustrate.mjs");
-const { importNigeriaData } = await import("../lib/nigeria/import-data.mjs");
 const config = {
   scope: "NG-LA",
   years: 5,
@@ -75,34 +75,22 @@ test("model preserves nominal sums and responds in the declared direction", () =
   assert.throws(() => plans.validatePlan({ ...config, years: 7 }), { status: 400 });
   assert.throws(() => plans.validatePlan({ ...config, inflation: NaN }), { status: 400 });
 });
-test("decision snapshots are server-computed, persistent and revision-protected", async () => {
-  const d = await decisions.createDecision({
-    title: "Review education funding",
-    reason: "Validate costs and procurement first.",
-    config,
-    result: { totals: "fabricated" },
-  });
-  assert.equal(d.result.totals.nominalNaira, 5000000000);
-  assert.equal(d.audit.length, 1);
-  assert.equal(d.sources.length, 4);
-  const r = await decisions.reviewDecision(d.id, { status: "Reviewed", expectedRevision: 1 });
-  assert.equal(r.revision, 2);
-  assert.equal(r.audit.length, 2);
-  assert.deepEqual(r.result, d.result);
+test("a decision is not saved on this computer when no database URL is set", async () => {
   await assert.rejects(
-    () => decisions.reviewDecision(d.id, { status: "Rejected", expectedRevision: 1 }),
-    { status: 409 },
+    () =>
+      decisions.createDecision({
+        title: "Review education funding",
+        reason: "Validate costs and procurement first.",
+        config,
+        result: { totals: "fabricated" },
+      }),
+    (error) => {
+      assert.equal(error.status, 503);
+      assert.match(error.message, /DATABASE_URL/);
+      return true;
+    },
   );
-  importNigeriaData(getDatabase(), sourceDirectory());
-  assert.equal((await decisions.getDecision(d.id)).status, "Reviewed");
-  assert.equal((await decisions.listDecisions()).total, 1);
-  assert.equal(
-    Object.getPrototypeOf((await decisions.listDecisions()).records[0]),
-    Object.prototype,
-  );
-  getDatabase().close();
-  globalThis[Symbol.for("nationos.sqlite")].clear();
-  assert.equal((await decisions.getDecision(d.id)).revision, 2);
+  assert.equal(getDatabase().prepare("select count(*) n from plan_runs").get().n, 0);
 });
 test("tax and sector illustrations start from published Lagos kobo", () => {
   const row = getDatabase()
@@ -136,7 +124,9 @@ test("HTTP boundary validates size, origin, JSON and model input", async () => {
         body: typeof body === "string" ? body : JSON.stringify(body),
       }),
     );
-  assert.equal((await send({ config })).status, 200);
+  const saved = await send({ config });
+  assert.equal(saved.status, 503);
+  assert.match((await saved.json()).error, /DATABASE_URL/);
   assert.equal((await send({ config: { ...config, scope: "unknown" } })).status, 400);
   assert.equal((await send({ config }, { origin: "https://other.example" })).status, 403);
   assert.equal((await send("invalid")).status, 400);

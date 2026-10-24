@@ -21,7 +21,7 @@ With no AI credentials, the answer is **local and rule-based**. Topic aliases an
 
 When `AI_GATEWAY_API_KEY` is set, or the app is running on Vercel, the same route calls Grok through the Vercel AI Gateway. The body may be `{ "message" }` or `{ "question" }`. The default model is `spacexai/grok-4.20-non-reasoning` (fast, tool-calling). `AI_MODEL` overrides that gateway id. The live catalog has no `xai/grok-4-fast`. On Vercel the gateway uses the `x-vercel-oidc-token` request header, which is present when Project Settings → Security → OIDC is enabled. That token is not a project environment variable. Locally, use the gateway key or `vercel env pull`. `XAI_API_KEY` with `@ai-sdk/xai` is used only when the gateway is not configured. The direct model id defaults to `grok-4.20-non-reasoning`.
 
-The model must call a tool. Tools read national indicators, one state's revenue, a two-state comparison, and the federal headline. A government session may also run the tax or plan projection. A citizen session, or no session, does not receive that tool. The role comes from the session cookie, not the body. After the reply, any number that is not in the tool results is removed. The badge reads `AI · figures checked`, `AI · unsupported figure removed`, `Rule-based · AI not configured`, or `Rule-based · AI error`. The JSON field is `aiStatus`: `ok`, `not_configured`, or `error`. If the model call fails, the rule-based answer is returned. The server log records a short reason with tokens and keys removed. It does not include the question.
+The model must call a tool. Tools read national indicators, one state's revenue, a two-state comparison, and the federal headline. A government session may also run the tax or plan projection. A citizen session, or no session, does not receive that tool. The role comes from the session cookie, not the body. After the reply, any number that is not in the tool results is removed. The badge reads `AI · numbers checked`, `AI · a number was removed`, `From the data · AI isn't set up`, or `From the data · AI hit an error`. The JSON field is `aiStatus`: `ok`, `not_configured`, or `error`. If the model call fails, the rule-based answer is returned. The server log records a short reason with tokens and keys removed. It does not include the question.
 
 `{ "query" }` still returns `{ "answer" }` from the ledger and never calls the model. `stream: true` on a `{ "message" }` request returns the already-checked text as `text/plain`, with `X-NationOS-Mode`. Message chat is limited to 30 requests per 15 minutes in this process.
 
@@ -70,7 +70,7 @@ Responses:
 
 Errors use `{error: string}`, HTTP 400 for invalid questions/context/configuration, plus shared HTTP origin/size/content-type errors. Messages must contain 1–2,000 characters.
 
-No database table or migration is added. Chat calculations do not create saved decisions or plan runs. Conversation state is local React memory and clears on navigation/reload or New conversation. To retain reasoning, calculate and save through the decision builder. Existing saved decisions remain in SQLite.
+Chat does not create a saved decision by itself. The conversation stays in React memory and clears when you leave the page or start a new one. To keep a reason, save it from the decision builder. Those records go to Postgres.
 
 ## Evidence safeguards
 

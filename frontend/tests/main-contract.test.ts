@@ -11,6 +11,9 @@ const directory = mkdtempSync(path.join(tmpdir(), "nationos-main-api-"));
 process.env.NATION_DB_PATH = path.join(directory, "ledger.sqlite");
 process.env.NATIONOS_DB_PATH = path.join(directory, "nigeria.sqlite");
 
+const { prepareLedger } = await import("../lib/db/connection");
+prepareLedger();
+
 const { GET: overview } = await import("../app/api/v1/fiscal/overview/route");
 const { GET: scenarios } = await import("../app/api/v1/scenarios/route");
 const { POST: recommend } = await import("../app/api/v1/budgets/recommend/route");

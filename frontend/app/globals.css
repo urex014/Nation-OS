@@ -5,6 +5,11 @@
   --color-accent: #476548;
   --font-serif: Georgia, "Times New Roman", serif;
 }
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: calc(4.75rem + env(safe-area-inset-top, 0px));
+  }
+}
 @layer base {
   body {
     @apply bg-paper text-ink antialiased;

@@ -9,7 +9,7 @@ export function CitizenDesk({ user, snapshot }) {
   const profile = ROLE_PROFILES.citizen;
   return (
     <>
-      <Heading eyebrow={profile.title} title="Transparency desk">
+      <Heading eyebrow={profile.title} title="Your public desk">
         {profile.summary} Signed in as {user.name} · {user.agency}.
       </Heading>
       <PublishedMoney snapshot={snapshot} />
@@ -18,10 +18,10 @@ export function CitizenDesk({ user, snapshot }) {
           {snapshot ? (
             <div className="space-y-3 text-sm leading-6 text-stone-700">
               <p>
-                In {snapshot.year}, {snapshot.state} reported {naira(snapshot.totalNaira)} of
-                internally generated revenue. Tax was {naira(snapshot.taxNaira)}. Other collections
-                were {naira(snapshot.otherNaira)}. Tax is {number(snapshot.taxShare, 1)}% of that
-                published total. That percentage is calculated here from the two published amounts.
+                In {snapshot.year}, {snapshot.state} reported {naira(snapshot.totalNaira)} of IGR
+                (money the state raises itself). Tax was {naira(snapshot.taxNaira)}. Other
+                collections were {naira(snapshot.otherNaira)}. Tax is {number(snapshot.taxShare, 1)}%
+                of that published total. We worked out that share from the two published amounts.
                 It is not a tax rate.
               </p>
               <p>{snapshot.warning}</p>
@@ -34,7 +34,7 @@ export function CitizenDesk({ user, snapshot }) {
             </div>
           ) : (
             <p className="text-sm leading-6 text-stone-600">
-              Published revenue appears here once the local database is ready.
+              Published revenue shows up here once the figures file is built.
             </p>
           )}
         </Card>
@@ -51,10 +51,10 @@ export function CitizenDesk({ user, snapshot }) {
                   Source: {snapshot.budget.source.publisher}, {snapshot.budget.source.title}.
                 </p>
               )}
-              <p>This desk cannot change a budget, a tax figure, or a saved decision.</p>
+              <p>This desk can’t change a budget, a tax figure, or a saved decision.</p>
             </div>
           ) : (
-            <p className="text-sm leading-6 text-stone-600">The federal headline is not loaded.</p>
+            <p className="text-sm leading-6 text-stone-600">The federal headline isn’t loaded yet.</p>
           )}
         </Card>
       </div>
@@ -67,7 +67,7 @@ export function CitizenDesk({ user, snapshot }) {
             {profile.links.map((link) => (
               <li key={link.href}>
                 <Link
-                  className="font-medium text-emerald-800 underline underline-offset-4"
+                  className="inline-flex font-medium text-emerald-800 underline underline-offset-4 max-md:min-h-11 max-md:items-center"
                   href={link.href}
                 >
                   {link.label}
@@ -81,7 +81,7 @@ export function CitizenDesk({ user, snapshot }) {
       <div className="mt-6">
         <Advisor
           heading="AI advisor"
-          intro="Ask where the published money goes. This seat cannot run a simulation. If no AI key is set, you still get the rule-based answer."
+          intro="Ask where the published money goes. This seat can't run a what-if. If AI isn't set up, you still get an answer from the data."
           prompts={[
             "Where does Lagos internally generated revenue come from?",
             "What is the federal budget headline, and is it Lagos spending?",
@@ -91,8 +91,8 @@ export function CitizenDesk({ user, snapshot }) {
       </div>
       <div className="mt-6">
         <Notice>
-          These pages show published Nigerian observations already loaded in the workspace. They do
-          not approve a Lagos budget or invent a missing figure.
+          These pages show published Nigerian figures already loaded here. They don’t approve a
+          Lagos budget, and they don’t fill in a missing number.
         </Notice>
       </div>
     </>

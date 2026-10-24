@@ -6,8 +6,21 @@ export const dynamic = "force-dynamic";
 
 const noStore = { "Cache-Control": "no-store" };
 
+function fail(error: unknown): Response {
+  const status = Number((error as { status?: number })?.status) || 500;
+  const message =
+    error instanceof Error && (status === 503 || (status >= 400 && status < 500))
+      ? error.message
+      : "The request could not be completed.";
+  return Response.json({ error: message }, { status, headers: noStore });
+}
+
 export async function GET(): Promise<Response> {
-  return Response.json({ decisions: await listDecisions() }, { headers: noStore });
+  try {
+    return Response.json({ decisions: await listDecisions() }, { headers: noStore });
+  } catch (error) {
+    return fail(error);
+  }
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -19,7 +32,11 @@ export async function POST(request: Request): Promise<Response> {
   }
   const parsed = parseRecommend(body);
   if (typeof parsed === "string") return Response.json({ error: parsed }, { status: 400 });
-  const result = buildRecommendation(parsed);
-  const decision = await saveDecision(parsed, result);
-  return Response.json({ decision, ...result }, { headers: noStore });
+  try {
+    const result = buildRecommendation(parsed);
+    const decision = await saveDecision(parsed, result);
+    return Response.json({ decision, ...result }, { headers: noStore });
+  } catch (error) {
+    return fail(error);
+  }
 }

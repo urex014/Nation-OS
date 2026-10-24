@@ -14,6 +14,8 @@ const directory = mkdtempSync(path.join(tmpdir(), "nationos-ai-"));
 process.env.NATIONOS_DB_PATH = path.join(directory, "nigeria.sqlite");
 process.env.NATIONOS_AUTH_DB_PATH = path.join(directory, "auth.sqlite");
 process.env.NATION_DB_PATH = path.join(directory, "ledger.sqlite");
+const { prepareSourcedDatabase } = await import("../lib/nigeria/database.mjs");
+prepareSourcedDatabase();
 
 const { groundReply } = await import("../lib/ai/ground.mjs");
 const { advise } = await import("../lib/ai/advise.mjs");
@@ -24,6 +26,7 @@ const {
   activeModelId,
   gatewayModelId,
   gatewayReady,
+  gatewaySettings,
   DEFAULT_GATEWAY_MODEL,
   DEFAULT_XAI_MODEL,
 } = await import("../lib/ai/model.mjs");
@@ -112,6 +115,54 @@ test("with no key the chat stays on the rule-based engine", async () => {
   assert.match(logged[1], /fell back \(error\): model unavailable/);
   assert.match(logged[2], /x-vercel-oidc-token/);
   assert.doesNotMatch(logged.join("\n"), /eyJ|sk_|bearer /i);
+  const cardLogged = [];
+  console.error = (line) => cardLogged.push(String(line));
+  let card;
+  let hung;
+  try {
+    card = await answerChat(
+      { message: "Compare Lagos and Rivers revenue" },
+      {
+        forceAi: true,
+        generate: async () => {
+          throw Error("AI Gateway requires a valid credit card on file");
+        },
+      },
+    );
+    const started = Date.now();
+    hung = await answerChat(
+      { question: "Compare Lagos and Rivers revenue" },
+      {
+        forceAi: true,
+        timeoutMs: 40,
+        generate: () => new Promise(() => {}),
+      },
+    );
+    assert.ok(Date.now() - started < 2000);
+  } finally {
+    console.error = write;
+  }
+  assert.equal(card.aiStatus, "error");
+  assert.equal(card.mode, "local-data");
+  assert.match(cardLogged.join("\n"), /credit card/);
+  assert.equal(hung.aiStatus, "error");
+  assert.equal(hung.mode, "local-data");
+  assert.match(cardLogged.join("\n"), /fell back \(error\): timeout/);
+  delete process.env.AI_GATEWAY_API_KEY;
+  const settings = gatewaySettings({ oidcToken: "oidc-header-token" });
+  assert.equal(settings.apiKey, "oidc-header-token");
+  assert.equal(settings.headers["x-vercel-oidc-token"], "oidc-header-token");
+  const forwarded = await advise({
+    message: "How much internally generated revenue did Lagos collect in 2025?",
+    role: "citizen",
+    oidcToken: "header-token",
+    generate: async (input) => {
+      assert.equal(input.oidcToken, "header-token");
+      const row = await input.tools.getStateRevenue.execute({ state: "Lagos", year: 2025 });
+      return `Lagos collected ${row.displayTotal}.`;
+    },
+  });
+  assert.equal(forwarded.mode, "ai");
   await assert.rejects(
     () => answerChat({ message: " " }, { forceAi: true, generate: async () => "no" }),
     { status: 400 },

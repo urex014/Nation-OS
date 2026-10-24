@@ -4,8 +4,8 @@ export const DEFAULT_GATEWAY_MODEL = "spacexai/grok-4.20-non-reasoning";
 export const DEFAULT_XAI_MODEL = "grok-4.20-non-reasoning";
 
 /**
- * On Vercel the OIDC token is usually the x-vercel-oidc-token request header,
- * not a project environment variable. Treat every Vercel run as worth trying.
+ * On Vercel the OIDC token arrives as the x-vercel-oidc-token request header.
+ * Treat every Vercel run as worth trying. The token itself is passed per request.
  */
 export function gatewayReady() {
   return Boolean(
@@ -28,11 +28,25 @@ export function activeModelId() {
 }
 
 /**
- * Gateway string models use OIDC on Vercel or AI_GATEWAY_API_KEY locally.
+ * A request OIDC token is enough. AI_GATEWAY_API_KEY is optional.
+ * The token is sent as the bearer credential and as x-vercel-oidc-token.
+ */
+export function gatewaySettings({ oidcToken } = {}) {
+  const token = typeof oidcToken === "string" ? oidcToken.trim() : "";
+  const apiKey = process.env.AI_GATEWAY_API_KEY || token || undefined;
+  const headers = token ? { "x-vercel-oidc-token": token } : undefined;
+  return { apiKey, headers };
+}
+
+/**
+ * Gateway calls use the request token, VERCEL_OIDC_TOKEN, or AI_GATEWAY_API_KEY.
  * A direct xAI key is only used when the gateway is not configured.
  */
-export async function resolveModel() {
-  if (gatewayReady()) return gatewayModelId();
+export async function resolveModel(options = {}) {
+  if (gatewayReady()) {
+    const { createGateway } = await import("ai");
+    return createGateway(gatewaySettings(options))(gatewayModelId());
+  }
   if (!process.env.XAI_API_KEY) return null;
   const { createXai } = await import("@ai-sdk/xai");
   const id = process.env.XAI_MODEL || DEFAULT_XAI_MODEL;

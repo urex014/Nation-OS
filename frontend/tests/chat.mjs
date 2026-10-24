@@ -8,6 +8,8 @@ delete process.env.VERCEL_OIDC_TOKEN;
 delete process.env.XAI_API_KEY;
 const directory = mkdtempSync(path.join(tmpdir(), "nationos-chat-"));
 process.env.NATIONOS_DB_PATH = path.join(directory, "chat.sqlite");
+const { prepareSourcedDatabase } = await import("../lib/nigeria/database.mjs");
+prepareSourcedDatabase();
 const { answerQuestion } = await import("../lib/nigeria/chat.mjs");
 const { getRevenue, getIndicators } = await import("../lib/nigeria/repository.mjs");
 const { allocateBudget } = await import("../lib/nigeria/planning.mjs");

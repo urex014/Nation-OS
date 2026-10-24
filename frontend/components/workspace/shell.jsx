@@ -7,12 +7,12 @@ import { MobileMenu, signOutAndLeave } from "../public/mobile-menu";
 import { Logo } from "../public/logo";
 
 const navigation = [
-  ["/overview", "National Overview", "Country indicators and geography"],
-  ["/revenue", "Budget & Revenue", "State revenue and comparisons"],
-  ["/budget", "Project Intelligence", "Ask the data and explore plans"],
-  ["/scenarios", "Scenario Lab", "Five- and ten-year sensitivity analysis"],
-  ["/decisions", "Decision & Audit Records", "Reasoning and review history"],
-  ["/sources", "Data Sources", "Provenance and coverage"],
+  ["/overview", "The country", "National figures and the map"],
+  ["/revenue", "Money in", "What each state collected"],
+  ["/budget", "Plan a budget", "Ask questions and try a plan"],
+  ["/scenarios", "What-if tests", "See what changes the plan"],
+  ["/decisions", "Saved decisions", "The reason and the review history"],
+  ["/sources", "Sources", "Who published each number"],
 ];
 
 export function WorkspaceShell({ children, user }) {
@@ -87,7 +87,7 @@ export function WorkspaceShell({ children, user }) {
             <>
               Federal Republic of Nigeria
               <br />
-              Public evidence. Explicit assumptions.
+              Public figures. Guesses are labelled.
             </>
           )}
         </div>
@@ -109,9 +109,11 @@ export function WorkspaceShell({ children, user }) {
             </Link>
           )}
         </header>
-        <main className="mx-auto max-w-[1500px] p-5 md:p-8 xl:p-10">{children}</main>
-        <footer className="px-8 pb-6 text-xs text-stone-600">
-          Observations retain their reporting years. Planning results depend on your assumptions.
+        <main className="mx-auto min-w-0 max-w-[1500px] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] md:p-8 xl:p-10">
+          {children}
+        </main>
+        <footer className="px-5 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] text-xs text-stone-600 md:px-8">
+          The years on these figures stay as published. Plans depend on the guesses you type in.
         </footer>
       </div>
     </div>

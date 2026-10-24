@@ -21,7 +21,7 @@ export function illustrateTax(taxKobo, otherKobo, percent) {
     otherKobo,
     totalKobo: tax + otherKobo,
     projection:
-      "Projection. Other internally generated revenue stays at the published amount. This changes the published tax collection, not a tax law, and it does not forecast what people will pay.",
+      "Projection. The rest of IGR (money the state raises itself) stays at the published amount. This changes the published tax collection, not a tax law, and it doesn't forecast what people will pay.",
   };
 }
 
@@ -32,6 +32,6 @@ export function illustrateSplit(envelopeNaira, strategy) {
     ...split,
     envelopeNaira,
     projection:
-      "Projection. These weights are a chosen preference, not evidence that a sector works better. The total is published internally generated revenue rounded to the nearest naira. It is not an appropriation.",
+      "Projection. These weights are a preference you chose, not evidence that a sector works better. The total is published IGR rounded to the nearest naira. It is not a budget law.",
   };
 }

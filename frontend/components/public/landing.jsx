@@ -5,48 +5,48 @@ import { SiteHeader } from "./site-header";
 const work = [
   {
     title: "Transparency for citizens",
-    body: "Read the published budget, revenue, and decisions in plain language. Each figure names its source. Nothing on the citizen desk can be edited.",
+    body: "Read the published budget, revenue, and decisions in plain language. Each figure names its source. You can't edit anything on the citizen desk.",
   },
   {
-    title: "Decision support for government",
-    body: "Officials start from the same published figures, then keep a written reason when a choice is saved. A public sign-up cannot open this desk.",
+    title: "Help for government decisions",
+    body: "Officials start from the same published figures, then write down why a choice was saved. A public sign-up can't open this desk.",
   },
   {
-    title: "Simulations with the source attached",
-    body: "Move the published tax collection, or split that published revenue across sectors. The result is labelled a projection. It does not invent a new total.",
+    title: "What-ifs with the source attached",
+    body: "Move the published tax collection, or split that published revenue across sectors. The result is labelled a projection. It doesn't invent a new total.",
   },
 ];
 
 const steps = [
-  ["01", "Read the published figures", "Start from observations that name a publisher and a year."],
+  ["01", "Read the published figures", "Start from numbers that name a publisher and a year."],
   [
     "02",
-    "Test an allocation",
-    "Move the assumptions. The workspace shows the formula, not a hidden score.",
+    "Try a split",
+    "Change the guesses. You see the formula, not a hidden score.",
   ],
-  ["03", "Record the reason", "A decision keeps the question, the result, and the review history."],
+  ["03", "Write down why", "A decision keeps the question, the result, and the review history."],
 ];
 
 function Evidence({ evidence }) {
   if (!evidence) {
     return (
       <p className="text-sm leading-6 text-stone-600">
-        Published figures appear here once the local database is ready.
+        These published numbers show up once the figures file is built.
       </p>
     );
   }
   const items = [
-    ["Lagos internally generated revenue", evidence.lagosIgr, `NBS · ${evidence.lagosYear}`],
+    ["Lagos IGR (money the state raises itself)", evidence.lagosIgr, `NBS · ${evidence.lagosYear}`],
     [
       "Lagos rank that year",
       evidence.lagosRank ? `${evidence.lagosRank} of ${evidence.coverage}` : "Not reported",
-      "Nominal IGR, not a governance score",
+      "Ranked by amount, not by how well the state is run",
     ],
     ["Tax within Lagos IGR", evidence.lagosTax, `NBS · ${evidence.lagosYear}`],
     [
       "Approved federal budget",
       evidence.budget,
-      `${evidence.budgetYear} headline · not Lagos spending`,
+      `${evidence.budgetYear} headline · not what Lagos spent`,
     ],
   ];
   return (
@@ -67,19 +67,18 @@ export function Landing({ user, evidence }) {
     <div className="min-h-screen bg-[#F8FAF9] text-[#18352e]">
       <SiteHeader user={user} />
       <main id="content">
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:grid-cols-[1.25fr_0.75fr] md:py-24">
+        <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 lg:grid-cols-[1.25fr_0.75fr] lg:py-24">
           <div>
             <p className="text-xs font-medium uppercase tracking-widest text-emerald-800">
               Lagos State · citizens and government
             </p>
             <h1 className="mt-4 max-w-xl font-serif text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
-              See where public money goes. Test a decision before it is made.
+              See where public money goes. Try a decision before it’s made.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-stone-700">
-              Citizens get a plain-language view of the published budget, revenue, and decisions,
-              with the source beside each figure. Government officials get decision support:
-              simulations of a budget split and of tax collections, starting from those same
-              published numbers.
+              Citizens get a plain view of the published budget, revenue, and decisions, with the
+              source next to each figure. Government officials can try a budget split or a change
+              in tax collections, starting from those same published numbers.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -99,19 +98,19 @@ export function Landing({ user, evidence }) {
           <aside className="rounded-xl border border-stone-200 bg-white p-6 shadow-[0_1px_0_rgb(11_59_44_/_0.04),0_14px_32px_rgb(11_59_44_/_0.06)]">
             <h2 className="text-sm font-semibold">Published figures in this workspace</h2>
             <p className="mt-2 mb-6 text-sm leading-6 text-stone-600">
-              Copied from public sources. They are not a Lagos appropriation bill.
+              Copied from public sources. This is not a Lagos budget law.
             </p>
             <Evidence evidence={evidence} />
           </aside>
         </section>
 
-        <section id="work" className="border-t border-stone-200">
+        <section id="work" className="scroll-mt-24 border-t border-stone-200">
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
             <h2 className="font-serif text-3xl font-semibold tracking-tight">What NationOS does</h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-              Transparency for the public. Decision support and simulations for government.
+              A clear view for the public. Decision help and what-ifs for government.
             </p>
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <div className="mt-10 grid gap-4 lg:grid-cols-3">
               {work.map((item) => (
                 <article
                   key={item.title}
@@ -125,12 +124,12 @@ export function Landing({ user, evidence }) {
           </div>
         </section>
 
-        <section id="roles" className="border-t border-stone-200 bg-white">
+        <section id="roles" className="scroll-mt-24 border-t border-stone-200 bg-white">
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
             <h2 className="font-serif text-3xl font-semibold tracking-tight">Who it is for</h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-              Sign-in sends each person to their own desk. A role cannot open another role&apos;s
-              desk.
+              Sign-in opens the right desk for each person. One role can&apos;t open the other
+              role&apos;s desk.
             </p>
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {Object.values(ROLE_PROFILES).map((role) => (
@@ -143,12 +142,12 @@ export function Landing({ user, evidence }) {
           </div>
         </section>
 
-        <section id="decision" className="border-t border-stone-200">
+        <section id="decision" className="scroll-mt-24 border-t border-stone-200">
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
             <h2 className="font-serif text-3xl font-semibold tracking-tight">
               How a decision is kept
             </h2>
-            <ol className="mt-10 grid gap-8 md:grid-cols-3">
+            <ol className="mt-10 grid gap-8 lg:grid-cols-3">
               {steps.map(([index, title, body]) => (
                 <li key={index}>
                   <p className="text-xs font-medium uppercase tracking-widest text-emerald-800">
@@ -169,8 +168,8 @@ export function Landing({ user, evidence }) {
                 Open the desk for your role.
               </h2>
               <p className="mt-4 text-base leading-7 text-emerald-50">
-                One demonstration seat is a government official. One is a citizen. A new account is
-                always a citizen.
+                One demo seat is a government official. One is a citizen. A new account is always a
+                citizen.
               </p>
             </div>
             <Link
@@ -185,7 +184,7 @@ export function Landing({ user, evidence }) {
       <footer className="border-t border-stone-200 px-5 py-8 text-sm leading-6 text-stone-600">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:justify-between">
           <p>NationOS · Lagos State planning workspace</p>
-          <p>Public evidence. Not an official gazette or an appropriation law.</p>
+          <p>Public figures. Not an official gazette or a budget law.</p>
         </div>
       </footer>
     </div>

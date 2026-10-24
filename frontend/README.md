@@ -108,13 +108,12 @@ Copy `.env.example` to `.env.local` only if overriding defaults:
 
 | Variable                  | Default                              | Meaning                                                |
 | ------------------------- | ------------------------------------ | ------------------------------------------------------ |
-| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`       | Writable SQLite database file                          |
+| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`       | Read-only published figures. Built by `npm run db:init` |
 | `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`            | Normalized input directory                             |
-| `DATABASE_URL`            | unset                                | Pooled Postgres for accounts, plans, decisions, audit   |
-| `DATABASE_URL_UNPOOLED`   | unset                                | Direct Postgres used to create those tables             |
-| `POSTGRES_URL`            | unset                                | Used when `DATABASE_URL` is empty                       |
-| `NATIONOS_AUTH_STORE`     | `sqlite` without a database URL      | `sqlite` or `memory` for one computer. Not the session. |
-| `NATIONOS_AUTH_DB_PATH`   | `data/auth.sqlite`                   | SQLite file used when the account store is `sqlite`     |
+| `DATABASE_URL`            | required for writes                  | Pooled Postgres for accounts, plans, decisions, audit  |
+| `DATABASE_URL_UNPOOLED`   | unset                                | Direct Postgres used to create those tables            |
+| `POSTGRES_URL`            | unset                                | Used when `DATABASE_URL` is empty                      |
+| `AI_TIMEOUT_MS`           | `12000`                              | Model call limit before the data answer is used        |
 | `NATIONOS_SESSION_SECRET` | development fallback                 | HMAC secret; required in production, 32+ characters    |
 | `NATIONOS_BCRYPT_COST`    | `12`                                 | Password hash cost                                     |
 | `NATION_DB_PATH`          | `data/nationos.sqlite`               | SQLite file for the `main` fiscal routes               |
@@ -128,9 +127,9 @@ Next reads `.env.local`; standalone Node scripts use process environment variabl
 
 SQLite files, WAL files, environment files and local recovery archives are ignored by Git. Shut down all app processes before copying the database for backup; copying only the main file while WAL writes are active can lose recent transactions. Keep your backup outside this working folder.
 
-Locally, the published money databases live under `data/`. On Vercel that disk is read-only, so those published files open under `/tmp`. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are bcrypt cost 10. A new account is hashed at cost 12.
+Locally, the published money databases live under `data/`. `npm run db:init` and the production build create them. The running app opens them read-only and does not copy them to `/tmp`. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are bcrypt cost 10. A new account is hashed at cost 12.
 
-Accounts, saved plans, decisions, and the audit trail are the rows people write. When `DATABASE_URL` or `POSTGRES_URL` is set, those rows go to Postgres and the tables in `db/schema.sql` are created on the first request. `DATABASE_URL_UNPOOLED` is used for that create when Neon provides it. With no database URL, your own computer keeps the rows in SQLite. On Vercel, public sign-up stays off until a URL is set, and the two demo sign-ins still work. Citizens read the same decision rows the official wrote, with no static cache.
+Accounts, saved plans, decisions, and the audit trail are the rows people write. They go to Postgres when `DATABASE_URL` or `POSTGRES_URL` is set, and the tables in `db/schema.sql` are created on the first request. `DATABASE_URL_UNPOOLED` is used for that create when Neon provides it. With no database URL, those requests return 503 and nothing is saved on the computer. The two demo sign-ins still work. Citizens read the same decision rows the official wrote, with no static cache. Set `DATABASE_URL` for local development too.
 
 ## Deploy to Vercel
 

@@ -52,7 +52,7 @@ export function AuthPanel() {
         return;
       }
       if (!data.dashboardPath) {
-        setError("The desk could not be opened.");
+        setError("We couldn't open your desk.");
         return;
       }
       moved = true;
@@ -64,7 +64,7 @@ export function AuthPanel() {
           ? signingIn
             ? "Signing in is taking too long. Check your connection and try again."
             : "Creating an account is taking too long. Check your connection and try again."
-          : "The workspace could not be reached.",
+          : "We couldn't reach NationOS. Check your connection and try again.",
       );
     } finally {
       clearTimeout(timer);
@@ -96,7 +96,7 @@ export function AuthPanel() {
               setError("");
               setFields({});
             }}
-            className={`rounded-md px-3 py-2 text-sm font-medium ${mode === value ? "bg-[#0B3B2C] text-white" : "text-[#18352e]"}`}
+            className={`rounded-md px-3 py-2 text-sm font-medium max-md:min-h-11 ${mode === value ? "bg-[#0B3B2C] text-white" : "text-[#18352e]"}`}
           >
             {label}
           </button>
@@ -107,8 +107,8 @@ export function AuthPanel() {
       </h1>
       <p className="mt-3 text-sm leading-6 text-stone-600">
         {mode === "sign-in"
-          ? "After your role is checked on the server, NationOS opens that role's desk."
-          : "New accounts are for members of the public. A government seat is not granted here."}
+          ? "We'll check your role, then open the right desk."
+          : "New accounts are for the public. This form can't make you a government user."}
       </p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
         {mode === "sign-up" && (
@@ -168,7 +168,9 @@ export function AuthPanel() {
         </div>
       </form>
       <details className="mt-6 text-sm leading-6 text-stone-600">
-        <summary className="font-medium text-[#18352e]">Demonstration accounts</summary>
+        <summary className="font-medium text-[#18352e] max-md:flex max-md:min-h-11 max-md:items-center">
+          Demo accounts
+        </summary>
         <ul className="mt-3 space-y-2">
           {DEMO_USERS.map((account) => (
             <li key={account.email}>
