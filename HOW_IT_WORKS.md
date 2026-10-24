@@ -110,7 +110,7 @@ The server limits how many questions one visit can ask. It does not write passwo
 
 **Why it matters.** A decision saved by an official is visible to a citizen on any copy of the site, because they read the same Neon database. A saved decision no longer disappears when one copy of the server stops.
 
-On Vercel you do not paste an AI key. Turn on OIDC under Project Settings → Security. Vercel then sends a short-lived pass on each request, in the `x-vercel-oidc-token` header. That pass lets the AI Gateway call Grok. It is not an environment variable you add. If OIDC is off, set `AI_GATEWAY_API_KEY` from the team AI Gateway page instead. The badge says when the answer stayed rule-based. The server log records the reason and leaves out keys. Locally, use a gateway key, or run `vercel env pull`, or use a direct xAI key. The names are in `frontend/.env.example`. The steps are in the frontend README.
+On Vercel, set `XAI_API_KEY` when the team gateway has no card on file. That key calls api.x.ai as `grok-4.20-non-reasoning`. The AI Gateway is used only when that key is absent. Then turn on OIDC under Project Settings → Security. Vercel sends a short-lived pass on each request, in the `x-vercel-oidc-token` header. It is not an environment variable you add. If OIDC is off, set `AI_GATEWAY_API_KEY` from the team AI Gateway page instead. The badge says when the answer stayed rule-based. The server log records the reason and leaves out keys. The names are in `frontend/.env.example`. The steps are in the frontend README.
 
 ## How to explain this to judges
 
