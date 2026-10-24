@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { openReadOnlySqlite } from "@/lib/runtime/read-only-sqlite.mjs";
 import { applySchema } from "@/lib/db/schema";
 import { seed } from "@/lib/db/seed/run";
 
@@ -30,13 +31,11 @@ export function prepareLedger(): void {
 }
 
 export function getDb(): DatabaseSync {
-  if (!globalForDb.nationDb) {
-    const filename = ledgerPath();
-    if (!fs.existsSync(filename)) throw Object.assign(new Error(MISSING), { status: 503 });
-    const db = new DatabaseSync(filename, { readOnly: true });
-    db.exec("PRAGMA query_only = ON");
-    db.exec("PRAGMA foreign_keys = ON");
-    globalForDb.nationDb = db;
-  }
-  return globalForDb.nationDb;
+  const existing = globalForDb.nationDb;
+  if (existing) return existing;
+  const filename = ledgerPath();
+  if (!fs.existsSync(filename)) throw Object.assign(new Error(MISSING), { status: 503 });
+  const db = openReadOnlySqlite(filename);
+  globalForDb.nationDb = db;
+  return db;
 }

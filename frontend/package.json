@@ -11,6 +11,7 @@
     "check:lines": "node scripts/check-lines.mjs",
     "check:http": "node tests/http.mjs",
     "check:mobile": "node scripts/check-mobile-width.mjs",
+    "check:desk": "node scripts/check-desk.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:init": "tsx scripts/init-db.mjs",

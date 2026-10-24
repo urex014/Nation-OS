@@ -10,13 +10,13 @@ A government official can ask questions and try a what-if before anyone calls it
 Every figure names the office that published it.
 If we do not have a number, the site says so.
 
-## The two desks
+## Where you land
 
-**What it is.** After sign-in, each person lands on one desk. There are only two.
+**What it is.** After sign-in, both seats open the country overview. The old desk addresses (`/dashboard`, `/dashboard/government`, `/dashboard/citizen`) send you there too.
 
-**What it does.** A government official opens `/dashboard/government`. That desk shows the published Lagos figures and a what-if tool. A citizen opens `/dashboard/citizen`. That desk shows the same published figures and does not let anyone change them.
+**What it does.** A citizen sees Overview first, then Money in, Saved decisions, and Sources. A government official sees those, plus Plan a budget and What-if tests. The tax slider that used to sit on the government desk is on Plan a budget.
 
-**Why it matters.** The public can see the numbers. Officials can test an idea. A new account is always a citizen. The sign-up form cannot create a government seat.
+**Why it matters.** There is one shared first page. Government tools stay on the government pages. A new account is always a citizen. The sign-up form cannot create a government seat.
 
 The two demo sign-ins are in the [README](README.md).
 
@@ -24,45 +24,45 @@ The two demo sign-ins are in the [README](README.md).
 
 **What it is.** One page, `/sign-in`, for both seats. A cookie is a small signed note the browser sends back. The note already says who you are, which seat you have, and when it expires. It lasts 12 hours.
 
-**What it does.** The person types an email and a password. The server checks the password. It then sets the cookie and sends the browser straight to the right desk. The button waits at most 15 seconds, then says so. Later pages trust that note after they check the signature. They do not look up a saved visit. Sign out throws the cookie away.
+**What it does.** The person types an email and a password. The server checks the password. It then sets the cookie and sends the browser to the overview. The button waits at most 15 seconds, then says so. Later pages trust that note after they check the signature. They do not look up a saved visit. Sign out throws the cookie away.
 
-**Why it matters.** The browser does not get to pick the role. A citizen who opens the government desk, the plan page, or the what-if page is sent to a short “not for this seat” page. The two demo people are written in the program, so signing in as them does not save a file. A copied cookie keeps working until it expires. That is the trade for not keeping a visit list on the server.
+**Why it matters.** The browser does not get to pick the role. A citizen who opens the plan page or the what-if page is sent to a short “not for this seat” page. The two demo people are written in the program, so signing in as them does not save a file. A copied cookie keeps working until it expires. That is the trade for not keeping a visit list on the server.
 
 ```mermaid
 flowchart TD
   home["Open the site"] --> sign["Sign in"]
-  sign --> desk{"Which seat?"}
-  desk -->|Official| gov["Decision desk"]
-  desk -->|Citizen| cit["Reading desk"]
+  sign --> overview["Overview"]
+  overview --> gov["Officials can open Plan a budget"]
+  overview --> cit["Citizens stay on the public pages"]
 ```
 
 ## The numbers
 
 **What it is.** A database is a file that holds saved numbers. This app keeps three of them. One holds the Nigeria figures. One holds the 2026 figures copied from the `main` branch. One holds accounts.
 
-**What it does.** The first time a file is needed, the app creates it and fills the starter rows. The Lagos money on the desks is published internally generated revenue. That means money the state collected itself. It is not money sent by the federal government, and it is not the whole Lagos budget.
+**What it does.** The first time a file is needed, the app creates it and fills the starter rows. The Lagos money on the pages is published internally generated revenue. That means money the state collected itself. It is not money sent by the federal government, and it is not the whole Lagos budget.
 
 **Why it matters.** The site does not invent a tax rate or a Lagos spending plan. The federal number on the page is a national headline. The what-if tool does not spend it.
 
 ## Asking a question
 
-**What it is.** Both desks have an advisor. It can use Grok, a language model reached through Vercel’s AI Gateway. A gateway here is a door that talks to the model for us. If that door is closed, the same box uses fixed rules that read the database.
+**What it is.** Both workspaces have Nation AI. It is the round button at the bottom-right. It can use Grok, a language model reached through Vercel’s AI Gateway. A gateway here is a door that talks to the model for us. If that door is closed, the same panel uses fixed rules that read the database.
 
-**What it does.** The model must call a tool before it states a figure. A tool is a small server function that reads one published table or runs one labelled what-if. After the reply, the server checks every number. A number that was not in the tool result is removed. The badge says which path answered: AI with figures checked, AI with a figure removed, or rule-based.
+**What it does.** The model must call a tool before it states a figure. A tool is a small server function that reads one published table or runs one labelled what-if. After the reply, the server checks every number. A number that was not in the tool result is removed. The badge says which path answered: AI with figures checked, AI with a figure removed, or rule-based. The conversation stays in the open tab. It is not saved on the computer.
 
-**Why it matters.** A fluent sentence is not evidence. The government seat may run a what-if. The citizen seat can only read. A visitor with no cookie is treated as read-only. A question sent in the older `{ "query" }` shape never goes to the model.
+**Why it matters.** A fluent sentence is not evidence. The government seat may run a what-if. The citizen seat gets the same panel, limited to public figures. A visitor with no cookie is treated as read-only. A question sent in the older `{ "query" }` shape never goes to the model.
 
 ## One real visit
 
 Adaeze works on the Lagos budget. She opens the site and signs in on the government seat.
 
-She sees the published Lagos revenue, the tax part, and the other part, with the publisher named. She asks, “What if Lagos tax collections were 10% lower than the published figure?”
+She opens Plan a budget and sees the published Lagos tax collection, with a slider. She asks Nation AI, “What if Lagos tax collections were 10% lower than the published figure?”
 
 The server reads her cookie and sees that she is government. If Grok is available, the model calls the what-if tool. The tool reads the published tax amount and applies 10%. The reply comes back only after the number check. The screen says it is a projection. A projection is a what-if sum. It is not a new tax law, and it does not promise jobs or services.
 
 If no AI key is set, she still gets an answer. The badge says rule-based. The figures still come from the database.
 
-Later, Chinedu, a resident, signs in on the citizen seat. He sees the same published Lagos revenue in plain language, with the same source. He does not see the slider. He can ask where the money comes from. His advisor cannot run the what-if. If he opens the plan page, the site turns him away.
+Later, Chinedu, a resident, signs in on the citizen seat. He sees the same published figures in plain language, with the same source. He does not see the slider. He can ask Nation AI where the money comes from. His panel cannot run the what-if. If he opens the plan page, the site turns him away.
 
 ```mermaid
 flowchart TD
@@ -81,13 +81,12 @@ flowchart TD
 | ----------------------------------- | -------------------- | ------------------------------------------------------ |
 | `/`                                 | Anyone               | What the site is, and a sign-in button                 |
 | `/sign-in`                          | Anyone not signed in | Sign in, or create a citizen account                   |
-| `/dashboard/government`             | Government only      | Published figures, a what-if, and the advisor          |
-| `/dashboard/citizen`                | Citizen only         | The same figures, read only                            |
-| `/overview`, `/revenue`, `/sources` | Any signed-in person | The wider picture, state revenue, and who published it |
-| `/budget`, `/scenarios`             | Government only      | Ask the data, then draft a plan and compare cases      |
+| `/overview`, `/revenue`, `/sources` | Any signed-in person | The wider picture, state revenue, and who published it. Sign-in opens `/overview`. |
+| `/budget`, `/scenarios`             | Government only      | The tax slider, then a plan and compared cases         |
+| `/dashboard/government`, `/dashboard/citizen` | Signed-in person | Redirect to `/overview`. The desk pages are gone. |
 | `/decisions`                        | Any signed-in person | Saved reasons. Only government can change a status     |
 
-The green bar uses the NationOS logo. The landing page, the sign-in page, and the desk share that logo.
+The green bar uses the NationOS logo. The landing page, the sign-in page, and the workspace share that logo. Nation AI uses the same mark on its round button.
 
 ## What the server answers
 
@@ -119,7 +118,7 @@ NationOS lets the public read published Lagos revenue, and lets an official test
 
 The figures come from named publishers. Missing numbers stay missing. A what-if is labelled as a projection.
 
-The advisor may use Grok. It can only repeat numbers a tool just read. Any other number is removed. With no key, the same questions still get a rule-based answer.
+Nation AI may use Grok. It can only repeat numbers a tool just read. Any other number is removed. With no key, the same questions still get a rule-based answer. Citizens stay on public figures.
 
 There are two seats. The public seat cannot run the what-if or open the plan page. A new account cannot become a government seat.
 

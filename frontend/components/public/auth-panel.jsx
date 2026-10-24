@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, startTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DEMO_USERS } from "../../lib/auth/demo-users";
 import { ROLE_PROFILES } from "../../lib/auth/types";
@@ -42,6 +42,8 @@ export function AuthPanel() {
       const response = await fetch(signingIn ? "/api/auth/sign-in" : "/api/auth/sign-up", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        cache: "no-store",
+        credentials: "same-origin",
         body: JSON.stringify(body),
         signal: controller.signal,
       });
@@ -52,11 +54,17 @@ export function AuthPanel() {
         return;
       }
       if (!data.dashboardPath) {
-        setError("We couldn't open your desk.");
+        setError("We couldn't open the overview.");
         return;
       }
       moved = true;
-      router.replace(data.dashboardPath);
+      // The cookie is set. Refresh the sign-in page so its server redirect runs
+      // with that cookie. router.replace alone reused the signed-out shell, so
+      // the overview stayed blank until a manual reload.
+      startTransition(() => {
+        router.replace(data.dashboardPath);
+        router.refresh();
+      });
     } catch (error) {
       const aborted = error instanceof Error && error.name === "AbortError";
       setError(
@@ -107,7 +115,7 @@ export function AuthPanel() {
       </h1>
       <p className="mt-3 text-sm leading-6 text-stone-600">
         {mode === "sign-in"
-          ? "We'll check your role, then open the right desk."
+          ? "We'll check your role, then open the overview."
           : "New accounts are for the public. This form can't make you a government user."}
       </p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>

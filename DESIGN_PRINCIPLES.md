@@ -29,16 +29,16 @@ Use this page when adding a screen or an API. The visual system is the one alrea
 
 ## Roles
 
-| Role         | Desk                    | Who                                | Registration                                     |
-| ------------ | ----------------------- | ---------------------------------- | ------------------------------------------------ |
-| `government` | `/dashboard/government` | Lagos budget and finance officials | Seeded only. Sign-up must never grant this role. |
-| `citizen`    | `/dashboard/citizen`    | Members of the public              | Seeded, and the only role sign-up can create.    |
+| Role         | Lands on    | Who                                | Registration                                     |
+| ------------ | ----------- | ---------------------------------- | ------------------------------------------------ |
+| `government` | `/overview` | Lagos budget and finance officials | Seeded only. Sign-up must never grant this role. |
+| `citizen`    | `/overview` | Members of the public              | Seeded, and the only role sign-up can create.    |
 
-Both roles may read `/overview`, `/revenue`, `/decisions`, and `/sources`. Only `government` may open `/budget` and `/scenarios`, or post a plan, allocation, scenario, or decision. The government desk simulates from published Lagos IGR. It labels the result a projection and cites the source. It does not invent a tax rate or a Lagos appropriation. The citizen desk is read-only.
+Both roles may read `/overview`, `/revenue`, `/decisions`, and `/sources`. Only `government` may open `/budget` and `/scenarios`, or post a plan, allocation, scenario, or decision. The tax slider lives on `/budget`. It simulates from published Lagos IGR, labels the result a projection, and cites the source. It does not invent a tax rate or a Lagos appropriation. Citizens do not see that slider. `/dashboard/government` and `/dashboard/citizen` redirect to `/overview`.
 
 ## Advice and deploy
 
-- The advisor uses the Vercel AI SDK. The default model is Grok through the AI Gateway: `spacexai/grok-4.20-non-reasoning`. `AI_MODEL` overrides that gateway id. The catalog does not list `xai/grok-4-fast`.
+- Nation AI uses the Vercel AI SDK. The default model is Grok through the AI Gateway: `spacexai/grok-4.20-non-reasoning`. `AI_MODEL` overrides that gateway id. The catalog does not list `xai/grok-4-fast`. The panel is in memory only. Citizens get the same UI with read-only tools.
 - On Vercel the gateway signs in with the `x-vercel-oidc-token` request header when Project Settings → Security → OIDC is on. That header is not an environment variable you add. Locally use `AI_GATEWAY_API_KEY`, or `vercel env pull`. A direct `XAI_API_KEY` is the fallback only when the gateway is not configured.
 - The model may state a number only after a tool read it from the repository. After the reply, any number that is not in those tool results is removed. A `{ "query" }` body stays on the ledger path and never calls the model.
 - The role comes from the session. A government seat may run the simulation tool. A citizen seat, and a visitor with no session, get read-only tools. If no key is set, or the model call fails, the existing rule-based answer is used and the screen says so.

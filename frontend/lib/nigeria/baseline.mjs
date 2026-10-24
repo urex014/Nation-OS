@@ -14,7 +14,7 @@ function sourceBrief(source) {
   };
 }
 
-/** Published Lagos money for both desks. Missing rows stay missing. */
+/** Published Lagos money for the budget what-if. Missing rows stay missing. */
 export async function publicMoneySnapshot() {
   try {
     const overview = getOverview();
@@ -24,7 +24,7 @@ export async function publicMoneySnapshot() {
       .prepare(
         "select total_kobo, tax_kobo, other_kobo from state_revenue where state_id = 'NG-LA' and year = ?",
       )
-      .get(lagos.year);
+      .get(overview.revenue.year);
     if (!row || row.tax_kobo == null || row.other_kobo == null) return null;
     const inflation = overview.indicators.find((item) => item.code === "FP.CPI.TOTL.ZG");
     let decisions = [];

@@ -21,12 +21,12 @@ Copy `.env.example` to `.env.local` before any shared or production run and set 
 
 ## Sign in
 
-`main` does not define accounts or roles. This workspace adds two demonstration seats. Passwords are hashed with bcrypt. A signed `httpOnly` cookie is checked on the server, and each role is sent to its own desk. Self-serve registration creates a **citizen** only. A government seat is seeded, not chosen on the form. A step-by-step tour is in [HOW_IT_WORKS.md](../HOW_IT_WORKS.md). Design rules are in [DESIGN_PRINCIPLES.md](../DESIGN_PRINCIPLES.md).
+`main` does not define accounts or roles. This workspace adds two demonstration seats. Passwords are hashed with bcrypt. A signed `httpOnly` cookie is checked on the server, and both roles open the country overview. Self-serve registration creates a **citizen** only. A government seat is seeded, not chosen on the form. A step-by-step tour is in [HOW_IT_WORKS.md](../HOW_IT_WORKS.md). Design rules are in [DESIGN_PRINCIPLES.md](../DESIGN_PRINCIPLES.md).
 
-| Role                | Desk                    | Email                      | Password                |
-| ------------------- | ----------------------- | -------------------------- | ----------------------- |
-| Government official | `/dashboard/government` | `government@nationos.demo` | `Government-Demo-2026!` |
-| Citizen             | `/dashboard/citizen`    | `citizen@nationos.demo`    | `Citizen-Demo-2026!`    |
+| Role                | Lands on    | Email                      | Password                |
+| ------------------- | ----------- | -------------------------- | ----------------------- |
+| Government official | `/overview` | `government@nationos.demo` | `Government-Demo-2026!` |
+| Citizen             | `/overview` | `citizen@nationos.demo`    | `Citizen-Demo-2026!`    |
 
 These passwords are for the local hackathon demo. They are not production credentials.
 
@@ -45,11 +45,10 @@ Both commands bind to your local computer. Stop a running dev server before star
 | ----------------------- | ------------------------------------------------------------------------------------------------------- |
 | `/`                     | Public landing page: transparency for citizens, decision support for government                         |
 | `/sign-in`              | Sign in, or create a citizen account                                                                    |
-| `/overview`             | Country indicators, approved federal budget, actual state boundaries, observed state revenue            |
-| `/dashboard/government` | Government decision-support desk and projections from published figures                                 |
-| `/dashboard/citizen`    | Read-only transparency desk for budget, revenue, and decisions                                          |
+| `/overview`             | Country indicators, approved federal budget, actual state boundaries, observed state revenue. Both roles land here. |
+| `/dashboard`, `/dashboard/government`, `/dashboard/citizen` | Old desk addresses. They redirect to `/overview`. |
 | `/revenue`              | Compare any two jurisdictions and reporting years; all 37 state/FCT rows                                |
-| `/budget`               | Chat with the imported data, compare states, inspect sources, model plans and open the decision builder |
+| `/budget`               | Tax slider from the old government desk, then chat, plans, and the decision builder. Government only. |
 | `/scenarios`            | Compare four conditional cases using the current unsaved planner configuration                          |
 | `/decisions`            | Retrieve saved reasoning, model/source snapshots, status reviews and audit events                       |
 | `/sources`              | Publishers, source periods, attribution, checksums and coverage gaps                                    |
@@ -106,28 +105,28 @@ No database credentials belong in browser code. Local development can sign sessi
 
 Copy `.env.example` to `.env.local` only if overriding defaults:
 
-| Variable                  | Default                              | Meaning                                                |
-| ------------------------- | ------------------------------------ | ------------------------------------------------------ |
-| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`       | Read-only published figures. Built by `npm run db:init` |
-| `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`            | Normalized input directory                             |
-| `DATABASE_URL`            | required for writes                  | Pooled Postgres for accounts, plans, decisions, audit  |
-| `DATABASE_URL_UNPOOLED`   | unset                                | Direct Postgres used to create those tables            |
-| `POSTGRES_URL`            | unset                                | Used when `DATABASE_URL` is empty                      |
-| `AI_TIMEOUT_MS`           | `12000`                              | Model call limit before the data answer is used        |
-| `NATIONOS_SESSION_SECRET` | development fallback                 | HMAC secret; required in production, 32+ characters    |
-| `NATIONOS_BCRYPT_COST`    | `12`                                 | Password hash cost                                     |
-| `NATION_DB_PATH`          | `data/nationos.sqlite`               | SQLite file for the `main` fiscal routes               |
-| `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning`   | Gateway model. The catalog has no `xai/grok-4-fast`    |
-| `AI_GATEWAY_API_KEY`      | unset                                | Local AI Gateway key. Optional                         |
-| `VERCEL_OIDC_TOKEN`       | not a project variable               | Request header when OIDC is on. Do not create it       |
-| `XAI_API_KEY`             | unset                                | Direct xAI key, only if the gateway is not set         |
-| `XAI_MODEL`               | `grok-4.20-non-reasoning`            | Model id for that direct key                           |
+| Variable                  | Default                            | Meaning                                                                       |
+| ------------------------- | ---------------------------------- | ----------------------------------------------------------------------------- |
+| `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`     | Read-only published figures. Built by `next build` and `npm run db:init`      |
+| `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`          | Normalized input directory                                                    |
+| `DATABASE_URL`            | required for writes                | Pooled Postgres for accounts, plans, decisions, audit                         |
+| `DATABASE_URL_UNPOOLED`   | unset                              | Direct Postgres used to create those tables                                   |
+| `POSTGRES_URL`            | unset                              | Used when `DATABASE_URL` is empty                                             |
+| `AI_TIMEOUT_MS`           | `12000`                            | Model call limit before the data answer is used                               |
+| `NATIONOS_SESSION_SECRET` | development fallback               | HMAC secret; required in production, 32+ characters                           |
+| `NATIONOS_BCRYPT_COST`    | `12`                               | Password hash cost                                                            |
+| `NATION_DB_PATH`          | `data/nationos.sqlite`             | Read-only fiscal file for the `main` routes. Built with the published figures |
+| `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning` | Gateway model. The catalog has no `xai/grok-4-fast`                           |
+| `AI_GATEWAY_API_KEY`      | unset                              | Local AI Gateway key. Optional                                                |
+| `VERCEL_OIDC_TOKEN`       | not a project variable             | Request header when OIDC is on. Do not create it                              |
+| `XAI_API_KEY`             | unset                              | Direct xAI key, only if the gateway is not set                                |
+| `XAI_MODEL`               | `grok-4.20-non-reasoning`          | Model id for that direct key                                                  |
 
 Next reads `.env.local`; standalone Node scripts use process environment variables. For a script override in PowerShell, set `$env:NATIONOS_DB_PATH='your-path.sqlite'` first.
 
 SQLite files, WAL files, environment files and local recovery archives are ignored by Git. Shut down all app processes before copying the database for backup; copying only the main file while WAL writes are active can lose recent transactions. Keep your backup outside this working folder.
 
-Locally, the published money databases live under `data/`. `npm run db:init` and the production build create them. The running app opens them read-only and does not copy them to `/tmp`. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are bcrypt cost 10. A new account is hashed at cost 12.
+Locally, the published money databases live under `data/`. `next build` writes both SQLite files before file tracing and includes them in every server function that reads them. `npm run db:init` writes the same files. The running app opens them read-only (`immutable=1`) from that bundled path. If that open fails, it copies the bytes once to `/tmp/nationos-ro` and opens the copy read-only. That copy is not a place anything is saved. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are bcrypt cost 10. A new account is hashed at cost 12.
 
 Accounts, saved plans, decisions, and the audit trail are the rows people write. They go to Postgres when `DATABASE_URL` or `POSTGRES_URL` is set, and the tables in `db/schema.sql` are created on the first request. `DATABASE_URL_UNPOOLED` is used for that create when Neon provides it. With no database URL, those requests return 503 and nothing is saved on the computer. The two demo sign-ins still work. Citizens read the same decision rows the official wrote, with no static cache. Set `DATABASE_URL` for local development too.
 

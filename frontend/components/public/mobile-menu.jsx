@@ -149,7 +149,11 @@ export function MobileMenu({ links, user, logoHref = "/", sticky = true }) {
               <Link
                 href={link.href}
                 data-menu-item
-                onClick={close}
+                prefetch={link.prefetch}
+                onClick={(event) => {
+                  link.onSelect?.(event);
+                  close();
+                }}
                 aria-current={link.current ? "page" : undefined}
                 className={`flex min-h-11 flex-col justify-center px-4 py-2 focus-visible:outline-white ${link.current ? "bg-white/10" : ""}`}
               >

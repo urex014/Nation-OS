@@ -38,7 +38,7 @@ function streamText(text) {
   });
 }
 
-// The desk posts { message } or { question }. main's contract posts { query }.
+// Nation AI posts { message } or { question }. main's contract posts { query }.
 export async function POST(request) {
   try {
     const body = await readJson(request);

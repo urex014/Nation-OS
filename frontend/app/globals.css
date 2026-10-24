@@ -59,3 +59,70 @@
     @apply text-lg font-medium;
   }
 }
+
+/* Soft border glow for the Project intelligence chat. The fill stays still when motion is reduced. */
+.project-intelligence {
+  --pi-surface: #ffffff;
+  --pi-ink: #18352e;
+  --pi-muted: #78716c;
+  --pi-bubble: #f5f5f4;
+  --pi-user: #0b3b2c;
+  position: relative;
+  border-radius: 1.25rem;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--pi-surface), var(--pi-surface)) padding-box,
+    linear-gradient(120deg, #0b3b2c, #b7e4c7, #f4fff8, #1f7a4d, #0b3b2c) border-box;
+  background-size:
+    100% 100%,
+    240% 240%;
+  box-shadow:
+    0 0 0 1px rgb(16 117 74 / 0.08),
+    0 0 22px rgb(16 117 74 / 0.16);
+  color: var(--pi-ink);
+  animation: pi-glow 8s ease-in-out infinite;
+}
+.pi-user {
+  background: var(--pi-user);
+  color: #fff;
+}
+.pi-assistant {
+  background: var(--pi-bubble);
+  color: var(--pi-ink);
+}
+@keyframes pi-glow {
+  0%,
+  100% {
+    background-position:
+      0 0,
+      0% 50%;
+  }
+  50% {
+    background-position:
+      0 0,
+      100% 50%;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .project-intelligence {
+    --pi-surface: #10241c;
+    --pi-ink: #e7f3ec;
+    --pi-muted: #a9c3b6;
+    --pi-bubble: #16352a;
+    --pi-user: #1c6b49;
+    box-shadow:
+      0 0 0 1px rgb(183 228 199 / 0.22),
+      0 0 26px rgb(80 200 140 / 0.28);
+    background:
+      linear-gradient(var(--pi-surface), var(--pi-surface)) padding-box,
+      linear-gradient(120deg, #8fd4ae, #f4fff8, #1f7a4d, #c8f5dc) border-box;
+    background-size:
+      100% 100%,
+      240% 240%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-intelligence {
+    animation: none;
+  }
+}

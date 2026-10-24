@@ -1,4 +1,10 @@
 /** Node 24 ships node:sqlite. @types/node 20 in this workspace does not describe it yet. */
+declare module "@/lib/runtime/read-only-sqlite.mjs" {
+  import { DatabaseSync } from "node:sqlite";
+  export function openReadOnlySqlite(filename: string): DatabaseSync;
+  export function readOnlyCachePath(filename: string): string;
+}
+
 declare module "node:sqlite" {
   interface StatementSync {
     get(...params: unknown[]): unknown;

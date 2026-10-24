@@ -3,17 +3,19 @@ import { redirect } from "next/navigation";
 import { AuthPanel } from "../../components/public/auth-panel";
 import { SiteHeader } from "../../components/public/site-header";
 import { currentUser } from "../../lib/auth/current";
-import { homeFor } from "../../lib/auth/types";
+import { destinationFor } from "../../lib/auth/types";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Sign in · NationOS",
-  description: "Sign in to the NationOS desk for your Lagos State role.",
+  description: "Sign in to NationOS. Both roles open the country overview.",
 };
 
-export default async function Page() {
+export default async function Page({ searchParams }) {
+  const params = await searchParams;
   const user = await currentUser();
-  if (user) redirect(homeFor(user.role));
+  const next = typeof params?.next === "string" ? params.next : null;
+  if (user) redirect(destinationFor(user.role, next));
   return (
     <div className="min-h-screen bg-[#F8FAF9]">
       <SiteHeader />
