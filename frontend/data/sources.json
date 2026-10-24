@@ -1,0 +1,16 @@
+{
+  "backup": "frontend/data/cited/ledger.json is the current backup. Every loaded figure is copied from that file.",
+  "datasets": [
+    {
+      "slug": "akinniyiakinwande/nigeria-agri-econ-indicators-1950-2023",
+      "role": "gdp-and-agriculture",
+      "note": "World Bank agricultural and GDP levels for Nigeria, published on Kaggle. Not loaded. No CSV is present."
+    },
+    {
+      "slug": "adeagborapheal/gdp-cassava-production-exchng-rt-interest-rt-ng",
+      "role": "fx-and-rates",
+      "note": "Nigeria exchange rate and interest rate series published on Kaggle. Not loaded. The stored FX figure is the MTEF assumption ₦1,512/$, not this series."
+    }
+  ],
+  "faac": "January–September 2026 gross FAAC for 36 states. Listed amounts and the ₦8.43tn headline are from Agora Policy, 21 October 2026. Every state is published. There is no residual estimate. FCT is outside the table."
+}
