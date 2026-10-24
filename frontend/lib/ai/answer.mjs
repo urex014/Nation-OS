@@ -2,18 +2,56 @@ import { answerQuestion } from "../nigeria/chat.mjs";
 import { advise } from "./advise.mjs";
 import { aiConfigured } from "./model.mjs";
 
+export function chatMessage(body) {
+  if (typeof body?.message === "string") return body.message;
+  if (typeof body?.question === "string") return body.question;
+  return "";
+}
+
+/** Drop tokens and keys before a line is written to the server log. */
+export function safeAiReason(error) {
+  const raw = error instanceof Error ? error.message : "AI request failed";
+  return raw
+    .replace(/bearer\s+\S+/gi, "bearer [redacted]")
+    .replace(/eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "[redacted]")
+    .replace(/\b(sk|xai|vck)_[A-Za-z0-9_-]{6,}/gi, "[redacted]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 300);
+}
+
+export function aiStatusFor(reason) {
+  if (
+    /x-vercel-oidc-token|oidc option|no authentication|no ai credentials|AI_GATEWAY_API_KEY/i.test(
+      reason,
+    )
+  ) {
+    return "not_configured";
+  }
+  return "error";
+}
+
 export async function answerChat(body, options = {}) {
-  const useAi = Boolean(options.forceAi || options.generate || aiConfigured());
-  if (!useAi) return answerQuestion(body);
+  const message = chatMessage(body);
+  const normalized = { ...body, message };
+  if (!Boolean(options.forceAi || options.generate || aiConfigured())) {
+    console.error(
+      "AI advisor fell back (not_configured): no AI_GATEWAY_API_KEY or XAI_API_KEY, and this process is not on Vercel.",
+    );
+    return { ...answerQuestion(normalized), aiStatus: "not_configured" };
+  }
   try {
-    return await advise({
-      message: body?.message,
+    const answer = await advise({
+      message,
       role: options.role,
       generate: options.generate,
     });
+    return { ...answer, aiStatus: "ok" };
   } catch (error) {
     if (error?.status) throw error;
-    console.error("AI advisor failed; using rule-based answers.");
-    return answerQuestion(body);
+    const reason = safeAiReason(error);
+    const aiStatus = aiStatusFor(reason);
+    console.error(`AI advisor fell back (${aiStatus}): ${reason}`);
+    return { ...answerQuestion(normalized), aiStatus };
   }
 }

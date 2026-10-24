@@ -110,14 +110,17 @@ Copy `.env.example` to `.env.local` only if overriding defaults:
 | ------------------------- | ------------------------------------ | ------------------------------------------------------ |
 | `NATIONOS_DB_PATH`        | `data/nigeria/nationos.sqlite`       | Writable SQLite database file                          |
 | `NATIONOS_SOURCE_DIR`     | `data/nigeria/normalized`            | Normalized input directory                             |
-| `NATIONOS_AUTH_STORE`     | `sqlite` locally, `memory` on Vercel | Where new citizen accounts are saved. Not the session. |
-| `NATIONOS_AUTH_DB_PATH`   | `data/auth.sqlite`                   | SQLite file used when the account store is `sqlite`    |
+| `DATABASE_URL`            | unset                                | Pooled Postgres for accounts, plans, decisions, audit   |
+| `DATABASE_URL_UNPOOLED`   | unset                                | Direct Postgres used to create those tables             |
+| `POSTGRES_URL`            | unset                                | Used when `DATABASE_URL` is empty                       |
+| `NATIONOS_AUTH_STORE`     | `sqlite` without a database URL      | `sqlite` or `memory` for one computer. Not the session. |
+| `NATIONOS_AUTH_DB_PATH`   | `data/auth.sqlite`                   | SQLite file used when the account store is `sqlite`     |
 | `NATIONOS_SESSION_SECRET` | development fallback                 | HMAC secret; required in production, 32+ characters    |
 | `NATIONOS_BCRYPT_COST`    | `12`                                 | Password hash cost                                     |
 | `NATION_DB_PATH`          | `data/nationos.sqlite`               | SQLite file for the `main` fiscal routes               |
 | `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning`   | Gateway model. The catalog has no `xai/grok-4-fast`    |
 | `AI_GATEWAY_API_KEY`      | unset                                | Local AI Gateway key. Optional                         |
-| `VERCEL_OIDC_TOKEN`       | set by Vercel                        | Gateway auth on Vercel. `vercel env pull` locally      |
+| `VERCEL_OIDC_TOKEN`       | not a project variable               | Request header when OIDC is on. Do not create it       |
 | `XAI_API_KEY`             | unset                                | Direct xAI key, only if the gateway is not set         |
 | `XAI_MODEL`               | `grok-4.20-non-reasoning`            | Model id for that direct key                           |
 
@@ -125,7 +128,9 @@ Next reads `.env.local`; standalone Node scripts use process environment variabl
 
 SQLite files, WAL files, environment files and local recovery archives are ignored by Git. Shut down all app processes before copying the database for backup; copying only the main file while WAL writes are active can lose recent transactions. Keep your backup outside this working folder.
 
-Locally, the money databases live under `data/`. On Vercel the disk is read-only, so those databases open under `/tmp` and the published Nigeria files are imported on first use. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are checked from hashes shipped in the program. A new citizen account is kept in memory on Vercel, so it does not last across copies unless you plug a real database into `lib/auth/accounts.ts`. Saved decisions still last only for that copy. Set a real session secret, serve the app over HTTPS, and replace the demonstration accounts before exposing it to untrusted users.
+Locally, the published money databases live under `data/`. On Vercel that disk is read-only, so those published files open under `/tmp`. Sign-in does not use that file. The cookie is a signed note with the person, the seat, and a 12-hour expiry. Demo passwords are bcrypt cost 10. A new account is hashed at cost 12.
+
+Accounts, saved plans, decisions, and the audit trail are the rows people write. When `DATABASE_URL` or `POSTGRES_URL` is set, those rows go to Postgres and the tables in `db/schema.sql` are created on the first request. `DATABASE_URL_UNPOOLED` is used for that create when Neon provides it. With no database URL, your own computer keeps the rows in SQLite. On Vercel, public sign-up stays off until a URL is set, and the two demo sign-ins still work. Citizens read the same decision rows the official wrote, with no static cache.
 
 ## Deploy to Vercel
 
@@ -133,13 +138,15 @@ The Vercel project root is this `frontend/` folder, not the repository root.
 
 1. Import the Git repository. Set **Root Directory** to `frontend`. Use the Node.js 24 runtime.
 2. Set `NATIONOS_SESSION_SECRET` to a random string of at least 32 characters. Production will not start sessions without it.
-3. Leave the AI key empty if you want the AI Gateway. Vercel sets `VERCEL_OIDC_TOKEN` on the deployment. Optional: set `AI_MODEL`. The default is `spacexai/grok-4.20-non-reasoning`.
-4. Deploy. Open the site, sign in with either demo account, and ask one question. The badge should say the answer was checked by AI. With no gateway access, the same question still answers and the badge says rule-based.
-5. For a local gateway call, set `AI_GATEWAY_API_KEY`, or run `vercel link` and `vercel env pull` to receive a `VERCEL_OIDC_TOKEN` that lasts about 12 hours. A direct `XAI_API_KEY` is the alternative only when neither gateway credential is set.
+3. Leave `AI_MODEL` unset unless you want another gateway model. The default is `spacexai/grok-4.20-non-reasoning`.
+4. In the Vercel project, open **Storage** and add **Neon** from the Marketplace. Vercel sets `DATABASE_URL` for you. The app creates the account and decision tables the first time they are needed. You can also run `npm run db:init` on your own computer after the URL is in the environment.
+5. For the advisor, open **Project Settings → Security** and turn **OIDC** on. That lets the AI Gateway sign in. Or set `AI_GATEWAY_API_KEY` from the team **AI Gateway** page. Do not put a provider key in the browser.
+6. Deploy. Open the site, sign in with either demo account, and ask one question. The badge should say the answer was checked by AI. If OIDC is off and no gateway key is set, the badge says the AI is not configured and the answer is still rule-based.
+7. For a local gateway call, set `AI_GATEWAY_API_KEY`, or run `vercel link` and `vercel env pull`. A direct `XAI_API_KEY` is the alternative only when neither gateway credential is set.
 
 Do not commit `.env.local` or a pulled token. Names and comments are in `.env.example`.
 
-The fiscal routes from `main` are also mounted here: `GET /api/v1/fiscal/overview`, `GET /api/v1/fiscal/revenue`, `POST /api/v1/budgets/recommend`, `GET` and `POST /api/v1/decisions`, `GET /api/v1/scenarios`, and `POST /api/allocate`. `POST /api/chat` still accepts the workspace `{ "message" }` body. A body with `{ "query" }` follows the `main` contract and returns `{ "answer" }`. Those routes require a signed-in session, as the rest of `/api` does.
+The fiscal routes from `main` are also mounted here: `GET /api/v1/fiscal/overview`, `GET /api/v1/fiscal/revenue`, `POST /api/v1/budgets/recommend`, `GET` and `POST /api/v1/decisions`, `GET /api/v1/scenarios`, and `POST /api/allocate`. `POST /api/chat` accepts `{ "message" }` or `{ "question" }`. The JSON includes `aiStatus`: `ok`, `not_configured`, or `error`. A body with `{ "query" }` follows the `main` contract and returns `{ "answer" }`. Those routes require a signed-in session, as the rest of `/api` does.
 
 ## Refresh observations
 

@@ -1,6 +1,7 @@
 import { readJson } from "../../../../lib/nigeria/http.mjs";
+import { SIGN_UP_DISABLED } from "../../../../lib/auth/accounts";
 import { httpFailure, jsonError, withSession } from "../../../../lib/auth/http";
-import { openSession, registerCitizen } from "../../../../lib/auth/service";
+import { registerCitizen } from "../../../../lib/auth/service";
 import { destinationFor } from "../../../../lib/auth/types";
 import { fieldErrorsFrom, signUpSchema } from "../../../../lib/auth/validate";
 
@@ -19,12 +20,12 @@ export async function POST(request: Request) {
         403,
       );
     }
-    const created = registerCitizen(parsed.data);
+    const created = await registerCitizen(parsed.data);
     if (created === "exists") return jsonError("An account with that email already exists.", 409);
-    const session = openSession(created);
+    if (created === "disabled") return jsonError(SIGN_UP_DISABLED, 503);
     return withSession(
-      { user: session.user, dashboardPath: destinationFor(session.user.role, parsed.data.next) },
-      session.token,
+      { user: created.user, dashboardPath: destinationFor(created.user.role, parsed.data.next) },
+      created.token,
       201,
     );
   } catch (error) {

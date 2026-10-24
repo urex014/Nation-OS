@@ -1,19 +1,15 @@
 import { randomBytes } from "node:crypto";
-import { findAccount, saveCitizen } from "./accounts";
-import { hashPassword, verifyPassword } from "./passwords";
-import { SESSION_TTL_SECONDS, signSession, userFromToken } from "./token";
+import { deleteAccount, findAccount, publicSignUpEnabled, saveCitizen } from "./accounts";
+import { verifyPassword } from "./passwords";
+import { SESSION_TTL_SECONDS, sessionSecret, signSession, userFromToken } from "./token";
 import type { PublicUser } from "./types";
 
 export { userFromToken };
 
 type Attempt = { count: number; resetAt: number };
 const attempts = new Map<string, Attempt>();
-let dummyHash: string | null = null;
-
-function placeholderHash(): string {
-  dummyHash ??= hashPassword("nationos-dummy-password");
-  return dummyHash;
-}
+/** Cost 10, same work as a demo check, so a missing account is not faster. */
+const DUMMY_HASH = "$2b$10$oyKhd.M9jk7MBPS7CJG6QenvKAOQ4Nruf0z6WAEHJJDlEVJxGNqhm";
 
 export function registerFailure(email: string): void {
   const now = Date.now();
@@ -38,8 +34,8 @@ export async function authenticate(
   email: string,
   password: string,
 ): Promise<{ user: PublicUser; token: string } | null> {
-  const account = findAccount(email);
-  const matches = await verifyPassword(password, account?.passwordHash ?? placeholderHash());
+  const account = await findAccount(email);
+  const matches = await verifyPassword(password, account?.passwordHash ?? DUMMY_HASH);
   if (!account || !matches) return null;
   const user: PublicUser = {
     id: account.id,
@@ -51,13 +47,47 @@ export async function authenticate(
   return openSession(user);
 }
 
-export function registerCitizen(input: {
-  name: string;
-  agency: string;
-  email: string;
-  password: string;
-}): PublicUser | "exists" {
-  return saveCitizen({ ...input, id: `user-${randomBytes(9).toString("base64url")}` });
+type SessionGate = {
+  assertSecret(): void;
+  open(user: PublicUser): { user: PublicUser; token: string };
+};
+
+const liveGate: SessionGate = {
+  assertSecret() {
+    sessionSecret();
+  },
+  open: openSession,
+};
+
+/**
+ * The signing secret is checked before the account is saved.
+ * If the cookie still cannot be signed, the new row is removed.
+ */
+export async function registerCitizen(
+  input: { name: string; agency: string; email: string; password: string },
+  gate: SessionGate = liveGate,
+): Promise<{ user: PublicUser; token: string } | "exists" | "disabled"> {
+  if (!publicSignUpEnabled()) return "disabled";
+  gate.assertSecret();
+  const created = await saveCitizen({
+    ...input,
+    id: `user-${randomBytes(9).toString("base64url")}`,
+  });
+  if (created === "exists" || created === "disabled") return created;
+  try {
+    return gate.open(created);
+  } catch (error) {
+    try {
+      await deleteAccount(created.id);
+    } catch (rollbackError) {
+      const reason = error instanceof Error ? error.message : "session error";
+      throw new Error(
+        `Session was not created (${reason}) and the new account could not be removed.`,
+        { cause: rollbackError },
+      );
+    }
+    throw error;
+  }
 }
 
 /** The cookie carries the person. There is no session row to write. */

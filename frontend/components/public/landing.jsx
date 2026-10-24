@@ -143,7 +143,7 @@ export function Landing({ user, evidence }) {
           </div>
         </section>
 
-        <section className="border-t border-stone-200">
+        <section id="decision" className="border-t border-stone-200">
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
             <h2 className="font-serif text-3xl font-semibold tracking-tight">
               How a decision is kept

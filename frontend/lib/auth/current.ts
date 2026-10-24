@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { userFromToken } from "./service";
+import { userFromToken } from "./token";
 import { SESSION_COOKIE } from "./token";
 import type { PublicUser, Role } from "./types";
 

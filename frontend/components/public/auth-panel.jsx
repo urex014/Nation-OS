@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DEMO_USERS } from "../../lib/auth/demo-users";
 import { ROLE_PROFILES } from "../../lib/auth/types";
@@ -12,9 +12,12 @@ export function AuthPanel() {
   const [error, setError] = useState("");
   const [fields, setFields] = useState({});
   const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
 
   async function onSubmit(event) {
     event.preventDefault();
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setPending(true);
     setError("");
     setFields({});
@@ -32,24 +35,43 @@ export function AuthPanel() {
           email: form.get("email"),
           password: form.get("password"),
         };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    let moved = false;
     try {
       const response = await fetch(signingIn ? "/api/auth/sign-in" : "/api/auth/sign-up", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
       const data = await response.json();
       if (!response.ok) {
         setError(data.error || "The request could not be completed.");
         setFields(data.fieldErrors || {});
-        setPending(false);
         return;
       }
-      router.push(data.dashboardPath);
-      router.refresh();
-    } catch {
-      setError("The workspace could not be reached.");
-      setPending(false);
+      if (!data.dashboardPath) {
+        setError("The desk could not be opened.");
+        return;
+      }
+      moved = true;
+      router.replace(data.dashboardPath);
+    } catch (error) {
+      const aborted = error instanceof Error && error.name === "AbortError";
+      setError(
+        aborted
+          ? signingIn
+            ? "Signing in is taking too long. Check your connection and try again."
+            : "Creating an account is taking too long. Check your connection and try again."
+          : "The workspace could not be reached.",
+      );
+    } finally {
+      clearTimeout(timer);
+      if (!moved) {
+        pendingRef.current = false;
+        setPending(false);
+      }
     }
   }
 
@@ -68,6 +90,7 @@ export function AuthPanel() {
             key={value}
             type="button"
             aria-pressed={mode === value}
+            disabled={pending}
             onClick={() => {
               setMode(value);
               setError("");
@@ -127,8 +150,20 @@ export function AuthPanel() {
         {fields.password && <p className="text-sm text-red-800">{fields.password}</p>}
         {error && <Notice error>{error}</Notice>}
         <div className="[&_button]:w-full">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Checking…" : mode === "sign-in" ? "Sign in" : "Create account"}
+          <Button type="submit" disabled={pending} aria-busy={pending}>
+            {pending ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <span
+                  className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                  aria-hidden="true"
+                />
+                {mode === "sign-in" ? "Signing in…" : "Creating account…"}
+              </span>
+            ) : mode === "sign-in" ? (
+              "Sign in"
+            ) : (
+              "Create account"
+            )}
           </Button>
         </div>
       </form>

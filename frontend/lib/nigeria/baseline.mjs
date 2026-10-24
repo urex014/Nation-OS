@@ -15,7 +15,7 @@ function sourceBrief(source) {
 }
 
 /** Published Lagos money for both desks. Missing rows stay missing. */
-export function publicMoneySnapshot() {
+export async function publicMoneySnapshot() {
   try {
     const overview = getOverview();
     const lagos = overview.revenue.states.find((state) => state.id === "NG-LA");
@@ -29,7 +29,7 @@ export function publicMoneySnapshot() {
     const inflation = overview.indicators.find((item) => item.code === "FP.CPI.TOTL.ZG");
     let decisions = [];
     try {
-      decisions = listDecisions(5, 0).records.map((item) => ({
+      decisions = (await listDecisions(5, 0)).records.map((item) => ({
         id: item.id,
         title: item.title,
         status: item.status,

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { GOVERNMENT_PATHS, ROLE_PROFILES } from "../../lib/auth/types";
+import { MobileMenu, signOutAndLeave } from "../public/mobile-menu";
 import { Logo } from "../public/logo";
 
 const navigation = [
@@ -26,24 +27,27 @@ export function WorkspaceShell({ children, user }) {
     : visible;
   const active = items.find(([path]) => path === pathname);
 
-  async function signOut() {
-    await fetch("/api/auth/sign-out", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: "{}",
-    });
-    router.push("/");
-    router.refresh();
-  }
+  const menuLinks = items.map(([href, label, description]) => ({
+    href,
+    label,
+    description,
+    current: pathname === href,
+  }));
 
   return (
     <div className="min-h-screen bg-[#F8FAF9] lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="flex flex-col bg-[#0B3B2C] text-white lg:sticky lg:top-0 lg:h-screen">
+      <MobileMenu
+        links={menuLinks}
+        user={user}
+        logoHref={user ? ROLE_PROFILES[user.role].path : "/overview"}
+      />
+      <aside className="hidden flex-col bg-[#0B3B2C] text-white md:flex lg:sticky lg:top-0 lg:h-screen">
         <div className="flex items-center justify-between border-b border-white/10 p-6">
           <Logo inverse href="/overview" />
           <button
             aria-label="Toggle navigation"
             aria-expanded={open}
+            aria-controls="workspace-nav"
             onClick={() => setOpen(!open)}
             className="lg:hidden"
             type="button"
@@ -52,6 +56,7 @@ export function WorkspaceShell({ children, user }) {
           </button>
         </div>
         <nav
+          id="workspace-nav"
           aria-label="Main navigation"
           className={`${open ? "block" : "hidden"} space-y-2 px-3 py-6 lg:block`}
         >
@@ -93,13 +98,13 @@ export function WorkspaceShell({ children, user }) {
           {user ? (
             <button
               type="button"
-              onClick={signOut}
-              className="shrink-0 rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-[#18352e]"
+              onClick={() => signOutAndLeave(router)}
+              className="hidden shrink-0 rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-[#18352e] md:inline"
             >
               Sign out
             </button>
           ) : (
-            <Link href="/sign-in" className="font-medium text-emerald-800">
+            <Link href="/sign-in" className="hidden font-medium text-emerald-800 md:inline">
               Sign in
             </Link>
           )}

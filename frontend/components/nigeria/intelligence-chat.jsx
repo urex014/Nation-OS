@@ -67,7 +67,7 @@ export function IntelligenceChat({ jurisdictions }) {
             <div>
               <h2 className="font-semibold">Data conversation</h2>
               <p className="mt-1 text-xs text-stone-500">
-                Rule-based until an AI key is set. AI figures are checked against the database.
+                The badge says whether this answer used AI. Figures from AI are checked.
               </p>
             </div>
             <Button
@@ -101,7 +101,7 @@ export function IntelligenceChat({ jurisdictions }) {
               >
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
                   {message.role === "user" ? "You" : "NationOS · evidence assistant"}
-                  {message.mode ? ` · ${engineLabel(message.mode)}` : ""}
+                  {message.mode ? ` · ${engineLabel(message.mode, message.aiStatus)}` : ""}
                 </p>
                 {message.paragraphs.map((paragraph, i) => (
                   <p key={i} className="whitespace-pre-wrap text-sm leading-7 text-stone-700">
@@ -185,7 +185,7 @@ export function IntelligenceChat({ jurisdictions }) {
             />
             <div className="mt-3 flex items-center justify-between gap-3">
               <span className="text-xs text-stone-400">
-                Conversation stays in this page; saved decisions remain in SQLite.
+                Conversation stays on this page. Saved decisions are shared from the database.
               </span>
               <Button disabled={busy || !question.trim()} type="submit">
                 {busy ? "Checking…" : "Send question"}

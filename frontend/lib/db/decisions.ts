@@ -3,6 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { getDb } from "@/lib/db/connection";
 import type { Recommendation } from "@/lib/domain/recommend";
 import type { RecommendInput } from "@/lib/domain/recommend";
+import { databaseUrl } from "@/lib/runtime/database-url";
 import type { DecisionRecord } from "@/lib/types";
 
 type DecisionRow = {
@@ -18,7 +19,11 @@ type DecisionRow = {
   revisions: string;
 };
 
-export function listDecisions(): DecisionRecord[] {
+export async function listDecisions(): Promise<DecisionRecord[]> {
+  if (databaseUrl()) {
+    const { listLedgerDecisions } = await import("@/lib/db/decisions-pg");
+    return listLedgerDecisions();
+  }
   return listDecisionsFrom(getDb());
 }
 
@@ -36,8 +41,20 @@ function decisionTitle(strategy: string): string {
   return "Budget split";
 }
 
-export function saveDecision(input: RecommendInput, result: Recommendation): DecisionRecord {
-  return saveDecisionOn(getDb(), input, result);
+export async function saveDecision(
+  input: RecommendInput,
+  result: Recommendation,
+): Promise<DecisionRecord> {
+  if (!databaseUrl()) return saveDecisionOn(getDb(), input, result);
+  const { insertLedgerDecision, latestLedgerDecision } = await import("@/lib/db/decisions-pg");
+  const previous = await latestLedgerDecision();
+  const record = composeDecision(
+    input,
+    result,
+    previous ? { ...previous, horizon: Number(previous.horizon) } : undefined,
+  );
+  await insertLedgerDecision(record);
+  return record;
 }
 
 export function saveDecisionOn(
@@ -47,23 +64,7 @@ export function saveDecisionOn(
 ): DecisionRecord {
   const previous = db.prepare("SELECT * FROM decisions ORDER BY created_at DESC LIMIT 1").get() as
     DecisionRow | undefined;
-  const revisions = previous ? diffDecision(previous, input, result.budgets) : [];
-  const record: DecisionRecord = {
-    id: randomUUID(),
-    createdAt: new Date().toISOString(),
-    title: decisionTitle(input.strategy),
-    question: input.question,
-    horizon: input.horizon,
-    strategy: input.strategy,
-    assumptions: [
-      "The sector amounts add up to the budget.",
-      "Inflation comes from the stored figure, not a forecast.",
-      "Money already spent on capital projects stays out of this budget.",
-    ],
-    tradeoffs: result.tradeoffs,
-    budgets: result.budgets,
-    revisions,
-  };
+  const record = composeDecision(input, result, previous);
   db.prepare(
     `INSERT INTO decisions
       (id, created_at, title, question, horizon, strategy, assumptions, tradeoffs, budgets, revisions)
@@ -81,6 +82,29 @@ export function saveDecisionOn(
     JSON.stringify(record.revisions),
   );
   return record;
+}
+
+function composeDecision(
+  input: RecommendInput,
+  result: Recommendation,
+  previous?: DecisionRow,
+): DecisionRecord {
+  return {
+    id: randomUUID(),
+    createdAt: new Date().toISOString(),
+    title: decisionTitle(input.strategy),
+    question: input.question,
+    horizon: input.horizon,
+    strategy: input.strategy,
+    assumptions: [
+      "The sector amounts add up to the budget.",
+      "Inflation comes from the stored figure, not a forecast.",
+      "Money already spent on capital projects stays out of this budget.",
+    ],
+    tradeoffs: result.tradeoffs,
+    budgets: result.budgets,
+    revisions: previous ? diffDecision(previous, input, result.budgets) : [],
+  };
 }
 
 function diffDecision(

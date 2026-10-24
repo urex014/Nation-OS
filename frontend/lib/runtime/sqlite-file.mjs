@@ -9,7 +9,7 @@ export function onVercel() {
 /**
  * Local runs keep the requested file. On Vercel, open a copy under /tmp.
  * A bundled file is copied once. A missing file is created in /tmp on first use.
- * Writes, including sign-up and saved decisions, last only for that running copy.
+ * Published money is copied once. Accounts and decisions use Postgres when a URL is set.
  */
 export function writableDatabasePath(preferred) {
   if (!preferred || preferred === ":memory:" || !onVercel()) return preferred;

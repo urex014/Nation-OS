@@ -20,8 +20,7 @@ async function roleFrom(request) {
     const cookie = request.headers.get("cookie") || "";
     const match = cookie.match(/(?:^|;\s*)nationos_session=([^;]+)/);
     if (!match) return null;
-    // Loaded only when a session cookie is present. Next compiles this TypeScript module.
-    const { userFromToken } = await import("../../../lib/auth/service");
+    const { userFromToken } = await import("../../../lib/auth/token");
     return userFromToken(decodeURIComponent(match[1]))?.role ?? null;
   } catch {
     return null;
@@ -39,7 +38,7 @@ function streamText(text) {
   });
 }
 
-// The workspace posts { message }. main's contract posts { query } and returns { answer }.
+// The desk posts { message } or { question }. main's contract posts { query }.
 export async function POST(request) {
   try {
     const body = await readJson(request);
@@ -67,11 +66,16 @@ export async function POST(request) {
           "Cache-Control": "no-store",
           "X-Content-Type-Options": "nosniff",
           "X-NationOS-Mode": answer.mode || "local-data",
+          "X-NationOS-AI-Status": answer.aiStatus || "not_configured",
         },
       });
     }
     return Response.json(answer, {
-      headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "X-NationOS-AI-Status": answer.aiStatus || "not_configured",
+      },
     });
   } catch (error) {
     return fail(error);

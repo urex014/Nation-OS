@@ -2,9 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 /** Full wordmark. Dark file is for the forest bar; light file is for paper. */
-export function Logo({ inverse = false, href = "/" }) {
+export function Logo({ inverse = false, href = "/", onClick, className = "" }) {
   return (
-    <Link href={href} className="inline-flex min-w-0 items-center">
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`inline-flex min-w-0 items-center ${className}`.trim()}
+    >
       <Image
         src={inverse ? "/logo-full-dark.png" : "/logo-full.png"}
         alt="NationOS"

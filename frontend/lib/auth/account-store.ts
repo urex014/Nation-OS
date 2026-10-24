@@ -10,8 +10,9 @@ export type NewCitizen = {
   password: string;
 };
 
-/** Swap this for a hosted database. The session cookie does not read it. */
+/** Hosted or local accounts. The session cookie does not read this. */
 export type AccountStore = {
-  findByEmail(email: string): AccountRecord | null;
-  insertCitizen(input: NewCitizen): PublicUser | "exists";
+  findByEmail(email: string): Promise<AccountRecord | null>;
+  insertCitizen(input: NewCitizen): Promise<PublicUser | "exists">;
+  deleteById(id: string): Promise<void>;
 };
