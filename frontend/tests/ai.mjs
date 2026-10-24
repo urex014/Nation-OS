@@ -27,6 +27,7 @@ const {
   gatewayModelId,
   gatewayReady,
   gatewaySettings,
+  resolveModel,
   DEFAULT_GATEWAY_MODEL,
   DEFAULT_XAI_MODEL,
 } = await import("../lib/ai/model.mjs");
@@ -36,8 +37,21 @@ test("citizen tools are read-only and a zero change keeps the published Lagos ta
   assert.equal(aiConfigured(), false);
   assert.equal(gatewayReady(), false);
   process.env.VERCEL = "1";
-  assert.equal(gatewayReady(), true);
-  delete process.env.VERCEL;
+  try {
+    assert.equal(gatewayReady(), true);
+    assert.equal(activeModelId(), DEFAULT_GATEWAY_MODEL);
+    const gateway = await resolveModel({ oidcToken: "oidc-header-token" });
+    assert.equal(gateway.modelId, DEFAULT_GATEWAY_MODEL);
+    process.env.XAI_API_KEY = "xai-test-key";
+    assert.equal(activeModelId(), DEFAULT_XAI_MODEL);
+    const direct = await resolveModel({ oidcToken: "oidc-header-token" });
+    assert.equal(direct.modelId, DEFAULT_XAI_MODEL);
+    assert.match(direct.provider, /^xai\./);
+  } finally {
+    delete process.env.VERCEL;
+    delete process.env.XAI_API_KEY;
+    delete process.env.XAI_MODEL;
+  }
   assert.equal(gatewayModelId(), DEFAULT_GATEWAY_MODEL);
   assert.equal(activeModelId(), DEFAULT_XAI_MODEL);
   const citizen = createTools("citizen");

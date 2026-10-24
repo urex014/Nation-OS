@@ -119,7 +119,7 @@ Copy `.env.example` to `.env.local` only if overriding defaults:
 | `AI_MODEL`                | `spacexai/grok-4.20-non-reasoning` | Gateway model. The catalog has no `xai/grok-4-fast`                           |
 | `AI_GATEWAY_API_KEY`      | unset                              | Local AI Gateway key. Optional                                                |
 | `VERCEL_OIDC_TOKEN`       | not a project variable             | Request header when OIDC is on. Do not create it                              |
-| `XAI_API_KEY`             | unset                              | Direct xAI key, only if the gateway is not set                                |
+| `XAI_API_KEY`             | unset                              | Direct xAI key. When set, this is used instead of the gateway                 |
 | `XAI_MODEL`               | `grok-4.20-non-reasoning`          | Model id for that direct key                                                  |
 
 Next reads `.env.local`; standalone Node scripts use process environment variables. For a script override in PowerShell, set `$env:NATIONOS_DB_PATH='your-path.sqlite'` first.
@@ -138,9 +138,9 @@ The Vercel project root is this `frontend/` folder, not the repository root.
 2. Set `NATIONOS_SESSION_SECRET` to a random string of at least 32 characters. Production will not start sessions without it.
 3. Leave `AI_MODEL` unset unless you want another gateway model. The default is `spacexai/grok-4.20-non-reasoning`.
 4. In the Vercel project, open **Storage** and add **Neon** from the Marketplace. Vercel sets `DATABASE_URL` for you. The app creates the account and decision tables the first time they are needed. You can also run `npm run db:init` on your own computer after the URL is in the environment.
-5. For the advisor, open **Project Settings → Security** and turn **OIDC** on. That lets the AI Gateway sign in. Or set `AI_GATEWAY_API_KEY` from the team **AI Gateway** page. Do not put a provider key in the browser.
-6. Deploy. Open the site, sign in with either demo account, and ask one question. The badge should say the answer was checked by AI. If OIDC is off and no gateway key is set, the badge says the AI is not configured and the answer is still rule-based.
-7. For a local gateway call, set `AI_GATEWAY_API_KEY`, or run `vercel link` and `vercel env pull`. A direct `XAI_API_KEY` is the alternative only when neither gateway credential is set.
+5. Set `XAI_API_KEY` for production and preview when the team AI Gateway has no card on file. That key calls api.x.ai directly. Leave `XAI_MODEL` unset to use `grok-4.20-non-reasoning`. Do not put the key in the browser.
+6. Deploy. Open the site, sign in with either demo account, and ask one question. The badge should say the answer was checked by AI. With no `XAI_API_KEY`, no gateway key, and OIDC off, the badge says the AI is not configured and the answer is still rule-based.
+7. The gateway is the path only when `XAI_API_KEY` is unset. Then turn on **Project Settings → Security → OIDC**, or set `AI_GATEWAY_API_KEY`. Locally, `vercel link` and `vercel env pull` can supply the gateway token. The request still forwards `x-vercel-oidc-token` on that path.
 
 Do not commit `.env.local` or a pulled token. Names and comments are in `.env.example`.
 
