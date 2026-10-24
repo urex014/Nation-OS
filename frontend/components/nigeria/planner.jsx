@@ -219,7 +219,7 @@ export function Planner({ jurisdictions }) {
                 <Notice>
                   Saved with the other decisions.{" "}
                   <Link className="underline" href="/decisions">
-                    Open saved decisions
+                    Open saved projects
                   </Link>
                   .
                 </Notice>

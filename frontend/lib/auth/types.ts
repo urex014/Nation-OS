@@ -49,7 +49,7 @@ export const ROLE_PROFILES: Record<Role, RoleProfile> = {
       { href: "/budget", label: "Plan a budget", note: "Ask questions and draft a plan" },
       { href: "/scenarios", label: "What-if tests", note: "Five- and ten-year comparisons" },
       { href: "/revenue", label: "Money in", note: "What each state collected" },
-      { href: "/decisions", label: "Saved decisions", note: "Save a reason and review it" },
+      { href: "/decisions", label: "Saved projects", note: "Save a reason and review it" },
     ],
   },
   citizen: {
@@ -61,11 +61,11 @@ export const ROLE_PROFILES: Record<Role, RoleProfile> = {
     duties: [
       "See Lagos revenue, including tax, and how it ranks among states. More naira is not a score for how well a government is run.",
       "Read the federal budget headline with its note: it is not Lagos spending.",
-      "Open saved decisions and who published each series. This seat can't run the government what-if.",
+      "Open saved projects and who published each series. This seat can't run the government what-if.",
     ],
     links: [
       { href: "/revenue", label: "Money in", note: "Published collections" },
-      { href: "/decisions", label: "Saved decisions", note: "Reasons officials saved" },
+      { href: "/decisions", label: "Saved projects", note: "Reasons officials saved" },
       { href: "/sources", label: "Sources", note: "Who published each series" },
       { href: "/overview", label: "The country", note: "National figures and the map" },
     ],

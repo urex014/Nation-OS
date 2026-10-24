@@ -260,7 +260,7 @@ test("both roles land on the overview, and citizens keep it first", async () => 
     [
       ["/overview", "The country"],
       ["/revenue", "Money in"],
-      ["/decisions", "Saved decisions"],
+      ["/decisions", "Saved Projeccts"],
       ["/sources", "Sources"],
     ],
   );

@@ -34,7 +34,7 @@ export function DecisionRecords({ initial, canReview = false }) {
   }
   return (
     <>
-      <Heading eyebrow="Saved decisions" title="Keep the reason with the decision">
+      <Heading eyebrow="Saved Projects" title="See all pending, unfinished and completed projects">
         A saved record keeps the plan, the guesses, and the sources. A status review adds a note
         and leaves the original calculation as it was.
       </Heading>

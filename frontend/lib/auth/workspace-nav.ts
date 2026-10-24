@@ -6,7 +6,7 @@ export const WORKSPACE_NAV: [string, string, string][] = [
   ["/revenue", "Money in", "What each state collected"],
   ["/budget", "Plan a budget", "Ask questions and try a plan"],
   ["/scenarios", "What-if tests", "See what changes the plan"],
-  ["/decisions", "Saved decisions", "The reason and the review history"],
+  ["/decisions", "Saved projects", "The reason and the review history"],
   ["/sources", "Sources", "Who published each number"],
 ];
 

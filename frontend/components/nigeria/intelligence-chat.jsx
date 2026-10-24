@@ -234,7 +234,7 @@ export function IntelligenceChat({ jurisdictions, children }) {
             </button>
           </form>
           <p className="mt-2 text-xs" style={{ color: "var(--pi-muted)" }}>
-            This chat stays on this page. Saved decisions are stored in the shared database.
+            This chat stays on this page. Saved projects are stored in the shared database.
           </p>
         </section>
         <div className="space-y-5">
