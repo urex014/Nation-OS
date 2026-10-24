@@ -7,6 +7,7 @@ import { PlanResult } from "./plan-result";
 import { SECTORS, STRATEGIES } from "../../lib/nigeria/constants.mjs";
 import { request } from "../../lib/nigeria/client.mjs";
 import { naira } from "../../lib/nigeria/format.mjs";
+import { reviewProject } from "../../lib/nigeria/guardrails.mjs";
 export function Planner({ jurisdictions }) {
   const { config, setConfig } = useDraft(),
     [result, setResult] = useState(null),
@@ -18,10 +19,19 @@ export function Planner({ jurisdictions }) {
     [reason, setReason] = useState(""),
     [saved, setSaved] = useState(null);
   function change(key, value) {
-    setConfig({ ...config, [key]: value });
+    const next = { ...config, [key]: value };
+    if (key === "annualBudgetNaira") next.budgetTouched = true;
+    setConfig(next);
     setResult(null);
     setSaved(null);
   }
+  const projectWarning = config.projectNaira
+    ? reviewProject({
+        budgetNaira: config.annualBudgetNaira,
+        projectNaira: config.projectNaira,
+        override: config.overrideProjectCap,
+      }).warnings.join(" ")
+    : "";
   async function act(fn) {
     setError("");
     setBusy(true);
@@ -129,6 +139,11 @@ export function Planner({ jurisdictions }) {
             </Field>
           ))}
         </div>
+        {config.projectNaira ? (
+          <p className="mt-4 text-sm text-stone-700">
+            Project from the link: {naira(config.projectNaira)}. {projectWarning}
+          </p>
+        ) : null}
         <p
           className={`mt-4 text-sm ${total === config.annualBudgetNaira ? "text-emerald-800" : "text-red-700"}`}
         >

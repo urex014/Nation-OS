@@ -1,5 +1,11 @@
 /** Transparent budget arithmetic, not a causal forecast of jobs, GDP or service outcomes. */
-import { SECTORS, STRATEGIES } from "./constants.mjs";
+import { SECTORS } from "./constants.mjs";
+import { allocateBudget } from "./allocate.mjs";
+import { explainGuardrails } from "./alternatives.mjs";
+import { fundsFor } from "./funds.mjs";
+import { committedFrom } from "./guardrails.mjs";
+
+export { allocateBudget };
 
 export function validatePlan(input) {
   const fail = (message) => {
@@ -46,12 +52,20 @@ export function validatePlan(input) {
       fail("Sector amounts must be non-negative whole naira.");
     return sum + allocations[key];
   }, 0);
-  if (total !== annualBudgetNaira)
-    fail("Sector amounts must sum exactly to the annual investment budget.");
+  const extras = committedFrom(input);
+  if (extras.committedNaira > annualBudgetNaira)
+    fail("Salaries, debt and maintenance are larger than the annual amount.");
+  const left = annualBudgetNaira - extras.committedNaira;
+  if (total !== annualBudgetNaira && total !== left) {
+    fail(
+      "Sector amounts must sum to the annual amount, or to what's left after salaries, debt and maintenance.",
+    );
+  }
   return {
     years,
     startYear,
-    annualBudgetNaira,
+    annualBudgetNaira: total === left ? left : annualBudgetNaira,
+    envelopeNaira: annualBudgetNaira,
     inflation,
     budgetGrowth,
     revenueGrowth,
@@ -59,39 +73,7 @@ export function validatePlan(input) {
     maintenance,
     scope,
     allocations: { ...allocations },
-  };
-}
-
-export function allocateBudget(annualBudgetNaira, strategy = "balanced") {
-  if (
-    !Number.isSafeInteger(annualBudgetNaira) ||
-    annualBudgetNaira <= 0 ||
-    annualBudgetNaira > 1e14
-  )
-    throw Object.assign(Error("Enter a valid annual investment amount."), { status: 400 });
-  const preference = Object.hasOwn(STRATEGIES, strategy) ? STRATEGIES[strategy] : null;
-  if (!preference) throw Object.assign(Error("Unknown allocation preference."), { status: 400 });
-  const sum = preference.weights.reduce((a, b) => a + b, 0);
-  const rows = Object.keys(SECTORS).map((key, index) => ({
-    key,
-    raw: (annualBudgetNaira * preference.weights[index]) / sum,
-  }));
-  const allocations = Object.fromEntries(rows.map((row) => [row.key, Math.floor(row.raw)]));
-  let remainder = annualBudgetNaira - Object.values(allocations).reduce((a, b) => a + b, 0);
-  for (const row of [...rows].sort((a, b) => (b.raw % 1) - (a.raw % 1))) {
-    if (!remainder) break;
-    allocations[row.key]++;
-    remainder--;
-  }
-  return {
-    allocations,
-    strategy,
-    label: preference.label,
-    weights: Object.fromEntries(
-      rows.map((row, index) => [row.key, preference.weights[index] / sum]),
-    ),
-    explanation:
-      "These weights are a preference you picked. They aren't proof that one sector works better. Largest remainders is how rounding is shared so the total stays the same.",
+    ...extras,
   };
 }
 
@@ -134,6 +116,8 @@ export function projectPlan(input, context) {
     flags.push(
       "In some years the plan is larger than the projected IGR. That's a funding question, not a calculated deficit.",
     );
+  const review = explainGuardrails(config, fundsFor(config.scope));
+  flags.push(...review.warnings);
   return {
     version: "ng-budget-arithmetic-v1",
     config,
@@ -145,6 +129,9 @@ export function projectPlan(input, context) {
       deliveryAdjustedCapitalNaira: total("deliveryAdjustedCapitalNaira"),
     },
     flags,
+    blocked: review.blocked,
+    alternatives: review.alternatives,
+    bestReason: review.bestReason,
     formulas: [
       "Nominal year t = first-year budget × (1 + budget growth)^t",
       "Constant-price budget = nominal budget / (1 + inflation)^t",

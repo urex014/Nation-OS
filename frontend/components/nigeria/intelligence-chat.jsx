@@ -4,6 +4,7 @@ import { useDraft } from "./draft-provider";
 import { Heading, Card, Button, Notice, Source, Download } from "./ui";
 import { SideScroll } from "./side-scroll";
 import { PlanResult } from "./plan-result";
+import { AnswerBits } from "../dashboard/answer-bits";
 import { Planner } from "./planner";
 import { request } from "../../lib/nigeria/client.mjs";
 import { engineLabel } from "../../lib/ai/labels.mjs";
@@ -39,7 +40,29 @@ export function IntelligenceChat({ jurisdictions, children }) {
     const message = text.trim();
     // Only successful turns enter the transcript, so a failed request can be retried.
     try {
-      const answer = await request("chat", { message, context, config });
+      const history = messages.slice(-10).map((item) => ({
+        role: item.role === "user" ? "user" : "advisor",
+        text: (item.paragraphs || []).join("\n").slice(0, 800),
+        work: (item.work || []).slice(0, 3).map((row) => ({ formula: String(row.formula || "").slice(0, 240) })),
+      }));
+      const answer = await request("chat", {
+        message,
+        context,
+        history,
+        config,
+        page: {
+          path: "/budget",
+          annualBudgetNaira: config.annualBudgetNaira,
+          years: config.years,
+          startYear: config.startYear,
+          scope: config.scope,
+          inflation: config.inflation,
+          delivery: config.delivery,
+          maintenance: config.maintenance,
+          useBudget: config.fromLink === true || config.budgetTouched === true,
+          fromLink: config.fromLink === true,
+        },
+      });
       setMessages((previous) => [
         ...previous,
         { role: "user", paragraphs: [message] },
@@ -141,6 +164,7 @@ export function IntelligenceChat({ jurisdictions, children }) {
                       {engineLabel(message.mode, message.aiStatus)}
                     </p>
                   ) : null}
+                  <AnswerBits message={message} />
                   {!!message.sources?.length && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {message.sources.map((source) => (

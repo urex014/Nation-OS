@@ -1,4 +1,5 @@
 import { answerQuestion } from "../nigeria/chat.mjs";
+import { checkProjectRequest } from "../nigeria/project-check.mjs";
 import { advise } from "./advise.mjs";
 import { aiConfigured } from "./model.mjs";
 
@@ -33,19 +34,56 @@ export function aiStatusFor(reason) {
   return "error";
 }
 
+function projectAnswer(body, options, message) {
+  if (!message.trim()) return null;
+  const seat = options.role === "government" ? "government" : "citizen";
+  const direct = checkProjectRequest({
+    message,
+    context: body?.context,
+    history: body?.history,
+    page: body?.page,
+    role: seat,
+  });
+  if (!direct) return null;
+  const configured = Boolean(options.forceAi || options.generate || aiConfigured());
+  return {
+    mode: "local-data",
+    paragraphs: direct.paragraphs,
+    context: {
+      ...(body?.context && typeof body.context === "object" && !Array.isArray(body.context) ? body.context : {}),
+      ...(direct.context || {}),
+    },
+    sources: [],
+    work: direct.work || [],
+    links: direct.links || [],
+    warnings: direct.warnings || [],
+    alternatives: direct.alternatives || [],
+    bestReason: direct.bestReason || null,
+    aiStatus: configured ? "ok" : "not_configured",
+  };
+}
+
 export async function answerChat(body, options = {}) {
   const message = chatMessage(body);
   const normalized = { ...body, message };
+  const direct = projectAnswer(body, options, message);
+  if (direct) return direct;
   if (!Boolean(options.forceAi || options.generate || aiConfigured())) {
     console.error(
       "AI advisor fell back (not_configured): no AI_GATEWAY_API_KEY or XAI_API_KEY, and this process is not on Vercel.",
     );
-    return { ...answerQuestion(normalized), aiStatus: "not_configured" };
+    return {
+      ...answerQuestion({ ...normalized, role: options.role }),
+      aiStatus: "not_configured",
+    };
   }
   try {
     const answer = await advise({
       message,
       role: options.role,
+      history: body?.history,
+      page: body?.page,
+      context: body?.context,
       generate: options.generate,
       oidcToken: options.oidcToken,
       timeoutMs: options.timeoutMs,
@@ -56,6 +94,6 @@ export async function answerChat(body, options = {}) {
     const reason = safeAiReason(error);
     const aiStatus = aiStatusFor(reason);
     console.error(`AI advisor fell back (${aiStatus}): ${reason}`);
-    return { ...answerQuestion(normalized), aiStatus };
+    return { ...answerQuestion({ ...normalized, role: options.role }), aiStatus };
   }
 }

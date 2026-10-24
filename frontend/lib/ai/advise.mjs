@@ -1,26 +1,91 @@
 import { generateText, isStepCount } from "ai";
 import { getSources } from "../nigeria/repository.mjs";
+import { conversationText } from "./history.mjs";
 import { groundReply } from "./ground.mjs";
 import { activeModelId, resolveModel } from "./model.mjs";
 import { createTools, sourceIdsFrom } from "./tools.mjs";
 
 const SHARED = `You answer questions about Nigerian public money for NationOS.
-Answer in plain English. Use short sentences.
+Use short, plain sentences.
+Call a tool before you state a figure.
+You must use calculate for any arithmetic. Do not do the math yourself.
+Every number you write must come from a tool result, the recent conversation, or the person's own message.
+If a tool says data is missing, say that in plain words. Do not invent a replacement.
+Label a result as calculated from the source the tool names.
+If the person typed the amount, say they entered it.
+If a budget was assumed, call it an assumed budget and name the year, level, figure and source.
 Cite the source named by the tool.
-Label every projection as conditional. Say it is not a decision and not a forecast of jobs or services.
-If a tool says data is missing, say that. Do not estimate a replacement.
-Every number you write must appear in a tool result. Do not invent a figure, a rank, or a percent.
-Call a tool before you state a figure.`;
+Recent conversation is there so a follow-up can reuse a budget. Do not treat an untouched planner default as their budget.`;
 
 function systemPrompt(role) {
   if (role === "government") {
     return `${SHARED}
-You may call runSimulation for a tax-collection change or a budget plan.
-Describe those results as projections. They do not approve a budget.`;
+Use getBudget, getFaac and getFiscalSnapshot before you cite a 2026 budget, FAAC, debt, inflation, GDP or a project line.
+Use checkProject when the person names one project amount. The tool chooses the base budget. Do not invent one.
+Use allocateBudget to split money across sectors, and runSimulation for a tax change or a multi-year plan.
+Do not invent a six-sector split. If a sector is missing, the plan tool fills the strategy default. Repeat that as an assumption.
+Do not refuse a reasonable allocation or projection just because the derived figure is not already stored. Call the tool and quote it.
+If a state budget is not loaded, say so, and offer to use an amount the person types.
+Quote any warning and the best-fit option the tool returns, in the same plain words.
+These results are not a decision. Nothing is saved unless the person saves it on the plan page.`;
   }
   return `${SHARED}
-You only have read-only tools. Do not offer to change a budget or run a simulation.
-Explain where the published money goes.`;
+You can use calculate for read-only math on published figures or amounts the person typed.
+Do not allocate a budget or run a simulation. This seat cannot do that.`;
+}
+
+function packWork(transcript) {
+  const work = [];
+  const links = [];
+  const warnings = [];
+  const alternatives = [];
+  let bestReason = null;
+  let memory = null;
+  for (const item of transcript) {
+    if (!item || typeof item !== "object") continue;
+    if (item.formula) {
+      work.push({
+        formula: item.formula,
+        inputs: Array.isArray(item.inputs) ? item.inputs : [],
+        source: item.source || null,
+        enteredByUser: Boolean(item.enteredByUser),
+      });
+    }
+    if (Array.isArray(item.links)) links.push(...item.links);
+    if (Array.isArray(item.warnings)) warnings.push(...item.warnings);
+    if (Array.isArray(item.assumptions)) {
+      for (const assumption of item.assumptions) {
+        if (!warnings.includes(assumption) && !work.some((row) => row.formula === assumption)) {
+          work.push({
+            formula: assumption,
+            inputs: [],
+            source: "assumption",
+            enteredByUser: false,
+          });
+        }
+      }
+    }
+    if (Array.isArray(item.alternatives)) {
+      for (const option of item.alternatives) {
+        if (!alternatives.some((row) => row.id === option.id && row.title === option.title)) alternatives.push(option);
+      }
+    }
+    if (item.bestReason) bestReason = item.bestReason;
+    if (item.context?.budgetNaira) memory = item.context;
+  }
+  const seen = new Set();
+  return {
+    work,
+    links: links.filter((link) => {
+      if (!link?.href || seen.has(link.href)) return false;
+      seen.add(link.href);
+      return true;
+    }),
+    warnings: [...new Set(warnings)],
+    alternatives,
+    bestReason,
+    context: memory,
+  };
 }
 
 /** 12 seconds unless AI_TIMEOUT_MS or an explicit override says otherwise. */
@@ -48,21 +113,38 @@ export function withTimeout(work, ms) {
   return Promise.race([ran, timed]).finally(() => clearTimeout(timer));
 }
 
-export async function advise({ message, role, generate, oidcToken, timeoutMs }) {
+export async function advise({ message, role, history, page, context, generate, oidcToken, timeoutMs }) {
   if (typeof message !== "string" || message.trim().length < 1 || message.length > 2000) {
     throw Object.assign(Error("Ask a question between 1 and 2,000 characters."), { status: 400 });
   }
   const seat = role === "government" ? "government" : "citizen";
+  const talk = conversationText(message, history, page);
   const transcript = [];
-  const tools = createTools(seat, transcript);
+  const tools = createTools(seat, transcript, {
+    message,
+    history: talk.turns,
+    page: talk.settings,
+    context,
+  });
   const text = await withTimeout(
     (signal) =>
       generate
-        ? generate({ tools, message, role: seat, signal, oidcToken })
-        : liveGenerate({ tools, message, role: seat, signal, oidcToken }),
+        ? generate({
+            tools,
+            message: talk.prompt,
+            history: talk.turns,
+            page: talk.settings,
+            role: seat,
+            signal,
+            oidcToken,
+          })
+        : liveGenerate({ tools, prompt: talk.prompt, role: seat, signal, oidcToken }),
     aiTimeoutMs(timeoutMs),
   );
-  const grounded = groundReply(text, transcript);
+  const spoken = [...transcript].reverse().find((item) => item?.checked && Array.isArray(item.paragraphs));
+  const grounded = spoken
+    ? { text: spoken.paragraphs.join("\n\n"), removed: [], flagged: false }
+    : groundReply(text, transcript, talk.allow);
   const ids = sourceIdsFrom(transcript);
   const paragraphs = grounded.text.split(/\n\n+/).filter(Boolean);
   return {
@@ -73,19 +155,20 @@ export async function advise({ message, role, generate, oidcToken, timeoutMs }) 
     sources: getSources().filter((source) => ids.includes(source.id)),
     context: null,
     removedFigures: grounded.removed,
+    ...packWork(transcript),
   };
 }
 
-async function liveGenerate({ tools, message, role, signal, oidcToken }) {
+async function liveGenerate({ tools, prompt, role, signal, oidcToken }) {
   const model = await resolveModel({ oidcToken });
   if (!model) throw Error("No AI credentials are configured.");
   try {
     const result = await generateText({
       model,
       system: systemPrompt(role),
-      prompt: message,
+      prompt,
       tools,
-      stopWhen: isStepCount(4),
+      stopWhen: isStepCount(6),
       abortSignal: signal,
     });
     return result.text || "";

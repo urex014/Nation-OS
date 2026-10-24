@@ -56,7 +56,12 @@ export async function saveDecision(input, run) {
       values (
         ${id},
         ${"Created draft"},
-        ${JSON.stringify({ version: run.result.version, scope: run.result.config.scope })},
+        ${JSON.stringify({
+          version: run.result.version,
+          scope: run.result.config.scope,
+          warnings: run.result.flags || [],
+          overrideProjectCap: run.result.config.overrideProjectCap === true,
+        })},
         ${stamp}
       )
     `;
